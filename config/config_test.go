@@ -12,6 +12,14 @@ func TestDefaultConfigIsValid(t *testing.T) {
 	}
 }
 
+func TestConfigRejectsInvalidWorkerCount(t *testing.T) {
+	cfg := Default()
+	cfg.Workers = 0
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected worker validation error")
+	}
+}
+
 func filepathIsAbsolute(path string) bool {
 	if len(path) >= 3 && path[1] == ':' {
 		return true

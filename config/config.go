@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
@@ -56,6 +57,7 @@ type Config struct {
 	ExcludeFiles       []string           `json:"exclude_files"`
 	RuleFiles          []string           `json:"rule_files"`
 	SuppressionFile    string             `json:"suppression_file"`
+	Workers            int                `json:"workers"`
 	Scanners           map[string]Scanner `json:"scanners"`
 }
 
@@ -71,6 +73,7 @@ func Default() Config {
 		ExcludeDirectories: []string{".git", "node_modules", "vendor", "dist", "build", ".next", "out", "bin"},
 		ExcludeFiles:       []string{"security_findings.json", "package-lock.json"},
 		SuppressionFile:    ".security-ignore",
+		Workers:            runtime.GOMAXPROCS(0),
 	}
 }
 
@@ -86,6 +89,9 @@ func (c *Config) Validate() error {
 	}
 	if !c.FailOn.Valid() {
 		return fmt.Errorf("invalid fail_on severity %q", c.FailOn)
+	}
+	if c.Workers < 1 {
+		return fmt.Errorf("workers must be at least 1")
 	}
 	absRoot, err := filepath.Abs(c.Root)
 	if err != nil {

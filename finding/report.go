@@ -38,6 +38,7 @@ type ScannerState string
 const (
 	ScannerClean    ScannerState = "clean"
 	ScannerFindings ScannerState = "findings"
+	ScannerPartial  ScannerState = "partial"
 	ScannerSkipped  ScannerState = "skipped"
 	ScannerFailed   ScannerState = "failed"
 )

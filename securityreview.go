@@ -65,7 +65,7 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 	}
 	r := &reviewer{
 		config:   cfg,
-		scanners: []registeredScanner{{scanner: patternscanner.New(compiled), required: true}},
+		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers), required: true}},
 		now:      time.Now,
 	}
 	for _, option := range options {
@@ -99,7 +99,7 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 			ID: source.ID(), State: result.State, Duration: result.Duration,
 			Message: result.Message, Version: result.Version, Required: required,
 		})
-		if result.State == finding.ScannerFailed {
+		if result.State == finding.ScannerFailed || result.State == finding.ScannerPartial {
 			failure := fmt.Errorf("scanner %s failed: %s", source.ID(), result.Message)
 			if required {
 				operationalErrors = append(operationalErrors, failure)
