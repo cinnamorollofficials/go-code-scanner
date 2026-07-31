@@ -2,8 +2,10 @@ package discovery
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,23 +13,24 @@ import (
 	"strings"
 
 	"github.com/cinnamorollofficials/go-code-scanner/config"
+	"github.com/cinnamorollofficials/go-code-scanner/scanner"
 )
 
-func Files(ctx context.Context, cfg config.Config) ([]string, error) {
+func Sources(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
 	switch cfg.Mode {
 	case config.ModeFull:
 		return walk(ctx, cfg)
 	case config.ModeChanged:
-		return gitFiles(ctx, cfg, "diff", "--name-only", "--diff-filter=ACMR", "HEAD")
+		return gitSources(ctx, cfg, false, "diff", "--name-only", "--diff-filter=ACMR", "HEAD")
 	case config.ModeStaged:
-		return gitFiles(ctx, cfg, "diff", "--cached", "--name-only", "--diff-filter=ACMR")
+		return gitSources(ctx, cfg, true, "diff", "--cached", "--name-only", "--diff-filter=ACMR")
 	default:
 		return nil, fmt.Errorf("unsupported mode %q", cfg.Mode)
 	}
 }
 
-func walk(ctx context.Context, cfg config.Config) ([]string, error) {
-	var files []string
+func walk(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
+	var sources []scanner.Source
 	err := filepath.WalkDir(cfg.Root, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -39,30 +42,55 @@ func walk(ctx context.Context, cfg config.Config) ([]string, error) {
 			return filepath.SkipDir
 		}
 		if entry.Type().IsRegular() && allowed(path, cfg) {
-			files = append(files, path)
+			sources = append(sources, fileSource(path))
 		}
 		return nil
 	})
-	sort.Strings(files)
-	return files, err
+	sort.Slice(sources, func(i, j int) bool { return sources[i].Path < sources[j].Path })
+	return sources, err
 }
 
-func gitFiles(ctx context.Context, cfg config.Config, args ...string) ([]string, error) {
+func gitSources(ctx context.Context, cfg config.Config, staged bool, args ...string) ([]scanner.Source, error) {
 	cmdArgs := append([]string{"-C", cfg.Root}, args...)
 	output, err := exec.CommandContext(ctx, "git", cmdArgs...).Output()
 	if err != nil {
 		return nil, fmt.Errorf("list git files: %w", err)
 	}
-	var files []string
-	scanner := bufio.NewScanner(strings.NewReader(string(output)))
-	for scanner.Scan() {
-		path := filepath.Join(cfg.Root, filepath.FromSlash(strings.TrimSpace(scanner.Text())))
-		if info, statErr := os.Stat(path); statErr == nil && info.Mode().IsRegular() && allowed(path, cfg) {
-			files = append(files, path)
+	var sources []scanner.Source
+	lineScanner := bufio.NewScanner(strings.NewReader(string(output)))
+	for lineScanner.Scan() {
+		relative := filepath.ToSlash(strings.TrimSpace(lineScanner.Text()))
+		path := filepath.Join(cfg.Root, filepath.FromSlash(relative))
+		if !allowed(path, cfg) {
+			continue
+		}
+		if staged {
+			sources = append(sources, stagedSource(cfg.Root, relative))
+			continue
+		}
+		if info, statErr := os.Stat(path); statErr == nil && info.Mode().IsRegular() {
+			sources = append(sources, fileSource(path))
 		}
 	}
-	sort.Strings(files)
-	return files, scanner.Err()
+	sort.Slice(sources, func(i, j int) bool { return sources[i].Path < sources[j].Path })
+	return sources, lineScanner.Err()
+}
+
+func fileSource(path string) scanner.Source {
+	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
+		return os.Open(path)
+	}}
+}
+
+func stagedSource(root, relative string) scanner.Source {
+	path := filepath.Join(root, filepath.FromSlash(relative))
+	return scanner.Source{Path: path, Open: func(ctx context.Context) (io.ReadCloser, error) {
+		output, err := exec.CommandContext(ctx, "git", "-C", root, "show", ":"+relative).Output()
+		if err != nil {
+			return nil, fmt.Errorf("read staged file %s: %w", relative, err)
+		}
+		return io.NopCloser(bytes.NewReader(output)), nil
+	}}
 }
 
 func allowed(path string, cfg config.Config) bool {

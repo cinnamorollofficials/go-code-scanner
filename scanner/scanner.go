@@ -2,15 +2,21 @@ package scanner
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
 
+type Source struct {
+	Path string
+	Open func(context.Context) (io.ReadCloser, error)
+}
+
 type Request struct {
-	Root  string
-	Mode  string
-	Files []string
+	Root    string
+	Mode    string
+	Sources []Source
 }
 
 type Result struct {

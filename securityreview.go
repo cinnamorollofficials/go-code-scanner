@@ -64,11 +64,11 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 
 func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	started := r.now().UTC()
-	files, err := discovery.Files(ctx, r.config)
+	sources, err := discovery.Sources(ctx, r.config)
 	if err != nil {
 		return nil, err
 	}
-	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Files: files}
+	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Sources: sources}
 	var all []finding.Finding
 	statuses := make([]finding.ScannerStatus, 0, len(r.scanners))
 	for _, source := range r.scanners {

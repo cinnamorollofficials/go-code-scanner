@@ -3,7 +3,6 @@ package pattern
 import (
 	"bufio"
 	"context"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -26,12 +25,12 @@ func (s *Scanner) ID() string { return "pattern" }
 func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Result {
 	started := time.Now()
 	result := scanner.Result{State: finding.ScannerClean}
-	for _, path := range request.Files {
+	for _, source := range request.Sources {
 		if err := ctx.Err(); err != nil {
 			result.State, result.Message = finding.ScannerFailed, err.Error()
 			break
 		}
-		findings, err := s.scanFile(path, request.Root)
+		findings, err := s.scanSource(ctx, source, request.Root)
 		if err != nil {
 			result.Message = appendMessage(result.Message, err.Error())
 			continue
@@ -45,18 +44,18 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	return result
 }
 
-func (s *Scanner) scanFile(path, root string) ([]finding.Finding, error) {
-	file, err := os.Open(path)
+func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root string) ([]finding.Finding, error) {
+	file, err := source.Open(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	relative, err := filepath.Rel(root, path)
+	relative, err := filepath.Rel(root, source.Path)
 	if err != nil {
-		relative = path
+		relative = source.Path
 	}
 	relative = filepath.ToSlash(relative)
-	extension := strings.ToLower(filepath.Ext(path))
+	extension := strings.ToLower(filepath.Ext(source.Path))
 	var findings []finding.Finding
 	lineNumber := 0
 	lineScanner := bufio.NewScanner(file)
