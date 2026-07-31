@@ -92,8 +92,9 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	report, err := reviewer.Run(ctx)
-	if err != nil {
-		fmt.Fprintln(stderr, err)
+	operationalErr := err
+	if report == nil {
+		fmt.Fprintln(stderr, operationalErr)
 		return 3
 	}
 	outputPath := cfg.Output
@@ -110,6 +111,10 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 			return 3
 		}
 		fmt.Fprintf(stdout, "Report: %s\n", outputPath)
+	}
+	if operationalErr != nil {
+		fmt.Fprintln(stderr, operationalErr)
+		return 3
 	}
 	if *ci && len(policy.Violations(report, cfg.FailOn)) > 0 {
 		return 1

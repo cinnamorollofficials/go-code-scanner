@@ -3,6 +3,7 @@ package securityreview
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -25,18 +26,31 @@ type Reviewer interface {
 
 type reviewer struct {
 	config   config.Config
-	scanners []scanner.Scanner
+	scanners []registeredScanner
 	now      func() time.Time
+}
+
+type registeredScanner struct {
+	scanner  scanner.Scanner
+	required bool
 }
 
 type Option func(*reviewer) error
 
 func WithScanner(value scanner.Scanner) Option {
+	return withScanner(value, false)
+}
+
+func WithRequiredScanner(value scanner.Scanner) Option {
+	return withScanner(value, true)
+}
+
+func withScanner(value scanner.Scanner, required bool) Option {
 	return func(r *reviewer) error {
 		if value == nil {
 			return fmt.Errorf("scanner cannot be nil")
 		}
-		r.scanners = append(r.scanners, value)
+		r.scanners = append(r.scanners, registeredScanner{scanner: value, required: required})
 		return nil
 	}
 }
@@ -51,7 +65,7 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 	}
 	r := &reviewer{
 		config:   cfg,
-		scanners: []scanner.Scanner{patternscanner.New(compiled)},
+		scanners: []registeredScanner{{scanner: patternscanner.New(compiled), required: true}},
 		now:      time.Now,
 	}
 	for _, option := range options {
@@ -71,15 +85,27 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Sources: sources}
 	var all []finding.Finding
 	statuses := make([]finding.ScannerStatus, 0, len(r.scanners))
-	for _, source := range r.scanners {
+	var operationalErrors []error
+	var warnings []string
+	for _, registered := range r.scanners {
+		source := registered.scanner
+		required := registered.required
+		if configured, ok := r.config.Scanners[source.ID()]; ok {
+			required = configured.Required
+		}
 		result := source.Scan(ctx, request)
 		all = append(all, result.Findings...)
 		statuses = append(statuses, finding.ScannerStatus{
 			ID: source.ID(), State: result.State, Duration: result.Duration,
-			Message: result.Message, Version: result.Version,
+			Message: result.Message, Version: result.Version, Required: required,
 		})
 		if result.State == finding.ScannerFailed {
-			return nil, fmt.Errorf("scanner %s failed: %s", source.ID(), result.Message)
+			failure := fmt.Errorf("scanner %s failed: %s", source.ID(), result.Message)
+			if required {
+				operationalErrors = append(operationalErrors, failure)
+			} else {
+				warnings = append(warnings, failure.Error())
+			}
 		}
 	}
 	all = normalize(all)
@@ -92,10 +118,10 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 		SchemaVersion: SchemaVersion, Timestamp: started, Duration: time.Since(started),
 		ScanMode: string(r.config.Mode), Project: r.config.Project,
 		Findings: active, SuppressionsApplied: suppressed,
-		StaleSuppressionFiles: stale, Scanners: statuses,
+		StaleSuppressionFiles: stale, Scanners: statuses, Warnings: warnings,
 	}
 	report.Summary = summarize(active, suppressed, stale)
-	return report, nil
+	return report, errors.Join(operationalErrors...)
 }
 
 func normalize(input []finding.Finding) []finding.Finding {
