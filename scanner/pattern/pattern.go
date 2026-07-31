@@ -70,7 +70,7 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 			findings = append(findings, finding.Finding{
 				RuleID: rule.ID, Tool: s.ID(), Category: rule.Category,
 				Severity: rule.Severity, Description: rule.Description,
-				Recommendation: rule.Recommendation, Snippet: redact(line),
+				Recommendation: rule.Recommendation, Snippet: redact(rule, line),
 				Location: finding.Location{File: relative, Line: lineNumber},
 			})
 		}
@@ -78,12 +78,16 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 	return findings, lineScanner.Err()
 }
 
-func redact(value string) string {
+func redact(rule rules.Compiled, value string) string {
+	if rule.Category == "secret_leak" {
+		return "[REDACTED: " + rule.ID + "]"
+	}
 	value = strings.TrimSpace(value)
 	if len(value) > 200 {
 		value = value[:200]
 	}
-	if strings.Contains(strings.ToLower(value), "password") || strings.Contains(strings.ToLower(value), "secret") || strings.Contains(strings.ToLower(value), "token") {
+	lower := strings.ToLower(value)
+	if strings.Contains(lower, "password") || strings.Contains(lower, "secret") || strings.Contains(lower, "token") || strings.Contains(lower, "api_key") || strings.Contains(lower, "apikey") || strings.Contains(lower, "authorization") {
 		return "[REDACTED: potentially sensitive source line]"
 	}
 	return value

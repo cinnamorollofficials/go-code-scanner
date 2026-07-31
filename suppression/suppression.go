@@ -12,13 +12,14 @@ import (
 )
 
 type Rule struct {
-	RuleID     string `json:"rule_id,omitempty"`
-	File       string `json:"file"`
-	Line       int    `json:"line"`
-	Reason     string `json:"reason"`
-	ApprovedBy string `json:"approved_by,omitempty"`
-	Expires    string `json:"expires"`
-	Ticket     string `json:"ticket,omitempty"`
+	RuleID      string `json:"rule_id,omitempty"`
+	Fingerprint string `json:"fingerprint,omitempty"`
+	File        string `json:"file"`
+	Line        int    `json:"line"`
+	Reason      string `json:"reason"`
+	ApprovedBy  string `json:"approved_by,omitempty"`
+	Expires     string `json:"expires"`
+	Ticket      string `json:"ticket,omitempty"`
 }
 
 type File struct {
@@ -37,6 +38,11 @@ func Load(path string) ([]Rule, error) {
 	var file File
 	if err := json.Unmarshal(data, &file); err != nil {
 		return nil, fmt.Errorf("decode suppressions: %w", err)
+	}
+	for index, rule := range file.Suppressions {
+		if err := validate(rule); err != nil {
+			return nil, fmt.Errorf("suppression %d: %w", index+1, err)
+		}
 	}
 	return file.Suppressions, nil
 }
@@ -66,12 +72,13 @@ func Apply(findings []finding.Finding, rules []Rule, now time.Time) (active, sup
 }
 
 func matches(item finding.Finding, rule Rule) bool {
-	want := filepath.ToSlash(filepath.Clean(rule.File))
-	got := filepath.ToSlash(filepath.Clean(item.Location.File))
-	fileMatches := got == want || strings.HasSuffix(got, "/"+want)
+	want := normalizePath(rule.File)
+	got := normalizePath(item.Location.File)
+	fileMatches := got == want
 	ruleMatches := rule.RuleID == "" || rule.RuleID == item.RuleID
+	fingerprintMatches := rule.Fingerprint == "" || rule.Fingerprint == item.Fingerprint
 	lineMatches := rule.Line == -1 || rule.Line == item.Location.Line
-	return fileMatches && ruleMatches && lineMatches
+	return fileMatches && ruleMatches && fingerprintMatches && lineMatches
 }
 
 func expired(rule Rule, now time.Time) bool {
@@ -89,4 +96,24 @@ func appendUnique(values []string, value string) []string {
 		}
 	}
 	return append(values, value)
+}
+
+func validate(rule Rule) error {
+	if strings.TrimSpace(rule.File) == "" {
+		return fmt.Errorf("file is required")
+	}
+	if strings.TrimSpace(rule.Reason) == "" {
+		return fmt.Errorf("reason is required")
+	}
+	if strings.TrimSpace(rule.Expires) == "" {
+		return fmt.Errorf("expires is required")
+	}
+	if _, err := time.Parse("2006-01-02", rule.Expires); err != nil {
+		return fmt.Errorf("invalid expires %q: %w", rule.Expires, err)
+	}
+	return nil
+}
+
+func normalizePath(path string) string {
+	return strings.TrimPrefix(filepath.ToSlash(filepath.Clean(path)), "./")
 }

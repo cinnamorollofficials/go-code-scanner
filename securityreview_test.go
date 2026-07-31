@@ -29,7 +29,7 @@ func TestReviewerRunsDefaultPatternScanner(t *testing.T) {
 	if report.Summary.Critical != 1 || len(report.Findings) != 1 {
 		t.Fatalf("unexpected report: %+v", report.Summary)
 	}
-	if report.Findings[0].Snippet != "[REDACTED: potentially sensitive source line]" {
+	if report.Findings[0].Snippet != "[REDACTED: mock-token]" {
 		t.Fatalf("sensitive snippet was not redacted: %q", report.Findings[0].Snippet)
 	}
 }
