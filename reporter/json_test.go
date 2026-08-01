@@ -68,3 +68,32 @@ func TestWriteJSONReplacesExistingReport(t *testing.T) {
 		t.Fatalf("expected report mode 0600, got %o", info.Mode().Perm())
 	}
 }
+
+func TestWriteJSONRejectsTargetAndBackupSymlinks(t *testing.T) {
+	for _, backup := range []bool{false, true} {
+		directory := t.TempDir()
+		target := filepath.Join(directory, "outside.json")
+		if err := os.WriteFile(target, []byte("outside"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		path := filepath.Join(directory, "report.json")
+		link := path
+		if backup {
+			if err := os.WriteFile(path, []byte("existing"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			link = path + ".previous"
+		}
+		if err := os.Symlink(target, link); err != nil {
+			t.Skipf("symlinks unavailable: %v", err)
+		}
+		report := &finding.Report{SchemaVersion: "1.0", Timestamp: time.Unix(0, 0).UTC()}
+		if err := WriteJSON(path, report); err == nil {
+			t.Fatalf("backup=%t: symlink report path accepted", backup)
+		}
+		content, err := os.ReadFile(target)
+		if err != nil || string(content) != "outside" {
+			t.Fatalf("backup=%t: symlink target changed: content=%q err=%v", backup, content, err)
+		}
+	}
+}

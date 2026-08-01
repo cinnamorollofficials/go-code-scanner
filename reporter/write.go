@@ -40,7 +40,13 @@ func writeAtomic(path string, data []byte, label string) error {
 
 func replace(path, temporaryPath string) error {
 	backup := path + ".previous"
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if err := rejectSymlink(path); err != nil {
+		return err
+	}
+	if err := rejectSymlink(backup); err != nil {
+		return err
+	}
+	if _, err := os.Lstat(path); os.IsNotExist(err) {
 		if err := os.Rename(temporaryPath, path); err != nil {
 			return fmt.Errorf("install report: %w", err)
 		}
@@ -58,6 +64,20 @@ func replace(path, temporaryPath string) error {
 	}
 	if err := os.Remove(backup); err != nil {
 		return fmt.Errorf("remove report backup: %w", err)
+	}
+	return nil
+}
+
+func rejectSymlink(path string) error {
+	info, err := os.Lstat(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("inspect report path: %w", err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("refusing to replace symlink %s", path)
 	}
 	return nil
 }
