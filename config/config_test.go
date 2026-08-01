@@ -111,6 +111,34 @@ func TestGovernanceRequiredHeaderValidation(t *testing.T) {
 	}
 }
 
+func TestGovernanceOwnershipPolicyValidation(t *testing.T) {
+	valid := Default()
+	valid.Root = t.TempDir()
+	valid.Governance.OwnershipFile = ".github/CODEOWNERS"
+	valid.Governance.OwnershipRules = []OwnershipRule{{Path: "/internal/auth/**", Owners: []string{"@security", "@identity"}, Severity: finding.High}}
+	if err := valid.Validate(); err != nil {
+		t.Fatalf("valid ownership policy rejected: %v", err)
+	}
+
+	invalid := []GovernancePolicy{
+		{OwnershipFile: "../CODEOWNERS", OwnershipRules: valid.Governance.OwnershipRules},
+		{OwnershipRules: []OwnershipRule{{Path: "", Owners: []string{"@security"}}}},
+		{OwnershipRules: []OwnershipRule{{Path: "/internal/auth/**", Owners: nil}}},
+		{OwnershipRules: []OwnershipRule{{Path: "/internal/auth/**", Owners: []string{"team with spaces"}}}},
+		{OwnershipRules: []OwnershipRule{{Path: "/internal/auth/**", Owners: []string{"@security", "@security"}}}},
+		{OwnershipRules: []OwnershipRule{{Path: "/internal/auth/**", Owners: []string{"@security"}, Severity: "URGENT"}}},
+		{OwnershipRules: []OwnershipRule{{Path: "/same/**", Owners: []string{"@a"}}, {Path: "/same/**", Owners: []string{"@b"}}}},
+	}
+	for _, governance := range invalid {
+		cfg := Default()
+		cfg.Root = t.TempDir()
+		cfg.Governance = governance
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("invalid ownership policy accepted: %+v", governance)
+		}
+	}
+}
+
 func TestArchitecturePolicyValidation(t *testing.T) {
 	cfg := Default()
 	cfg.Root = t.TempDir()

@@ -98,6 +98,10 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 			Severity: header.Severity, Description: header.Description, Recommendation: header.Recommendation,
 		}
 	}
+	ownershipPolicies := make([]patternscanner.OwnershipPolicy, len(cfg.Governance.OwnershipRules))
+	for index, rule := range cfg.Governance.OwnershipRules {
+		ownershipPolicies[index] = patternscanner.OwnershipPolicy{Path: rule.Path, Owners: append([]string(nil), rule.Owners...), Severity: rule.Severity}
+	}
 	r := &reviewer{
 		config: cfg,
 		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers, patternscanner.Limits{
@@ -107,6 +111,8 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 			LicenseAllowlist: cfg.SupplyChain.LicenseAllowlist, LicenseDenylist: cfg.SupplyChain.LicenseDenylist,
 			RequiredFiles:   cfg.Governance.RequiredFiles,
 			RequiredHeaders: headerPolicies,
+			OwnershipFile:   cfg.Governance.OwnershipFile,
+			OwnershipRules:  ownershipPolicies,
 		}), required: true}},
 		now:         time.Now,
 		configHash:  configHash,

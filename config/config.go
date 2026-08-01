@@ -75,6 +75,14 @@ type SupplyChainPolicy struct {
 type GovernancePolicy struct {
 	RequiredFiles   []string         `json:"required_files,omitempty"`
 	RequiredHeaders []RequiredHeader `json:"required_headers,omitempty"`
+	OwnershipFile   string           `json:"ownership_file,omitempty"`
+	OwnershipRules  []OwnershipRule  `json:"ownership_rules,omitempty"`
+}
+
+type OwnershipRule struct {
+	Path     string           `json:"path"`
+	Owners   []string         `json:"owners"`
+	Severity finding.Severity `json:"severity,omitempty"`
 }
 
 type RequiredHeader struct {
@@ -310,6 +318,41 @@ func (c *Config) Validate() error {
 		}
 		if header.Severity != "" && !header.Severity.Valid() {
 			return fmt.Errorf("governance.required_headers[%d]: invalid severity %q", index, header.Severity)
+		}
+	}
+	ownershipFile := c.Governance.OwnershipFile
+	if ownershipFile == "" {
+		ownershipFile = "CODEOWNERS"
+	}
+	cleanOwnershipFile := filepath.ToSlash(filepath.Clean(ownershipFile))
+	if filepath.IsAbs(ownershipFile) || cleanOwnershipFile == ".." || strings.HasPrefix(cleanOwnershipFile, "../") {
+		return fmt.Errorf("governance.ownership_file contains unsafe path %q", ownershipFile)
+	}
+	seenOwnershipPaths := make(map[string]struct{}, len(c.Governance.OwnershipRules))
+	for index, rule := range c.Governance.OwnershipRules {
+		if strings.TrimSpace(rule.Path) == "" || len(rule.Owners) == 0 {
+			return fmt.Errorf("governance.ownership_rules[%d]: path and owners are required", index)
+		}
+		if strings.ContainsAny(rule.Path, "\r\n") {
+			return fmt.Errorf("governance.ownership_rules[%d]: path must be one line", index)
+		}
+		if _, duplicate := seenOwnershipPaths[rule.Path]; duplicate {
+			return fmt.Errorf("governance.ownership_rules[%d]: duplicate path %q", index, rule.Path)
+		}
+		seenOwnershipPaths[rule.Path] = struct{}{}
+		seenOwners := make(map[string]struct{}, len(rule.Owners))
+		for ownerIndex, owner := range rule.Owners {
+			owner = strings.TrimSpace(owner)
+			if owner == "" || strings.ContainsAny(owner, " \t\r\n") {
+				return fmt.Errorf("governance.ownership_rules[%d].owners[%d]: invalid owner %q", index, ownerIndex, owner)
+			}
+			if _, duplicate := seenOwners[owner]; duplicate {
+				return fmt.Errorf("governance.ownership_rules[%d]: duplicate owner %q", index, owner)
+			}
+			seenOwners[owner] = struct{}{}
+		}
+		if rule.Severity != "" && !rule.Severity.Valid() {
+			return fmt.Errorf("governance.ownership_rules[%d]: invalid severity %q", index, rule.Severity)
 		}
 	}
 	layers := make(map[string]struct{}, len(c.Architecture.Layers))

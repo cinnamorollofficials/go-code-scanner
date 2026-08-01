@@ -37,6 +37,14 @@ type Limits struct {
 	LicenseDenylist      []string
 	RequiredFiles        []string
 	RequiredHeaders      []HeaderPolicy
+	OwnershipFile        string
+	OwnershipRules       []OwnershipPolicy
+}
+
+type OwnershipPolicy struct {
+	Path     string
+	Owners   []string
+	Severity finding.Severity
 }
 
 type HeaderPolicy struct {
@@ -164,6 +172,9 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 				fmt.Sprintf("Required repository file %s is missing", required), "Add the required file or update governance policy through review", required, 1))
 		}
 	}
+	ownershipFindings, ownershipErrors := s.scanOwnershipPolicies(ctx, request)
+	findings = append(findings, ownershipFindings...)
+	failures = append(failures, ownershipErrors...)
 	for _, source := range request.Files {
 		if err := ctx.Err(); err != nil {
 			return findings, append(failures, err)
@@ -241,6 +252,87 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 		}
 	}
 	return findings, failures
+}
+
+func (s *Scanner) scanOwnershipPolicies(ctx context.Context, request scanner.Request) ([]finding.Finding, []error) {
+	if len(s.limits.OwnershipRules) == 0 {
+		return nil, nil
+	}
+	ownershipFile := s.limits.OwnershipFile
+	if ownershipFile == "" {
+		ownershipFile = "CODEOWNERS"
+	}
+	ownershipFile = filepath.ToSlash(filepath.Clean(ownershipFile))
+	var selected *scanner.Source
+	for index := range request.RepositoryFiles {
+		relative, err := filepath.Rel(request.Root, request.RepositoryFiles[index].Path)
+		if err == nil && strings.EqualFold(filepath.ToSlash(relative), ownershipFile) {
+			selected = &request.RepositoryFiles[index]
+			break
+		}
+	}
+	if selected == nil {
+		return []finding.Finding{fileFinding("ownership-file-missing", finding.Governance, "ownership", finding.High,
+			fmt.Sprintf("Ownership policy file %s is missing", ownershipFile), "Add the ownership file with the configured sensitive path rules", ownershipFile, 1)}, nil
+	}
+	reader, err := selected.Open(ctx)
+	if err != nil {
+		return nil, []error{fmt.Errorf("inspect ownership file %s: %w", ownershipFile, err)}
+	}
+	defer reader.Close()
+	type declaration struct {
+		owners map[string]struct{}
+		line   int
+	}
+	declarations := make(map[string]declaration)
+	lineScanner := bufio.NewScanner(io.LimitReader(reader, 256*1024))
+	line := 0
+	for lineScanner.Scan() {
+		line++
+		text := strings.TrimSpace(lineScanner.Text())
+		if text == "" || strings.HasPrefix(text, "#") {
+			continue
+		}
+		fields := strings.Fields(text)
+		if len(fields) < 2 {
+			continue
+		}
+		owners := make(map[string]struct{}, len(fields)-1)
+		for _, owner := range fields[1:] {
+			owners[owner] = struct{}{}
+		}
+		declarations[fields[0]] = declaration{owners: owners, line: line}
+	}
+	if err := lineScanner.Err(); err != nil {
+		return nil, []error{fmt.Errorf("inspect ownership file %s: %w", ownershipFile, err)}
+	}
+	var findings []finding.Finding
+	for _, policy := range s.limits.OwnershipRules {
+		declared, exists := declarations[policy.Path]
+		var missing []string
+		for _, owner := range policy.Owners {
+			if _, found := declared.owners[owner]; !found {
+				missing = append(missing, owner)
+			}
+		}
+		if exists && len(missing) == 0 {
+			continue
+		}
+		severity := policy.Severity
+		if severity == "" {
+			severity = finding.High
+		}
+		locationLine := declared.line
+		if locationLine == 0 {
+			locationLine = 1
+		}
+		item := fileFinding("sensitive-path-ownership", finding.Governance, "ownership", severity,
+			fmt.Sprintf("Sensitive path %s is not assigned to all required owners", policy.Path),
+			"Add the exact path pattern and required owners to the configured ownership file", ownershipFile, locationLine)
+		item.Metadata = map[string]string{"sensitive_path": policy.Path, "required_owners": strings.Join(policy.Owners, ","), "missing_owners": strings.Join(missing, ",")}
+		findings = append(findings, item)
+	}
+	return findings, nil
 }
 
 func dependencyPolicyFindings(content []byte, path string, limits Limits) []finding.Finding {

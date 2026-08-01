@@ -271,6 +271,22 @@ func TestRequiredHeaderPolicyMatchesSelectedFiles(t *testing.T) {
 	}
 }
 
+func TestSensitivePathOwnershipPolicy(t *testing.T) {
+	limits := Limits{MaxFileBytes: 1024, MaxLineBytes: 1024, OwnershipFile: ".github/CODEOWNERS", OwnershipRules: []OwnershipPolicy{
+		{Path: "/internal/auth/**", Owners: []string{"@security", "@identity"}, Severity: finding.Critical},
+		{Path: "/deploy/**", Owners: []string{"@platform"}},
+	}}
+	files := []scanner.Source{memorySource("/repo/.github/CODEOWNERS", "/internal/auth/** @security\n/deploy/** @platform\n")}
+	result := New(nil, 1, limits).Scan(context.Background(), scanner.Request{Root: "/repo", Mode: "staged", RepositoryFiles: files})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 1 {
+		t.Fatalf("unexpected ownership result: %+v", result)
+	}
+	item := result.Findings[0]
+	if item.RuleID != "sensitive-path-ownership" || item.Severity != finding.Critical || item.Metadata["missing_owners"] != "@identity" {
+		t.Fatalf("unexpected ownership finding: %+v", item)
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil
