@@ -451,11 +451,14 @@ func runCache(args []string, stdout, stderr io.Writer) int {
 }
 
 func runRelease(args []string, stdout, stderr io.Writer) int {
+	if len(args) >= 1 && args[0] == "archive" {
+		return runReleaseArchive(args[1:], stdout, stderr)
+	}
 	if len(args) >= 2 && args[0] == "changelog" && args[1] == "validate" {
 		return runChangelogValidate(args[2:], stdout, stderr)
 	}
 	if len(args) == 0 || args[0] != "verify" {
-		fmt.Fprintln(stderr, "usage: security-review release <verify|changelog validate> [options]")
+		fmt.Fprintln(stderr, "usage: security-review release <archive|verify|changelog validate> [options]")
 		return 2
 	}
 	flags := flag.NewFlagSet("release verify", flag.ContinueOnError)
@@ -485,6 +488,40 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintln(stdout, "Provenance signature verified")
+	return 0
+}
+
+func runReleaseArchive(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("release archive", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	binaryPath := flags.String("binary", "", "input binary path")
+	outputPath := flags.String("output", "", "output .tar.gz or .zip path")
+	timestamp := flags.String("timestamp", "", "archive timestamp in RFC3339 format")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "release archive does not accept positional arguments")
+		return 2
+	}
+	if *binaryPath == "" || *outputPath == "" || *timestamp == "" {
+		fmt.Fprintln(stderr, "--binary, --output, and --timestamp are required")
+		return 2
+	}
+	stamp, err := time.Parse(time.RFC3339, *timestamp)
+	if err != nil {
+		fmt.Fprintln(stderr, "--timestamp must be an RFC3339 timestamp")
+		return 2
+	}
+	if !strings.HasSuffix(*outputPath, ".tar.gz") && !strings.HasSuffix(*outputPath, ".zip") {
+		fmt.Fprintln(stderr, "--output must end in .tar.gz or .zip")
+		return 2
+	}
+	if err := releasepkg.ArchiveBinary(*binaryPath, *outputPath, stamp); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	fmt.Fprintf(stdout, "Release archive created: %s\n", *outputPath)
 	return 0
 }
 

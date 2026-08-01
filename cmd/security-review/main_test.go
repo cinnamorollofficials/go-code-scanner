@@ -544,6 +544,48 @@ func TestReleaseVerifyCommand(t *testing.T) {
 	}
 }
 
+func TestReleaseArchiveCommand(t *testing.T) {
+	directory := t.TempDir()
+	binary := filepath.Join(directory, "security-review")
+	if err := os.WriteFile(binary, []byte("binary"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	output := filepath.Join(directory, "security-review.tar.gz")
+	var stdout, stderr bytes.Buffer
+	code := run(context.Background(), []string{"release", "archive", "--binary", binary, "--output", output, "--timestamp", "2026-01-02T03:04:05Z"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("archive failed with %d: %s", code, stderr.String())
+	}
+	if info, err := os.Stat(output); err != nil || !info.Mode().IsRegular() {
+		t.Fatalf("archive was not created: %v", err)
+	}
+}
+
+func TestReleaseArchiveCommandRejectsInvalidInputs(t *testing.T) {
+	directory := t.TempDir()
+	binary := filepath.Join(directory, "security-review")
+	if err := os.WriteFile(binary, []byte("binary"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(directory, "binary-link")
+	if err := os.Symlink(binary, link); err != nil {
+		t.Skipf("symlink unavailable: %v", err)
+	}
+	cases := [][]string{
+		{"release", "archive", "--binary", binary, "--output", filepath.Join(directory, "release.tar.gz")},
+		{"release", "archive", "--binary", binary, "--output", filepath.Join(directory, "release.bin"), "--timestamp", "2026-01-02T03:04:05Z"},
+		{"release", "archive", "--binary", binary, "--output", filepath.Join(directory, "release.zip"), "--timestamp", "invalid"},
+		{"release", "archive", "--binary", link, "--output", filepath.Join(directory, "release.zip"), "--timestamp", "2026-01-02T03:04:05Z"},
+		{"release", "archive", "--binary", binary, "--output", filepath.Join(directory, "release.zip"), "--timestamp", "2026-01-02T03:04:05Z", "extra"},
+	}
+	for _, args := range cases {
+		var stdout, stderr bytes.Buffer
+		if code := run(context.Background(), args, &stdout, &stderr); code != 2 {
+			t.Fatalf("expected invalid arguments for %v, got %d", args, code)
+		}
+	}
+}
+
 func TestReleaseChangelogValidateCommand(t *testing.T) {
 	directory := t.TempDir()
 	path := filepath.Join(directory, "CHANGELOG.md")
