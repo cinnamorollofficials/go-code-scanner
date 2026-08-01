@@ -12,6 +12,7 @@ type Finding struct {
 	Fingerprint       string            `json:"fingerprint,omitempty"`
 	RuleID            string            `json:"rule_id,omitempty"`
 	Tool              string            `json:"tool"`
+	Domain            Domain            `json:"domain"`
 	Category          string            `json:"category"`
 	Severity          Severity          `json:"severity"`
 	Description       string            `json:"description"`

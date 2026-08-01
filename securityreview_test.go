@@ -35,6 +35,9 @@ func TestReviewerRunsDefaultPatternScanner(t *testing.T) {
 	if report.Findings[0].Snippet != "[REDACTED: mock-token]" {
 		t.Fatalf("sensitive snippet was not redacted: %q", report.Findings[0].Snippet)
 	}
+	if report.Findings[0].Domain != finding.Security {
+		t.Fatalf("expected security domain, got %q", report.Findings[0].Domain)
+	}
 }
 
 type failingScanner struct{ id string }

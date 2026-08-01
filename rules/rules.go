@@ -14,6 +14,7 @@ type Rule struct {
 	ID             string           `json:"id"`
 	Pattern        string           `json:"pattern"`
 	Severity       finding.Severity `json:"severity"`
+	Domain         finding.Domain   `json:"domain,omitempty"`
 	Category       string           `json:"category"`
 	Description    string           `json:"description"`
 	Recommendation string           `json:"recommendation,omitempty"`
@@ -57,8 +58,14 @@ func Compile(input []Rule) ([]Compiled, error) {
 		if rule.Enabled != nil && !*rule.Enabled {
 			continue
 		}
+		if rule.Domain == "" {
+			rule.Domain = finding.Security
+		}
 		if rule.ID == "" || rule.Category == "" || rule.Description == "" {
 			return nil, fmt.Errorf("rule id, category, and description are required")
+		}
+		if !rule.Domain.Valid() {
+			return nil, fmt.Errorf("rule %s: invalid domain %q", rule.ID, rule.Domain)
 		}
 		if _, ok := seen[rule.ID]; ok {
 			return nil, fmt.Errorf("duplicate rule id %q", rule.ID)

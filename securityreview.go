@@ -128,6 +128,12 @@ func normalize(input []finding.Finding) []finding.Finding {
 	seen := make(map[string]struct{}, len(input))
 	output := make([]finding.Finding, 0, len(input))
 	for _, item := range input {
+		// Findings produced by scanners built against the original API predate
+		// domains. The project was security-only at that point, so security is
+		// the compatible classification for an omitted value.
+		if item.Domain == "" {
+			item.Domain = finding.Security
+		}
 		key := fmt.Sprintf("%s\x00%s\x00%d\x00%s", item.RuleID, filepath.ToSlash(item.Location.File), item.Location.Line, item.Description)
 		fingerprint := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
 		if _, ok := seen[fingerprint]; ok {

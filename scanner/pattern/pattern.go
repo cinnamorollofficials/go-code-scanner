@@ -117,7 +117,7 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 				continue
 			}
 			findings = append(findings, finding.Finding{
-				RuleID: rule.ID, Tool: s.ID(), Category: rule.Category,
+				RuleID: rule.ID, Tool: s.ID(), Domain: rule.Domain, Category: rule.Category,
 				Severity: rule.Severity, Description: rule.Description,
 				Recommendation: rule.Recommendation, Snippet: redact(rule, line),
 				Location: finding.Location{File: relative, Line: lineNumber},
