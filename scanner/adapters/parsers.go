@@ -2,7 +2,9 @@ package adapters
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 
@@ -93,6 +95,97 @@ func parseSemgrep(data []byte) ([]command.ParsedFinding, error) {
 			RuleID: item.CheckID, Severity: adapterSeverity(item.Extra.Severity), Description: item.Extra.Message,
 			File: item.Path, Line: item.Start.Line,
 		})
+	}
+	return result, nil
+}
+
+func parseGovulncheck(data []byte) ([]command.ParsedFinding, error) {
+	decoder := json.NewDecoder(strings.NewReader(string(data)))
+	seen := make(map[string]struct{})
+	var result []command.ParsedFinding
+	for {
+		var message struct {
+			Finding *struct {
+				OSV          string `json:"osv"`
+				FixedVersion string `json:"fixed_version"`
+				Trace        []struct {
+					Module   string `json:"module"`
+					Version  string `json:"version"`
+					Package  string `json:"package"`
+					Function string `json:"function"`
+					Position *struct {
+						Filename string `json:"filename"`
+						Line     int    `json:"line"`
+					} `json:"position"`
+				} `json:"trace"`
+			} `json:"finding"`
+		}
+		if err := decoder.Decode(&message); errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		if message.Finding == nil || message.Finding.OSV == "" {
+			continue
+		}
+		item := command.ParsedFinding{RuleID: message.Finding.OSV, Documentation: "https://pkg.go.dev/vuln/" + message.Finding.OSV,
+			Description: "Reachable Go vulnerability " + message.Finding.OSV, Metadata: map[string]string{"fixed_version": message.Finding.FixedVersion}}
+		for _, frame := range message.Finding.Trace {
+			item.Metadata["module"], item.Metadata["version"], item.Metadata["package"] = frame.Module, frame.Version, frame.Package
+			if frame.Position != nil && frame.Position.Line > 0 {
+				item.File, item.Line = frame.Position.Filename, frame.Position.Line
+				item.Metadata["function"] = frame.Function
+			}
+		}
+		key := fmt.Sprintf("%s\x00%s\x00%d", item.RuleID, item.File, item.Line)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, item)
+	}
+	return result, nil
+}
+
+func parseOSVScanner(data []byte) ([]command.ParsedFinding, error) {
+	var report struct {
+		Results []struct {
+			Source struct {
+				Path string `json:"path"`
+			} `json:"source"`
+			Packages []struct {
+				Package struct {
+					Name, Version, Ecosystem string
+				} `json:"package"`
+				Vulnerabilities []struct {
+					ID               string `json:"id"`
+					Summary          string `json:"summary"`
+					Details          string `json:"details"`
+					DatabaseSpecific struct {
+						Severity string `json:"severity"`
+					} `json:"database_specific"`
+				} `json:"vulnerabilities"`
+			} `json:"packages"`
+		} `json:"results"`
+	}
+	if err := json.Unmarshal(data, &report); err != nil {
+		return nil, err
+	}
+	var result []command.ParsedFinding
+	for _, scan := range report.Results {
+		for _, pkg := range scan.Packages {
+			for _, vulnerability := range pkg.Vulnerabilities {
+				description := vulnerability.Summary
+				if description == "" {
+					description = "Dependency vulnerability " + vulnerability.ID
+				}
+				result = append(result, command.ParsedFinding{
+					RuleID: vulnerability.ID, Severity: adapterSeverity(vulnerability.DatabaseSpecific.Severity), Description: description,
+					Documentation: "https://osv.dev/vulnerability/" + vulnerability.ID, File: scan.Source.Path,
+					Metadata: map[string]string{"package": pkg.Package.Name, "version": pkg.Package.Version, "ecosystem": pkg.Package.Ecosystem},
+				})
+			}
+		}
 	}
 	return result, nil
 }

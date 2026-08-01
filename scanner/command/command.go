@@ -50,6 +50,7 @@ type Spec struct {
 	Environment      []string
 	FindingsOnOutput bool
 	Parser           func([]byte) ([]ParsedFinding, error)
+	ParserOnSuccess  bool
 }
 
 type Scanner struct {
@@ -212,6 +213,26 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	command.Stderr = stderr
 	err = command.Run()
 	if err == nil {
+		if s.spec.ParserOnSuccess && s.spec.Parser != nil {
+			if stdout.truncated {
+				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, "structured command output exceeded configured limit"
+				return finish()
+			}
+			parsed, parseErr := s.spec.Parser(stdout.buffer.Bytes())
+			if parseErr != nil {
+				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("decode adapter output: %v", parseErr)
+				return finish()
+			}
+			if len(parsed) > 0 {
+				result.Findings, err = normalizeParsedFindings(parsed, root, s.spec)
+				if err != nil {
+					result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("decode adapter output: %v", err)
+					return finish()
+				}
+				result.State, result.Message = finding.ScannerFindings, "command output reported findings"
+			}
+			return finish()
+		}
 		if s.spec.FindingsOnOutput && stdout.buffer.Len() > 0 {
 			if stdout.truncated {
 				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, "path command output exceeded configured limit"

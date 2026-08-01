@@ -24,4 +24,19 @@ func TestStructuredAdapterParsers(t *testing.T) {
 			t.Fatalf("unexpected semgrep parse: items=%+v err=%v", items, err)
 		}
 	})
+	t.Run("govulncheck stream", func(t *testing.T) {
+		data := []byte("{\"config\":{\"protocol_version\":\"v1.0.0\"}}\n" +
+			"{\"finding\":{\"osv\":\"GO-2026-0001\",\"fixed_version\":\"v1.2.3\",\"trace\":[{\"module\":\"example/mod\",\"version\":\"v1.0.0\",\"package\":\"example/mod/pkg\",\"function\":\"Run\",\"position\":{\"filename\":\"main.go\",\"line\":14}}]}}\n")
+		items, err := parseGovulncheck(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "GO-2026-0001" || items[0].Line != 14 || items[0].Metadata["fixed_version"] != "v1.2.3" {
+			t.Fatalf("unexpected govulncheck parse: items=%+v err=%v", items, err)
+		}
+	})
+	t.Run("osv-scanner", func(t *testing.T) {
+		data := []byte(`{"results":[{"source":{"path":"go.mod"},"packages":[{"package":{"name":"example/mod","version":"v1.0.0","ecosystem":"Go"},"vulnerabilities":[{"id":"GO-2026-0001","summary":"Example vulnerability","database_specific":{"severity":"HIGH"}}]}]}]}`)
+		items, err := parseOSVScanner(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "GO-2026-0001" || items[0].File != "go.mod" || items[0].Metadata["package"] != "example/mod" {
+			t.Fatalf("unexpected OSV-Scanner parse: items=%+v err=%v", items, err)
+		}
+	})
 }
