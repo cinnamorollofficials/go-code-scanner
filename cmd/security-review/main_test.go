@@ -134,3 +134,49 @@ func TestPreCommitHookCanBeDisabledByConfig(t *testing.T) {
 		t.Fatalf("unexpected disabled hook output %q", stdout.String())
 	}
 }
+
+func TestBaselineCommandsAndNewOnlyPolicy(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "existing.go"), []byte("change-me-in-production\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	reportPath := filepath.Join(root, "security_findings.json")
+	baselinePath := filepath.Join(root, ".security-baseline.json")
+	var stdout, stderr bytes.Buffer
+
+	if code := run(context.Background(), []string{"scan", "--root", root, "--quiet"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("initial scan exit=%d stderr=%s", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	createArgs := []string{"baseline", "create", "--report", reportPath, "--baseline", baselinePath}
+	if code := run(context.Background(), createArgs, &stdout, &stderr); code != 0 {
+		t.Fatalf("baseline create exit=%d stderr=%s", code, stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	scanArgs := []string{"scan", "--root", root, "--baseline", baselinePath, "--new-only", "--ci", "--quiet"}
+	if code := run(context.Background(), scanArgs, &stdout, &stderr); code != 0 {
+		t.Fatalf("existing finding blocked new-only policy: exit=%d stderr=%s", code, stderr.String())
+	}
+
+	if err := os.WriteFile(filepath.Join(root, "new.ts"), []byte("google-mock-jwt-token\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), scanArgs, &stdout, &stderr); code != 1 {
+		t.Fatalf("new finding did not block policy: exit=%d stderr=%s", code, stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	statusArgs := []string{"baseline", "status", "--report", reportPath, "--baseline", baselinePath}
+	if code := run(context.Background(), statusArgs, &stdout, &stderr); code != 0 {
+		t.Fatalf("baseline status exit=%d stderr=%s", code, stderr.String())
+	}
+	if stdout.String() != "Baseline: new=1 existing=1 resolved=0\n" {
+		t.Fatalf("unexpected baseline status %q", stdout.String())
+	}
+}

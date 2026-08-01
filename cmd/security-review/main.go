@@ -2,13 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
+	"github.com/cinnamorollofficials/go-code-scanner/baseline"
 	"github.com/cinnamorollofficials/go-code-scanner/config"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/gitrepo"
@@ -34,6 +38,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runConfig(args[1:], stdout, stderr)
 	case "hook":
 		return runHook(ctx, args[1:], stdout, stderr)
+	case "baseline":
+		return runBaseline(args[1:], stdout, stderr)
 	case "version", "--version", "-version":
 		fmt.Fprintln(stdout, version)
 		return 0
@@ -59,6 +65,8 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	failOn := flags.String("fail-on", "", "critical, high, medium, or low")
 	quiet := flags.Bool("quiet", false, "suppress terminal summary")
 	profile := flags.String("profile", "", "scanner profile to run")
+	baselinePath := flags.String("baseline", "", "finding baseline path")
+	newOnly := flags.Bool("new-only", false, "apply CI policy only to findings absent from the baseline")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -82,6 +90,9 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	if *profile != "" {
 		cfg.SelectedProfile = *profile
+	}
+	if *baselinePath != "" {
+		cfg.BaselineFile = *baselinePath
 	}
 	if *failOn != "" {
 		cfg.FailOn, err = finding.ParseSeverity(*failOn)
@@ -107,6 +118,11 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, operationalErr)
 		return 3
 	}
+	if *newOnly || *baselinePath != "" {
+		if _, err := compareBaseline(report, cfg.Root, cfg.BaselineFile); err != nil {
+			operationalErr = errors.Join(operationalErr, err)
+		}
+	}
 	outputPath := cfg.Output
 	if !filepath.IsAbs(outputPath) {
 		outputPath = filepath.Join(cfg.Root, outputPath)
@@ -126,10 +142,95 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, operationalErr)
 		return 3
 	}
-	if *ci && len(policy.ViolationsByDomain(report, cfg.FailOn, cfg.Policy)) > 0 {
+	violations := policy.ViolationsByDomain(report, cfg.FailOn, cfg.Policy)
+	if *newOnly {
+		violations = policy.NewViolationsByDomain(report, cfg.FailOn, cfg.Policy)
+	}
+	if *ci && len(violations) > 0 {
 		return 1
 	}
 	return 0
+}
+
+func compareBaseline(report *finding.Report, root, path string) (baseline.Comparison, error) {
+	if path == "" {
+		return baseline.Comparison{}, fmt.Errorf("baseline path is required")
+	}
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(root, path)
+	}
+	file, err := baseline.Load(path)
+	if errors.Is(err, os.ErrNotExist) {
+		file = &baseline.File{Version: baseline.Version, FingerprintVersion: report.FingerprintVersion}
+	} else if err != nil {
+		return baseline.Comparison{}, err
+	}
+	comparison, err := baseline.Compare(report, file)
+	if err != nil {
+		return baseline.Comparison{}, fmt.Errorf("compare baseline: %w", err)
+	}
+	return comparison, nil
+}
+
+func runBaseline(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || (args[0] != "create" && args[0] != "update" && args[0] != "status") {
+		fmt.Fprintln(stderr, "usage: security-review baseline <create|update|status> --report <path> [--baseline <path>]")
+		return 2
+	}
+	command := args[0]
+	flags := flag.NewFlagSet("baseline "+command, flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	reportPath := flags.String("report", "", "JSON report path")
+	baselinePath := flags.String("baseline", ".security-baseline.json", "baseline path")
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	if *reportPath == "" {
+		fmt.Fprintln(stderr, "--report is required")
+		return 2
+	}
+	report, err := loadReport(*reportPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	if command == "status" {
+		file, err := baseline.Load(*baselinePath)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 2
+		}
+		comparison, err := baseline.Compare(report, file)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 2
+		}
+		fmt.Fprintf(stdout, "Baseline: new=%d existing=%d resolved=%d\n", len(comparison.New), len(comparison.Existing), len(comparison.Resolved))
+		return 0
+	}
+	file, err := baseline.FromReport(report, time.Now())
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	if err := baseline.Write(*baselinePath, file); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 3
+	}
+	fmt.Fprintf(stdout, "Baseline %s: %d findings written to %s\n", command+"d", len(file.Entries), *baselinePath)
+	return 0
+}
+
+func loadReport(path string) (*finding.Report, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read report: %w", err)
+	}
+	var report finding.Report
+	if err := json.Unmarshal(data, &report); err != nil {
+		return nil, fmt.Errorf("decode report: %w", err)
+	}
+	return &report, nil
 }
 
 func runConfig(args []string, stdout, stderr io.Writer) int {
@@ -237,6 +338,9 @@ func runHookEvent(ctx context.Context, args []string, stdout, stderr io.Writer) 
 	if configuredHook.StagedOnly {
 		scanArgs = append(scanArgs, "--staged")
 	}
+	if configuredHook.NewOnly {
+		scanArgs = append(scanArgs, "--new-only")
+	}
 	return runScan(ctx, scanArgs, stdout, stderr)
 }
 
@@ -254,5 +358,5 @@ func loadConfig(path, root string) (config.Config, error) {
 }
 
 func writeUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|version> [options]")
+	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|version> [options]")
 }

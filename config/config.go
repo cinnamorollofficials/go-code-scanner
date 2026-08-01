@@ -45,6 +45,7 @@ type Hook struct {
 	Enabled    bool   `json:"enabled"`
 	Profile    string `json:"profile,omitempty"`
 	StagedOnly bool   `json:"staged_only,omitempty"`
+	NewOnly    bool   `json:"new_only,omitempty"`
 }
 
 type Hooks struct {
@@ -115,6 +116,7 @@ type Config struct {
 	ExcludeFiles       []string                            `json:"exclude_files"`
 	RuleFiles          []string                            `json:"rule_files"`
 	SuppressionFile    string                              `json:"suppression_file"`
+	BaselineFile       string                              `json:"baseline_file,omitempty"`
 	Workers            int                                 `json:"workers"`
 	Scanners           map[string]Scanner                  `json:"scanners"`
 	Profiles           map[string][]string                 `json:"profiles,omitempty"`
@@ -135,6 +137,7 @@ func Default() Config {
 		ExcludeDirectories: []string{".git", "node_modules", "vendor", "dist", "build", ".next", "out", "bin"},
 		ExcludeFiles:       []string{"security_findings.json", "package-lock.json"},
 		SuppressionFile:    ".security-ignore",
+		BaselineFile:       ".security-baseline.json",
 		Workers:            runtime.GOMAXPROCS(0),
 		Profiles: map[string][]string{
 			ProfileFast:     {"pattern"},
@@ -142,7 +145,7 @@ func Default() Config {
 			ProfileFull:     {"pattern"},
 		},
 		Hooks: Hooks{PreCommit: Hook{
-			Enabled: true, Profile: ProfileFast, StagedOnly: true,
+			Enabled: true, Profile: ProfileFast, StagedOnly: true, NewOnly: true,
 		}},
 	}
 }

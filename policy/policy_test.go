@@ -32,3 +32,14 @@ func TestViolationsRetainsGlobalThresholdBehavior(t *testing.T) {
 		t.Fatalf("expected one violation, got %d", got)
 	}
 }
+
+func TestNewViolationsIgnoreExistingFindings(t *testing.T) {
+	report := &finding.Report{Findings: []finding.Finding{
+		{Severity: finding.Critical, BaselineState: finding.BaselineExisting},
+		{Severity: finding.High, BaselineState: finding.BaselineNew},
+	}}
+	violations := NewViolationsByDomain(report, finding.High, nil)
+	if len(violations) != 1 || violations[0].BaselineState != finding.BaselineNew {
+		t.Fatalf("unexpected new violations: %+v", violations)
+	}
+}

@@ -39,8 +39,14 @@ func TestDefaultProfilesUseBuiltInPatternScanner(t *testing.T) {
 
 func TestDefaultPreCommitHookUsesFastStagedProfile(t *testing.T) {
 	hook := Default().Hooks.PreCommit
-	if !hook.Enabled || !hook.StagedOnly || hook.Profile != ProfileFast {
+	if !hook.Enabled || !hook.StagedOnly || !hook.NewOnly || hook.Profile != ProfileFast {
 		t.Fatalf("unexpected default pre-commit hook: %+v", hook)
+	}
+}
+
+func TestDefaultBaselinePath(t *testing.T) {
+	if got := Default().BaselineFile; got != ".security-baseline.json" {
+		t.Fatalf("unexpected default baseline path %q", got)
 	}
 }
 
