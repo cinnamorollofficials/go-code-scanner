@@ -20,12 +20,19 @@ func Sources(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
 	case config.ModeFull:
 		return walk(ctx, cfg)
 	case config.ModeChanged:
+		if !hasHEAD(ctx, cfg.Root) {
+			return gitSources(ctx, cfg, true, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR")
+		}
 		return gitSources(ctx, cfg, false, "diff", "--name-only", "-z", "--diff-filter=ACMR", "HEAD")
 	case config.ModeStaged:
 		return gitSources(ctx, cfg, true, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR")
 	default:
 		return nil, fmt.Errorf("unsupported mode %q", cfg.Mode)
 	}
+}
+
+func hasHEAD(ctx context.Context, root string) bool {
+	return exec.CommandContext(ctx, "git", "-C", root, "rev-parse", "--verify", "HEAD").Run() == nil
 }
 
 func walk(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {

@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/cinnamorollofficials/go-code-scanner/config"
+	"github.com/cinnamorollofficials/go-code-scanner/scanner"
 )
 
 func TestFullDiscoveryExcludesDependencies(t *testing.T) {
@@ -108,6 +110,117 @@ func TestStagedDiscoveryPreservesSpecialCharactersInPath(t *testing.T) {
 	}
 }
 
+func TestStagedDiscoveryHandlesGitChangeKinds(t *testing.T) {
+	root := t.TempDir()
+	runGit(t, root, "init")
+	runGit(t, root, "config", "user.email", "scanner@example.invalid")
+	runGit(t, root, "config", "user.name", "Scanner Test")
+	for _, name := range []string{"modified.go", "renamed.go", "copied.go", "deleted.go"} {
+		writeContent(t, filepath.Join(root, name), "package fixture\n")
+	}
+	runGit(t, root, "add", ".")
+	runGit(t, root, "commit", "-m", "test: initial fixture")
+
+	writeContent(t, filepath.Join(root, "added.go"), "package added\n")
+	writeContent(t, filepath.Join(root, "modified.go"), "package modified\n")
+	runGit(t, root, "mv", "renamed.go", "renamed_new.go")
+	copyContent, err := os.ReadFile(filepath.Join(root, "copied.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "copied_new.go"), copyContent, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(root, "deleted.go")); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, root, "add", "-A")
+
+	sources := stagedSources(t, root)
+	got := sourceBasenames(sources)
+	want := []string{"added.go", "copied_new.go", "modified.go", "renamed_new.go"}
+	if len(got) != len(want) {
+		t.Fatalf("staged sources=%v want=%v", got, want)
+	}
+	for index := range want {
+		if got[index] != want[index] {
+			t.Fatalf("staged sources=%v want=%v", got, want)
+		}
+	}
+}
+
+func TestChangedDiscoveryWorksWithoutHEAD(t *testing.T) {
+	root := t.TempDir()
+	runGit(t, root, "init")
+	writeContent(t, filepath.Join(root, "first.go"), "package first\n")
+	runGit(t, root, "add", "first.go")
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Mode = config.ModeChanged
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	sources, err := Sources(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := sourceBasenames(sources); len(got) != 1 || got[0] != "first.go" {
+		t.Fatalf("unexpected unborn-HEAD sources: %v", got)
+	}
+}
+
+func TestStagedSymlinkDoesNotReadOutsideRepository(t *testing.T) {
+	root := t.TempDir()
+	runGit(t, root, "init")
+	outside := filepath.Join(t.TempDir(), "secret.ts")
+	writeContent(t, outside, "google-mock-jwt-token\n")
+	link := filepath.Join(root, "linked.ts")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	runGit(t, root, "add", "linked.ts")
+	sources := stagedSources(t, root)
+	if len(sources) != 1 {
+		t.Fatalf("got %d symlink sources, want 1", len(sources))
+	}
+	reader, err := sources[0].Open(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reader.Close()
+	content, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != outside {
+		t.Fatalf("staged symlink followed its target: got %q want link payload %q", content, outside)
+	}
+}
+
+func stagedSources(t *testing.T, root string) []scanner.Source {
+	t.Helper()
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Mode = config.ModeStaged
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	sources, err := Sources(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return sources
+}
+
+func sourceBasenames(sources []scanner.Source) []string {
+	names := make([]string, len(sources))
+	for index, source := range sources {
+		names[index] = filepath.Base(source.Path)
+	}
+	sort.Strings(names)
+	return names
+}
+
 func runGit(t *testing.T, root string, args ...string) {
 	t.Helper()
 	commandArgs := append([]string{"-C", root}, args...)
@@ -122,6 +235,16 @@ func write(t *testing.T, path string) {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(path, []byte("fixture"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeContent(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
 }
