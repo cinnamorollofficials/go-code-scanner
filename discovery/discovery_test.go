@@ -32,6 +32,32 @@ func TestFullDiscoveryExcludesDependencies(t *testing.T) {
 	}
 }
 
+func TestFilesIncludesMetadataCandidatesWithoutScanningDependencies(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "Dockerfile"))
+	write(t, filepath.Join(root, "debug.dump"))
+	write(t, filepath.Join(root, "node_modules", "ignored.tmp"))
+	cfg := config.Default()
+	cfg.Root = root
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	files, err := Files(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := sourceBasenames(files); len(got) != 2 || got[0] != "Dockerfile" || got[1] != "debug.dump" {
+		t.Fatalf("unexpected metadata candidates: %v", got)
+	}
+	sources, err := Sources(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sources) != 0 {
+		t.Fatalf("metadata-only files leaked into regex sources: %v", sourceBasenames(sources))
+	}
+}
+
 func TestStagedSourceReadsGitIndexInsteadOfWorkingTree(t *testing.T) {
 	root := t.TempDir()
 	runGit(t, root, "init")

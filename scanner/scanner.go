@@ -17,6 +17,7 @@ type Request struct {
 	Root    string
 	Mode    string
 	Sources []Source
+	Files   []Source
 }
 
 type Result struct {

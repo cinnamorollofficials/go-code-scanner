@@ -16,16 +16,26 @@ import (
 )
 
 func Sources(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
+	return discover(ctx, cfg, false)
+}
+
+// Files returns every repository file eligible for metadata checks, including
+// extensionless manifests and artifact formats that must not be regex-scanned.
+func Files(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
+	return discover(ctx, cfg, true)
+}
+
+func discover(ctx context.Context, cfg config.Config, allFiles bool) ([]scanner.Source, error) {
 	switch cfg.Mode {
 	case config.ModeFull:
-		return walk(ctx, cfg)
+		return walk(ctx, cfg, allFiles)
 	case config.ModeChanged:
 		if !hasHEAD(ctx, cfg.Root) {
-			return gitSources(ctx, cfg, true, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR")
+			return gitSources(ctx, cfg, true, allFiles, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR")
 		}
-		return gitSources(ctx, cfg, false, "diff", "--name-only", "-z", "--diff-filter=ACMR", "HEAD")
+		return gitSources(ctx, cfg, false, allFiles, "diff", "--name-only", "-z", "--diff-filter=ACMR", "HEAD")
 	case config.ModeStaged:
-		return gitSources(ctx, cfg, true, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR")
+		return gitSources(ctx, cfg, true, allFiles, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR")
 	default:
 		return nil, fmt.Errorf("unsupported mode %q", cfg.Mode)
 	}
@@ -35,7 +45,7 @@ func hasHEAD(ctx context.Context, root string) bool {
 	return exec.CommandContext(ctx, "git", "-C", root, "rev-parse", "--verify", "HEAD").Run() == nil
 }
 
-func walk(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
+func walk(ctx context.Context, cfg config.Config, allFiles bool) ([]scanner.Source, error) {
 	var sources []scanner.Source
 	err := filepath.WalkDir(cfg.Root, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -47,7 +57,7 @@ func walk(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
 		if entry.IsDir() && path != cfg.Root && contains(cfg.ExcludeDirectories, entry.Name()) {
 			return filepath.SkipDir
 		}
-		if entry.Type().IsRegular() && allowed(path, cfg) {
+		if entry.Type().IsRegular() && pathAllowed(path, cfg) && (allFiles || allowed(path, cfg)) {
 			sources = append(sources, fileSource(path))
 		}
 		return nil
@@ -56,7 +66,7 @@ func walk(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
 	return sources, err
 }
 
-func gitSources(ctx context.Context, cfg config.Config, staged bool, args ...string) ([]scanner.Source, error) {
+func gitSources(ctx context.Context, cfg config.Config, staged, allFiles bool, args ...string) ([]scanner.Source, error) {
 	cmdArgs := append([]string{"-C", cfg.Root}, args...)
 	output, err := exec.CommandContext(ctx, "git", cmdArgs...).Output()
 	if err != nil {
@@ -69,7 +79,7 @@ func gitSources(ctx context.Context, cfg config.Config, staged bool, args ...str
 		}
 		relative := filepath.ToSlash(string(name))
 		path := filepath.Join(cfg.Root, filepath.FromSlash(relative))
-		if !allowed(path, cfg) {
+		if !pathAllowed(path, cfg) || (!allFiles && !allowed(path, cfg)) {
 			continue
 		}
 		if staged {
@@ -108,6 +118,19 @@ func allowed(path string, cfg config.Config) bool {
 	}
 	ext := strings.ToLower(filepath.Ext(path))
 	return contains(cfg.IncludeExtensions, ext)
+}
+
+func pathAllowed(path string, cfg config.Config) bool {
+	relative, err := filepath.Rel(cfg.Root, path)
+	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+		return false
+	}
+	for _, part := range strings.Split(filepath.Clean(relative), string(filepath.Separator)) {
+		if contains(cfg.ExcludeDirectories, part) {
+			return false
+		}
+	}
+	return !contains(cfg.ExcludeFiles, filepath.Base(path))
 }
 
 func contains(values []string, target string) bool {

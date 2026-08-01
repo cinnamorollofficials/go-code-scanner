@@ -57,7 +57,17 @@ func (s *Scanner) Describe() scanner.Descriptor {
 func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Result {
 	started := time.Now()
 	result := scanner.Result{State: finding.ScannerClean}
+	fileFindings, fileErrors := s.scanFilePolicies(ctx, request)
+	result.Findings = append(result.Findings, fileFindings...)
+	for _, err := range fileErrors {
+		result.Message = appendMessage(result.Message, err.Error())
+	}
 	if len(request.Sources) == 0 {
+		if result.Message != "" {
+			result.State, result.Failure = finding.ScannerPartial, scanner.FailurePartial
+		} else if len(result.Findings) > 0 {
+			result.State = finding.ScannerFindings
+		}
 		result.Duration = time.Since(started)
 		return result
 	}
@@ -94,6 +104,70 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	}
 	result.Duration = time.Since(started)
 	return result
+}
+
+func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request) ([]finding.Finding, []error) {
+	var findings []finding.Finding
+	var failures []error
+	for _, source := range request.Files {
+		if err := ctx.Err(); err != nil {
+			return findings, append(failures, err)
+		}
+		relative, err := filepath.Rel(request.Root, source.Path)
+		if err != nil {
+			relative = source.Path
+		}
+		relative = filepath.ToSlash(relative)
+		base := strings.ToLower(filepath.Base(relative))
+		extension := strings.ToLower(filepath.Ext(base))
+		if temporaryArtifact(base, extension) {
+			findings = append(findings, fileFinding("temporary-artifact", finding.Quality, "repository_hygiene", finding.Medium,
+				"Temporary atau build artifact ikut dalam perubahan", "Hapus artefak dan tambahkan pola yang sesuai ke .gitignore", relative, 1))
+		}
+		if base != "dockerfile" && !strings.HasPrefix(base, "dockerfile.") && request.Mode == "full" {
+			continue
+		}
+		reader, openErr := source.Open(ctx)
+		if openErr != nil {
+			failures = append(failures, fmt.Errorf("inspect %s: %w", relative, openErr))
+			continue
+		}
+		lineScanner := bufio.NewScanner(io.LimitReader(reader, 64*1024))
+		line := 0
+		for lineScanner.Scan() {
+			line++
+			text := lineScanner.Text()
+			if (base == "dockerfile" || strings.HasPrefix(base, "dockerfile.")) && strings.EqualFold(strings.TrimSpace(text), "USER root") {
+				findings = append(findings, fileFinding("docker-root-user", finding.Hardening, "container_security", finding.High,
+					"Docker container dikonfigurasi berjalan sebagai root", "Gunakan USER non-root dengan permission minimum", relative, line))
+			}
+			if request.Mode != "full" && strings.Contains(text, "Code generated") && strings.Contains(text, "DO NOT EDIT") {
+				findings = append(findings, fileFinding("generated-file-changed", finding.Quality, "generated_code", finding.Low,
+					"Generated file termasuk dalam perubahan", "Pastikan file dihasilkan ulang dari source generator, bukan diedit manual", relative, line))
+				break
+			}
+		}
+		if scanErr := lineScanner.Err(); scanErr != nil {
+			failures = append(failures, fmt.Errorf("inspect %s: %w", relative, scanErr))
+		}
+		if closeErr := reader.Close(); closeErr != nil {
+			failures = append(failures, fmt.Errorf("close %s: %w", relative, closeErr))
+		}
+	}
+	return findings, failures
+}
+
+func temporaryArtifact(base, extension string) bool {
+	switch extension {
+	case ".bak", ".class", ".dump", ".exe", ".orig", ".out", ".swp", ".tmp":
+		return true
+	}
+	return strings.HasSuffix(base, "~") || base == "core"
+}
+
+func fileFinding(id string, domain finding.Domain, category string, severity finding.Severity, description, recommendation, path string, line int) finding.Finding {
+	return finding.Finding{RuleID: id, Tool: "pattern", Domain: domain, Category: category, Severity: severity,
+		Description: description, Recommendation: recommendation, Location: finding.Location{File: path, Line: line}}
 }
 
 type outcome struct {

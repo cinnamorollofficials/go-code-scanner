@@ -127,7 +127,11 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	if err != nil {
 		return nil, err
 	}
-	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Sources: sources}
+	files, err := discovery.Files(ctx, r.config)
+	if err != nil {
+		return nil, err
+	}
+	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Sources: sources, Files: files}
 	var all []finding.Finding
 	statuses := make([]finding.ScannerStatus, 0, len(r.scanners))
 	var operationalErrors []error
