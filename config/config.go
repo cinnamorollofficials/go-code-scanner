@@ -64,6 +64,13 @@ type Hooks struct {
 	PrePush   Hook `json:"pre_push"`
 }
 
+type SupplyChainPolicy struct {
+	DependencyAllowlist []string `json:"dependency_allowlist,omitempty"`
+	DependencyDenylist  []string `json:"dependency_denylist,omitempty"`
+	LicenseAllowlist    []string `json:"license_allowlist,omitempty"`
+	LicenseDenylist     []string `json:"license_denylist,omitempty"`
+}
+
 func (s Scanner) TimeoutDuration() (time.Duration, error) {
 	if s.Timeout == "" {
 		return 0, nil
@@ -145,6 +152,7 @@ type Config struct {
 	Profiles             map[string][]string                 `json:"profiles,omitempty"`
 	Policy               map[finding.Domain]finding.Severity `json:"policy,omitempty"`
 	Hooks                Hooks                               `json:"hooks,omitempty"`
+	SupplyChain          SupplyChainPolicy                   `json:"supply_chain,omitempty"`
 	SelectedProfile      string                              `json:"-"`
 }
 
@@ -206,6 +214,27 @@ func (c *Config) Validate() error {
 	}
 	if c.QualityMaxFileBytes < 0 || c.QualityMaxLineLength < 0 {
 		return fmt.Errorf("quality file and line limits cannot be negative")
+	}
+	for name, patterns := range map[string][]string{
+		"dependency_allowlist": c.SupplyChain.DependencyAllowlist,
+		"dependency_denylist":  c.SupplyChain.DependencyDenylist,
+		"license_allowlist":    c.SupplyChain.LicenseAllowlist,
+		"license_denylist":     c.SupplyChain.LicenseDenylist,
+	} {
+		seen := make(map[string]struct{}, len(patterns))
+		for _, pattern := range patterns {
+			if strings.TrimSpace(pattern) == "" {
+				return fmt.Errorf("supply_chain.%s contains an empty pattern", name)
+			}
+			if _, err := filepath.Match(pattern, "fixture"); err != nil {
+				return fmt.Errorf("supply_chain.%s has invalid pattern %q: %w", name, pattern, err)
+			}
+			key := strings.ToLower(pattern)
+			if _, ok := seen[key]; ok {
+				return fmt.Errorf("supply_chain.%s contains duplicate pattern %q", name, pattern)
+			}
+			seen[key] = struct{}{}
+		}
 	}
 	for domain, threshold := range c.Policy {
 		if !domain.Valid() {

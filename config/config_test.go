@@ -60,6 +60,21 @@ func TestAdapterConfigurationValidatesKnownNames(t *testing.T) {
 	}
 }
 
+func TestSupplyChainPolicyRejectsInvalidOrDuplicatePatterns(t *testing.T) {
+	for _, policy := range []SupplyChainPolicy{
+		{DependencyAllowlist: []string{"[invalid"}},
+		{LicenseDenylist: []string{"GPL-*", "gpl-*"}},
+		{DependencyDenylist: []string{""}},
+	} {
+		cfg := Default()
+		cfg.Root = t.TempDir()
+		cfg.SupplyChain = policy
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("invalid supply-chain policy accepted: %+v", policy)
+		}
+	}
+}
+
 func TestDefaultBaselinePath(t *testing.T) {
 	if got := Default().BaselineFile; got != ".security-baseline.json" {
 		t.Fatalf("unexpected default baseline path %q", got)

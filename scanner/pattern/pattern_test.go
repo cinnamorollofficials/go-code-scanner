@@ -213,6 +213,26 @@ func TestOfflineSupplyChainPoliciesAcceptPinnedInputs(t *testing.T) {
 	}
 }
 
+func TestConfigurableDependencyAndLicensePolicies(t *testing.T) {
+	limits := Limits{
+		MaxFileBytes: 1024 * 1024, MaxLineBytes: 1024 * 1024,
+		DependencyAllowlist: []string{"@approved/*"}, DependencyDenylist: []string{"unsafe-*"},
+		LicenseAllowlist: []string{"MIT", "Apache-*"}, LicenseDenylist: []string{"GPL-*"},
+	}
+	files := []scanner.Source{
+		memorySource("/repo/package.json", `{"dependencies":{"@approved/core":"1.0.0","unsafe-lib":"1.0.0","unreviewed":"1.0.0"}}`),
+		memorySource("/repo/package-lock.json", `{"packages":{"node_modules/ok":{"name":"ok","license":"MIT"},"node_modules/bad":{"name":"bad","license":"GPL-3.0"},"node_modules/unknown":{"name":"unknown","license":"BSD-3-Clause"}}}`),
+	}
+	result := New(nil, 1, limits).Scan(context.Background(), scanner.Request{Root: "/repo", Mode: "full", Files: files})
+	counts := map[string]int{}
+	for _, item := range result.Findings {
+		counts[item.RuleID]++
+	}
+	if counts["dependency-policy"] != 2 || counts["dependency-license-policy"] != 2 {
+		t.Fatalf("unexpected configurable policy findings: %+v", result.Findings)
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil

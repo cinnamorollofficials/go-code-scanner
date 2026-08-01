@@ -28,6 +28,10 @@ type Limits struct {
 	MaxLineBytes         int
 	QualityMaxFileBytes  int64
 	QualityMaxLineLength int
+	DependencyAllowlist  []string
+	DependencyDenylist   []string
+	LicenseAllowlist     []string
+	LicenseDenylist      []string
 }
 
 func New(compiled []rules.Compiled, workers int, configured ...Limits) *Scanner {
@@ -140,7 +144,7 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 				"JavaScript dependency manifest tidak memiliki lockfile pada directory yang sama", "Commit lockfile package manager untuk resolution dependency yang reproducible", relative, 1))
 		}
 		if base != "dockerfile" && !strings.HasPrefix(base, "dockerfile.") && request.Mode == "full" {
-			if base != "go.mod" && base != "package.json" && !isGitHubWorkflow(relative) {
+			if base != "go.mod" && base != "package.json" && base != "package-lock.json" && !isGitHubWorkflow(relative) {
 				continue
 			}
 		}
@@ -184,6 +188,10 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 		}
 		if base == "package.json" {
 			findings = append(findings, unpinnedPackageDependencies(content, relative)...)
+			findings = append(findings, dependencyPolicyFindings(content, relative, s.limits)...)
+		}
+		if base == "package-lock.json" {
+			findings = append(findings, licensePolicyFindings(content, relative, s.limits)...)
 		}
 		if scanErr := lineScanner.Err(); scanErr != nil {
 			failures = append(failures, fmt.Errorf("inspect %s: %w", relative, scanErr))
@@ -193,6 +201,79 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 		}
 	}
 	return findings, failures
+}
+
+func dependencyPolicyFindings(content []byte, path string, limits Limits) []finding.Finding {
+	var manifest struct {
+		Dependencies         map[string]string `json:"dependencies"`
+		DevDependencies      map[string]string `json:"devDependencies"`
+		OptionalDependencies map[string]string `json:"optionalDependencies"`
+	}
+	if json.Unmarshal(content, &manifest) != nil {
+		return nil
+	}
+	names := make(map[string]struct{})
+	for _, group := range []map[string]string{manifest.Dependencies, manifest.DevDependencies, manifest.OptionalDependencies} {
+		for name := range group {
+			names[name] = struct{}{}
+		}
+	}
+	var result []finding.Finding
+	for name := range names {
+		denied := matchesPolicy(name, limits.DependencyDenylist)
+		notAllowed := len(limits.DependencyAllowlist) > 0 && !matchesPolicy(name, limits.DependencyAllowlist)
+		if !denied && !notAllowed {
+			continue
+		}
+		item := fileFinding("dependency-policy", finding.SupplyChain, "dependency_policy", finding.High,
+			fmt.Sprintf("Dependency %s tidak diizinkan oleh repository policy", name), "Gunakan dependency yang disetujui atau perbarui policy melalui review", path, 1)
+		item.Metadata = map[string]string{"dependency": name}
+		result = append(result, item)
+	}
+	return result
+}
+
+func licensePolicyFindings(content []byte, path string, limits Limits) []finding.Finding {
+	var lockfile struct {
+		Packages map[string]struct {
+			Name    string `json:"name"`
+			License string `json:"license"`
+		} `json:"packages"`
+	}
+	if json.Unmarshal(content, &lockfile) != nil {
+		return nil
+	}
+	var result []finding.Finding
+	for packagePath, pkg := range lockfile.Packages {
+		if packagePath == "" || pkg.License == "" {
+			continue
+		}
+		name := pkg.Name
+		if name == "" {
+			name = strings.TrimPrefix(filepath.ToSlash(packagePath), "node_modules/")
+		}
+		denied := matchesPolicy(pkg.License, limits.LicenseDenylist)
+		notAllowed := len(limits.LicenseAllowlist) > 0 && !matchesPolicy(pkg.License, limits.LicenseAllowlist)
+		if !denied && !notAllowed {
+			continue
+		}
+		item := fileFinding("dependency-license-policy", finding.SupplyChain, "license_policy", finding.High,
+			fmt.Sprintf("Dependency %s menggunakan license %s yang tidak diizinkan", name, pkg.License), "Ganti dependency atau perbarui license policy melalui legal review", path, 1)
+		item.Metadata = map[string]string{"dependency": name, "license": pkg.License}
+		result = append(result, item)
+	}
+	return result
+}
+
+func matchesPolicy(value string, patterns []string) bool {
+	value = strings.ToLower(value)
+	for _, pattern := range patterns {
+		matched, _ := filepath.Match(strings.ToLower(pattern), value)
+		if matched {
+			return true
+		}
+	}
+	return false
 }
 
 func hasJavaScriptLockfile(files map[string]struct{}, directory string) bool {

@@ -95,6 +95,8 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers, patternscanner.Limits{
 			MaxFileBytes: cfg.PatternMaxFileBytes, MaxLineBytes: cfg.PatternMaxLineBytes,
 			QualityMaxFileBytes: cfg.QualityMaxFileBytes, QualityMaxLineLength: cfg.QualityMaxLineLength,
+			DependencyAllowlist: cfg.SupplyChain.DependencyAllowlist, DependencyDenylist: cfg.SupplyChain.DependencyDenylist,
+			LicenseAllowlist: cfg.SupplyChain.LicenseAllowlist, LicenseDenylist: cfg.SupplyChain.LicenseDenylist,
 		}), required: true}},
 		now:         time.Now,
 		configHash:  configHash,
