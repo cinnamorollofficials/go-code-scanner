@@ -161,6 +161,34 @@ func TestPreCommitHookCanBeDisabledByConfig(t *testing.T) {
 	}
 }
 
+func TestCommitMsgHookValidatesConfiguredPolicy(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v: %s", err, output)
+	}
+	data := []byte(`{"project":"message-hook","hooks":{"commit_msg":{"enabled":true,"max_subject_length":72}}}`)
+	if err := os.WriteFile(filepath.Join(root, "security-review.json"), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	messagePath := filepath.Join(root, "COMMIT_EDITMSG")
+	args := []string{"hook", "run", "commit-msg", "--root", root, "--file", messagePath}
+	var stdout, stderr bytes.Buffer
+	if err := os.WriteFile(messagePath, []byte("not conventional\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
+		t.Fatalf("invalid message exit=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if err := os.WriteFile(messagePath, []byte("feat(hook): validate messages\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("valid message exit=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+}
+
 func TestBaselineCommandsAndNewOnlyPolicy(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "existing.go"), []byte("change-me-in-production\n"), 0o600); err != nil {

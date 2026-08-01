@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -44,10 +45,12 @@ type Scanner struct {
 }
 
 type Hook struct {
-	Enabled    bool   `json:"enabled"`
-	Profile    string `json:"profile,omitempty"`
-	StagedOnly bool   `json:"staged_only,omitempty"`
-	NewOnly    bool   `json:"new_only,omitempty"`
+	Enabled          bool   `json:"enabled"`
+	Profile          string `json:"profile,omitempty"`
+	StagedOnly       bool   `json:"staged_only,omitempty"`
+	NewOnly          bool   `json:"new_only,omitempty"`
+	MessagePattern   string `json:"message_pattern,omitempty"`
+	MaxSubjectLength int    `json:"max_subject_length,omitempty"`
 }
 
 type Hooks struct {
@@ -154,9 +157,10 @@ func Default() Config {
 			ProfileStandard: {"pattern"},
 			ProfileFull:     {"pattern"},
 		},
-		Hooks: Hooks{PreCommit: Hook{
-			Enabled: true, Profile: ProfileFast, StagedOnly: true, NewOnly: true,
-		}},
+		Hooks: Hooks{
+			PreCommit: Hook{Enabled: true, Profile: ProfileFast, StagedOnly: true, NewOnly: true},
+			CommitMsg: Hook{MaxSubjectLength: 72},
+		},
 	}
 }
 
@@ -256,6 +260,17 @@ func (c *Config) Validate() error {
 
 func (c Config) validateHook(name string, hook Hook) error {
 	if !hook.Enabled {
+		return nil
+	}
+	if name == "commit_msg" {
+		if hook.MaxSubjectLength < 0 {
+			return fmt.Errorf("hook %s: max_subject_length cannot be negative", name)
+		}
+		if hook.MessagePattern != "" {
+			if _, err := regexp.Compile(hook.MessagePattern); err != nil {
+				return fmt.Errorf("hook %s: invalid message_pattern: %w", name, err)
+			}
+		}
 		return nil
 	}
 	if strings.TrimSpace(hook.Profile) == "" {

@@ -326,13 +326,15 @@ func runHook(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 }
 
 func runHookEvent(ctx context.Context, args []string, stdout, stderr io.Writer) int {
-	if len(args) == 0 || args[0] != hook.PreCommit {
-		fmt.Fprintln(stderr, "usage: security-review hook run pre-commit [--root <path>]")
+	if len(args) == 0 || !hook.ValidEvent(args[0]) {
+		fmt.Fprintln(stderr, "usage: security-review hook run <pre-commit|commit-msg|pre-push> [options]")
 		return 2
 	}
-	flags := flag.NewFlagSet("hook run pre-commit", flag.ContinueOnError)
+	event := args[0]
+	flags := flag.NewFlagSet("hook run "+event, flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	root := flags.String("root", ".", "path inside the Git repository")
+	messageFile := flags.String("file", "", "commit message file (commit-msg only)")
 	if err := flags.Parse(args[1:]); err != nil {
 		return 2
 	}
@@ -352,9 +354,26 @@ func runHookEvent(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
-	configuredHook := cfg.Hooks.PreCommit
+	configuredHook := configuredHookForEvent(cfg.Hooks, event)
 	if !configuredHook.Enabled {
-		fmt.Fprintln(stdout, "pre-commit: disabled")
+		fmt.Fprintf(stdout, "%s: disabled\n", event)
+		return 0
+	}
+	if event == hook.CommitMsg {
+		if *messageFile == "" {
+			fmt.Fprintln(stderr, "commit-msg requires --file")
+			return 2
+		}
+		content, readErr := os.ReadFile(*messageFile)
+		if readErr != nil {
+			fmt.Fprintf(stderr, "read commit message: %v\n", readErr)
+			return 3
+		}
+		if validateErr := hook.ValidateCommitMessage(string(content), configuredHook.MessagePattern, configuredHook.MaxSubjectLength); validateErr != nil {
+			fmt.Fprintf(stderr, "commit-msg: %v\n", validateErr)
+			return 1
+		}
+		fmt.Fprintln(stdout, "commit-msg: valid")
 		return 0
 	}
 	scanArgs := []string{"--root", repository.Root(), "--ci", "--profile", configuredHook.Profile}
@@ -368,6 +387,17 @@ func runHookEvent(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		scanArgs = append(scanArgs, "--new-only")
 	}
 	return runScan(ctx, scanArgs, stdout, stderr)
+}
+
+func configuredHookForEvent(hooks config.Hooks, event string) config.Hook {
+	switch event {
+	case hook.CommitMsg:
+		return hooks.CommitMsg
+	case hook.PrePush:
+		return hooks.PrePush
+	default:
+		return hooks.PreCommit
+	}
 }
 
 func loadConfig(path, root string) (config.Config, error) {
