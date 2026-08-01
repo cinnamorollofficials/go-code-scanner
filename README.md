@@ -347,6 +347,8 @@ go vet ./...
 
 Struktur proyek sengaja modular agar discovery, rules, suppression, reporter, dan policy dapat diuji secara terpisah. Saat menambahkan perilaku baru, sertakan test pada package terkait dan pertahankan kompatibilitas schema laporan.
 
+Rencana pengembangan bertahap menuju commit gate untuk Quality, Reliability, Hardening, Security, Supply Chain, dan Governance tersedia di [TODO.md](TODO.md).
+
 ## Batasan saat ini
 
 - Engine bawaan adalah pencocokan regex per baris, bukan parser AST atau taint analysis; hasil perlu ditinjau dan false positive mungkin terjadi.
