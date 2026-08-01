@@ -14,6 +14,7 @@ import (
 
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
+	"github.com/cinnamorollofficials/go-code-scanner/buildinfo"
 	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
 	"github.com/cinnamorollofficials/go-code-scanner/config"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
@@ -25,8 +26,6 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/rules"
 	"github.com/cinnamorollofficials/go-code-scanner/suppression"
 )
-
-const version = "0.1.0-dev"
 
 func main() {
 	os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr))
@@ -50,7 +49,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	case "cache":
 		return runCache(args[1:], stdout, stderr)
 	case "version", "--version", "-version":
-		fmt.Fprintln(stdout, version)
+		fmt.Fprintln(stdout, buildinfo.String())
 		return 0
 	case "help", "--help", "-h":
 		writeUsage(stdout)
@@ -142,7 +141,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
-	reviewer, err := securityreview.New(cfg, securityreview.WithToolVersion(version))
+	reviewer, err := securityreview.New(cfg, securityreview.WithToolVersion(buildinfo.String()))
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
