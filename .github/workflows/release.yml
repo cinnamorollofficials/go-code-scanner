@@ -73,3 +73,16 @@ jobs:
             --signature dist/provenance.sig \
             --public-key "${public_key}" \
             --directory dist
+      - name: Upload verified release artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-${{ github.ref_name }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/SHA256SUMS
+            dist/provenance.json
+            dist/provenance.sig
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

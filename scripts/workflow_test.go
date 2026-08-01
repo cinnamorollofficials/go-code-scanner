@@ -32,8 +32,8 @@ func TestReleaseWorkflowBuildsAndVerifiesTaggedArtifacts(t *testing.T) {
 	}
 	contents := string(workflow)
 	actions := regexp.MustCompile(`(?m)^\s*uses:\s+[^@\s]+@([0-9a-f]{40})(?:\s|$)`).FindAllStringSubmatch(contents, -1)
-	if len(actions) != 2 {
-		t.Fatalf("expected 2 actions pinned to full commit SHAs, found %d", len(actions))
+	if len(actions) != 3 {
+		t.Fatalf("expected 3 actions pinned to full commit SHAs, found %d", len(actions))
 	}
 	for _, command := range []string{
 		"release changelog validate",
@@ -54,6 +54,14 @@ func TestReleaseWorkflowBuildsAndVerifiesTaggedArtifacts(t *testing.T) {
 		"release provenance sign",
 		"release verify",
 		"--directory dist",
+		"actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+		"dist/*.tar.gz",
+		"dist/*.zip",
+		"dist/SHA256SUMS",
+		"dist/provenance.json",
+		"dist/provenance.sig",
+		"if-no-files-found: error",
+		"retention-days: 14",
 	} {
 		if !strings.Contains(contents, command) {
 			t.Fatalf("release workflow is missing %q", command)
