@@ -27,6 +27,12 @@ func TestCIWorkflowUsesPinnedActionsAndVerificationScript(t *testing.T) {
 	if !strings.Contains(string(verification), "./scripts/fuzz-smoke.sh") {
 		t.Fatal("canonical verification must run bounded fuzz smoke tests")
 	}
+	if !strings.Contains(string(verification), "./scripts/vulnerability-scan.sh --if-available") {
+		t.Fatal("canonical verification must run vulnerability scanning when available")
+	}
+	if !strings.Contains(contents, "go install golang.org/x/vuln/cmd/govulncheck@v1.1.4") {
+		t.Fatal("CI must install the pinned govulncheck version")
+	}
 	if !strings.Contains(contents, "persist-credentials: false") {
 		t.Fatal("checkout credentials must not persist after checkout")
 	}
