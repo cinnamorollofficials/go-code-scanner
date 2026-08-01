@@ -136,6 +136,16 @@ func pathAllowed(path string, cfg config.Config, includeExcludedFiles bool) bool
 	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
 		return false
 	}
+	if cfg.Cache.Enabled {
+		cacheDirectory := cfg.Cache.Directory
+		if !filepath.IsAbs(cacheDirectory) {
+			cacheDirectory = filepath.Join(cfg.Root, cacheDirectory)
+		}
+		cacheRelative, cacheErr := filepath.Rel(cacheDirectory, path)
+		if cacheErr == nil && cacheRelative != ".." && !strings.HasPrefix(cacheRelative, ".."+string(filepath.Separator)) {
+			return false
+		}
+	}
 	for _, part := range strings.Split(filepath.Clean(relative), string(filepath.Separator)) {
 		if contains(cfg.ExcludeDirectories, part) {
 			return false

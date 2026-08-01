@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -133,6 +134,57 @@ func TestOfflineProfileSkipsNetworkScanner(t *testing.T) {
 	}
 	if source.called || report.Scanners[1].State != finding.ScannerSkipped || !strings.Contains(report.Scanners[1].Message, "network access") {
 		t.Fatalf("network scanner was not safely skipped: called=%t status=%+v", source.called, report.Scanners[1])
+	}
+}
+
+func TestRuntimeCachePreservesResultsAndInvalidatesContent(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "app.go")
+	if err := os.WriteFile(path, []byte("package app\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Cache.Enabled = true
+	cfg.Cache.Directory = ".cache"
+	source := &describedScanner{
+		id: "cached", descriptor: scanner.Descriptor{Domain: finding.Quality, Version: "1", SupportedModes: []string{"full"}},
+		result: scanner.Result{State: finding.ScannerFindings, Findings: []finding.Finding{{
+			RuleID: "quality/cached", Tool: "cached", Domain: finding.Quality, Category: "fixture", Severity: finding.High,
+			Description: "cached finding", Location: finding.Location{File: "app.go", Line: 1},
+		}}},
+	}
+	reviewer, err := New(cfg, WithScanner(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	source.called = false
+	second, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if source.called {
+		t.Fatal("scanner executed despite cache hit")
+	}
+	if !reflect.DeepEqual(first.Findings, second.Findings) || !reflect.DeepEqual(first.Summary, second.Summary) {
+		t.Fatalf("cached result differs: first=%+v second=%+v", first, second)
+	}
+	if !strings.Contains(second.Scanners[1].Message, "cache hit") {
+		t.Fatalf("cache hit is not visible in status: %+v", second.Scanners[1])
+	}
+	if err := os.WriteFile(path, []byte("package app\n// changed\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	source.called = false
+	if _, err := reviewer.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if !source.called {
+		t.Fatal("content change did not invalidate scanner cache")
 	}
 }
 
