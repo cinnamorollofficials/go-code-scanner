@@ -117,6 +117,34 @@ func TestCommandScannerUsesStagedWorkspace(t *testing.T) {
 	}
 }
 
+func TestCommandScannerStagedIsolationBothDirections(t *testing.T) {
+	for _, test := range []struct {
+		name, staged, working string
+		wantState             finding.ScannerState
+	}{
+		{name: "safe staged unsafe working", staged: "safe", working: "unsafe", wantState: finding.ScannerClean},
+		{name: "unsafe staged safe working", staged: "unsafe", working: "safe", wantState: finding.ScannerFindings},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			runGit(t, root, "init")
+			path := filepath.Join(root, "value.txt")
+			if err := os.WriteFile(path, []byte(test.staged), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			runGit(t, root, "add", "value.txt")
+			if err := os.WriteFile(path, []byte(test.working), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			source := helperScanner(t, "find-staged-unsafe", WorkspaceStaged)
+			result := source.Scan(context.Background(), scanner.Request{Root: root, Mode: "staged"})
+			if result.State != test.wantState {
+				t.Fatalf("staged isolation state=%s want=%s: %+v", result.State, test.wantState, result)
+			}
+		})
+	}
+}
+
 func TestCommandScannerEnforcesConfiguredSnapshotLimits(t *testing.T) {
 	root := t.TempDir()
 	runGit(t, root, "init")
@@ -284,6 +312,15 @@ func TestCommandHelperProcess(t *testing.T) {
 		content, err := os.ReadFile("value.txt")
 		if err != nil || string(content) != "staged" {
 			os.Exit(12)
+		}
+		os.Exit(0)
+	case "find-staged-unsafe":
+		content, err := os.ReadFile("value.txt")
+		if err != nil {
+			os.Exit(12)
+		}
+		if string(content) == "unsafe" {
+			os.Exit(10)
 		}
 		os.Exit(0)
 	case "json-lines":
