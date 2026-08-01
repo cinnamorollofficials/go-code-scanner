@@ -67,6 +67,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	profile := flags.String("profile", "", "scanner profile to run")
 	baselinePath := flags.String("baseline", "", "finding baseline path")
 	newOnly := flags.Bool("new-only", false, "apply CI policy only to findings absent from the baseline")
+	format := flags.String("format", "json", "report format: json, sarif, or junit")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -107,6 +108,10 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
+	if *format != "json" && *format != "sarif" && *format != "junit" {
+		fmt.Fprintf(stderr, "invalid report format %q\n", *format)
+		return 2
+	}
 	reviewer, err := securityreview.New(cfg, securityreview.WithToolVersion(version))
 	if err != nil {
 		fmt.Fprintln(stderr, err)
@@ -127,7 +132,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if !filepath.IsAbs(outputPath) {
 		outputPath = filepath.Join(cfg.Root, outputPath)
 	}
-	if err := reporter.WriteJSON(outputPath, report); err != nil {
+	if err := writeReport(*format, outputPath, report); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 3
 	}
@@ -150,6 +155,19 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+func writeReport(format, path string, report *finding.Report) error {
+	switch format {
+	case "json":
+		return reporter.WriteJSON(path, report)
+	case "sarif":
+		return reporter.WriteSARIF(path, report)
+	case "junit":
+		return reporter.WriteJUnit(path, report)
+	default:
+		return fmt.Errorf("unsupported report format %q", format)
+	}
 }
 
 func compareBaseline(report *finding.Report, root, path string) (baseline.Comparison, error) {

@@ -180,3 +180,27 @@ func TestBaselineCommandsAndNewOnlyPolicy(t *testing.T) {
 		t.Fatalf("unexpected baseline status %q", stdout.String())
 	}
 }
+
+func TestScanWritesSelectedReportFormat(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "bad.ts"), []byte("google-mock-jwt-token\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, format := range []string{"sarif", "junit"} {
+		t.Run(format, func(t *testing.T) {
+			output := filepath.Join(root, "report."+format)
+			var stdout, stderr bytes.Buffer
+			args := []string{"scan", "--root", root, "--format", format, "--output", output, "--quiet"}
+			if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+				t.Fatalf("scan exit=%d stderr=%s", code, stderr.String())
+			}
+			data, err := os.ReadFile(output)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(data) == 0 {
+				t.Fatal("report is empty")
+			}
+		})
+	}
+}
