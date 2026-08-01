@@ -226,13 +226,14 @@ func Default() Config {
 		PatternMaxLineBytes: 1024 * 1024,
 		Profiles: map[string][]string{
 			ProfileFast:     {"pattern"},
-			ProfileStandard: {"pattern"},
-			ProfileFull:     {"pattern"},
+			ProfileStandard: {"pattern", "govulncheck"},
+			ProfileFull:     {"pattern", "govulncheck"},
 		},
 		OfflineProfiles: []string{ProfileFast},
 		Hooks: Hooks{
 			PreCommit: Hook{Enabled: true, Profile: ProfileFast, StagedOnly: true, NewOnly: true},
 			CommitMsg: Hook{MaxSubjectLength: 72},
+			PrePush:   Hook{Profile: ProfileStandard},
 		},
 	}
 }

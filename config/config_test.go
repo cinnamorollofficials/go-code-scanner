@@ -30,12 +30,34 @@ func TestConfigRejectsInvalidWorkerCount(t *testing.T) {
 
 func TestDefaultProfilesUseBuiltInPatternScanner(t *testing.T) {
 	cfg := Default()
-	for _, name := range []string{ProfileFast, ProfileStandard, ProfileFull} {
+	if scanners := cfg.Profiles[ProfileFast]; len(scanners) != 1 || scanners[0] != "pattern" {
+		t.Fatalf("unexpected fast profile: %v", scanners)
+	}
+	for _, name := range []string{ProfileStandard, ProfileFull} {
 		scanners := cfg.Profiles[name]
-		if len(scanners) != 1 || scanners[0] != "pattern" {
+		if len(scanners) != 2 || scanners[0] != "pattern" || scanners[1] != "govulncheck" {
 			t.Fatalf("unexpected %s profile: %v", name, scanners)
 		}
 	}
+}
+
+func TestDefaultHookProfilesKeepSupplyChainOutOfPreCommit(t *testing.T) {
+	cfg := Default()
+	if profileContainsForTest(cfg.Profiles[cfg.Hooks.PreCommit.Profile], "govulncheck") {
+		t.Fatal("pre-commit profile must remain offline and fast")
+	}
+	if cfg.Hooks.PrePush.Profile != "" && !profileContainsForTest(cfg.Profiles[cfg.Hooks.PrePush.Profile], "govulncheck") {
+		t.Fatal("configured pre-push profile must include supply-chain checks")
+	}
+}
+
+func profileContainsForTest(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
 
 func TestDefaultPreCommitHookUsesFastStagedProfile(t *testing.T) {
