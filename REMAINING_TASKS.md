@@ -28,7 +28,7 @@ This document is the handoff checklist for continuing the project in a new sessi
 - [x] **7. Sign provenance in the release workflow.** Use a documented secret input or keyless mechanism, avoid writing key material with broad permissions, and verify the signature before publication. Keep untrusted pull-request workflows unable to access signing credentials. Commit suggestion: `ci(release): sign artifact provenance`.
 - [x] **8. Upload verified release artifacts.** Pin the upload action to a full commit SHA, upload archives, `SHA256SUMS`, provenance, and signature, and set explicit retention. The workflow must remain least-privilege. Commit suggestion: `ci(release): upload verified artifacts`.
 - [x] **9. Add reproducible-build verification.** Build the same target twice with identical metadata and assert equal digests. Normalize every timestamp or metadata source that prevents reproducibility. Commit suggestion: `test(release): verify reproducible builds`.
-- [ ] **10. Add release end-to-end tests.** Exercise build, archive, checksum, provenance, signing, and verification in a temporary directory, including tampered artifact and tampered signature cases. Commit suggestion: `test(release): cover end-to-end pipeline`.
+- [x] **10. Add release end-to-end tests.** Exercise build, archive, checksum, provenance, signing, and verification in a temporary directory, including tampered artifact and tampered signature cases. Commit suggestion: `test(release): cover end-to-end pipeline`.
 
 ## Phase 3 — Final quality and security gates
 
