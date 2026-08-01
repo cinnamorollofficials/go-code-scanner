@@ -3,6 +3,8 @@ package pattern
 import (
 	"bufio"
 	"context"
+	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 	"time"
@@ -16,10 +18,20 @@ type Scanner struct {
 	genericRules  []rules.Compiled
 	rulesBySuffix map[string][]rules.Compiled
 	workers       int
+	limits        Limits
 }
 
-func New(compiled []rules.Compiled, workers int) *Scanner {
-	s := &Scanner{rulesBySuffix: make(map[string][]rules.Compiled), workers: max(workers, 1)}
+type Limits struct {
+	MaxFileBytes int64
+	MaxLineBytes int
+}
+
+func New(compiled []rules.Compiled, workers int, configured ...Limits) *Scanner {
+	limits := Limits{MaxFileBytes: 2 * 1024 * 1024, MaxLineBytes: 1024 * 1024}
+	if len(configured) > 0 {
+		limits = configured[0]
+	}
+	s := &Scanner{rulesBySuffix: make(map[string][]rules.Compiled), workers: max(workers, 1), limits: limits}
 	for _, rule := range compiled {
 		if len(rule.Extensions) == 0 {
 			s.genericRules = append(s.genericRules, rule)
@@ -76,6 +88,7 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	}
 	if result.Message != "" {
 		result.State = finding.ScannerPartial
+		result.Failure = scanner.FailurePartial
 	} else if len(result.Findings) > 0 {
 		result.State = finding.ScannerFindings
 	}
@@ -114,11 +127,15 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 	applicableRules := s.rulesFor(extension)
 	var findings []finding.Finding
 	lineNumber := 0
-	lineScanner := bufio.NewScanner(file)
-	lineScanner.Buffer(make([]byte, 64*1024), 1024*1024)
+	counter := &countingReader{reader: io.LimitReader(file, s.limits.MaxFileBytes+1)}
+	lineScanner := bufio.NewScanner(counter)
+	lineScanner.Buffer(make([]byte, min(s.limits.MaxLineBytes, 64*1024)), s.limits.MaxLineBytes)
 	for lineScanner.Scan() {
 		lineNumber++
 		line := lineScanner.Text()
+		if counter.bytes > s.limits.MaxFileBytes {
+			return findings, fmt.Errorf("%s exceeds pattern file limit of %d bytes; increase pattern_max_file_bytes", relative, s.limits.MaxFileBytes)
+		}
 		for _, rule := range applicableRules {
 			if !rule.Regex.MatchString(line) {
 				continue
@@ -133,7 +150,24 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 			})
 		}
 	}
-	return findings, lineScanner.Err()
+	if err := lineScanner.Err(); err != nil {
+		if strings.Contains(err.Error(), "token too long") {
+			return findings, fmt.Errorf("%s contains a line exceeding %d bytes; increase pattern_max_line_bytes", relative, s.limits.MaxLineBytes)
+		}
+		return findings, err
+	}
+	return findings, nil
+}
+
+type countingReader struct {
+	reader io.Reader
+	bytes  int64
+}
+
+func (r *countingReader) Read(buffer []byte) (int, error) {
+	read, err := r.reader.Read(buffer)
+	r.bytes += int64(read)
+	return read, err
 }
 
 func (s *Scanner) rulesFor(extension string) []rules.Compiled {

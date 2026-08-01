@@ -62,3 +62,31 @@ func TestScanPropagatesRuleMetadata(t *testing.T) {
 		t.Fatalf("finding metadata was not propagated: %+v", item)
 	}
 }
+
+func TestScanReturnsPartialForConfiguredInputLimits(t *testing.T) {
+	compiled, err := rules.Compile([]rules.Rule{{
+		ID: "fixture", Pattern: "unsafe", Severity: finding.High, Category: "test", Description: "fixture",
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name    string
+		content string
+		limits  Limits
+		message string
+	}{
+		{name: "file", content: "safe\nsafe\nsafe\n", limits: Limits{MaxFileBytes: 5, MaxLineBytes: 100}, message: "pattern_max_file_bytes"},
+		{name: "line", content: strings.Repeat("x", 20), limits: Limits{MaxFileBytes: 100, MaxLineBytes: 10}, message: "pattern_max_line_bytes"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			source := scanner.Source{Path: "/repo/app.go", Open: func(context.Context) (io.ReadCloser, error) {
+				return io.NopCloser(strings.NewReader(test.content)), nil
+			}}
+			result := New(compiled, 1, test.limits).Scan(context.Background(), scanner.Request{Root: "/repo", Sources: []scanner.Source{source}})
+			if result.State != finding.ScannerPartial || result.Failure != scanner.FailurePartial || !strings.Contains(result.Message, test.message) {
+				t.Fatalf("unexpected limited scan result: %+v", result)
+			}
+		})
+	}
+}

@@ -121,40 +121,44 @@ func Load(path string) (Config, error) {
 }
 
 type Config struct {
-	Version            int                                 `json:"version"`
-	Project            string                              `json:"project"`
-	Root               string                              `json:"root"`
-	Mode               Mode                                `json:"mode"`
-	Output             string                              `json:"output"`
-	FailOn             finding.Severity                    `json:"fail_on"`
-	IncludeExtensions  []string                            `json:"include_extensions"`
-	ExcludeDirectories []string                            `json:"exclude_directories"`
-	ExcludeFiles       []string                            `json:"exclude_files"`
-	RuleFiles          []string                            `json:"rule_files"`
-	SuppressionFile    string                              `json:"suppression_file"`
-	BaselineFile       string                              `json:"baseline_file,omitempty"`
-	Workers            int                                 `json:"workers"`
-	Scanners           map[string]Scanner                  `json:"scanners"`
-	Profiles           map[string][]string                 `json:"profiles,omitempty"`
-	Policy             map[finding.Domain]finding.Severity `json:"policy,omitempty"`
-	Hooks              Hooks                               `json:"hooks,omitempty"`
-	SelectedProfile    string                              `json:"-"`
+	Version             int                                 `json:"version"`
+	Project             string                              `json:"project"`
+	Root                string                              `json:"root"`
+	Mode                Mode                                `json:"mode"`
+	Output              string                              `json:"output"`
+	FailOn              finding.Severity                    `json:"fail_on"`
+	IncludeExtensions   []string                            `json:"include_extensions"`
+	ExcludeDirectories  []string                            `json:"exclude_directories"`
+	ExcludeFiles        []string                            `json:"exclude_files"`
+	RuleFiles           []string                            `json:"rule_files"`
+	SuppressionFile     string                              `json:"suppression_file"`
+	BaselineFile        string                              `json:"baseline_file,omitempty"`
+	Workers             int                                 `json:"workers"`
+	PatternMaxFileBytes int64                               `json:"pattern_max_file_bytes"`
+	PatternMaxLineBytes int                                 `json:"pattern_max_line_bytes"`
+	Scanners            map[string]Scanner                  `json:"scanners"`
+	Profiles            map[string][]string                 `json:"profiles,omitempty"`
+	Policy              map[finding.Domain]finding.Severity `json:"policy,omitempty"`
+	Hooks               Hooks                               `json:"hooks,omitempty"`
+	SelectedProfile     string                              `json:"-"`
 }
 
 func Default() Config {
 	return Config{
-		Version:            1,
-		Project:            "security-review",
-		Root:               ".",
-		Mode:               ModeFull,
-		Output:             "security_findings.json",
-		FailOn:             finding.Critical,
-		IncludeExtensions:  []string{".go", ".ts", ".tsx", ".js", ".jsx", ".yaml", ".yml", ".json"},
-		ExcludeDirectories: []string{".git", "node_modules", "vendor", "dist", "build", ".next", "out", "bin"},
-		ExcludeFiles:       []string{"security_findings.json", "package-lock.json"},
-		SuppressionFile:    ".security-ignore",
-		BaselineFile:       ".security-baseline.json",
-		Workers:            runtime.GOMAXPROCS(0),
+		Version:             1,
+		Project:             "security-review",
+		Root:                ".",
+		Mode:                ModeFull,
+		Output:              "security_findings.json",
+		FailOn:              finding.Critical,
+		IncludeExtensions:   []string{".go", ".ts", ".tsx", ".js", ".jsx", ".yaml", ".yml", ".json"},
+		ExcludeDirectories:  []string{".git", "node_modules", "vendor", "dist", "build", ".next", "out", "bin"},
+		ExcludeFiles:        []string{"security_findings.json", "package-lock.json"},
+		SuppressionFile:     ".security-ignore",
+		BaselineFile:        ".security-baseline.json",
+		Workers:             runtime.GOMAXPROCS(0),
+		PatternMaxFileBytes: 2 * 1024 * 1024,
+		PatternMaxLineBytes: 1024 * 1024,
 		Profiles: map[string][]string{
 			ProfileFast:     {"pattern"},
 			ProfileStandard: {"pattern"},
@@ -191,6 +195,9 @@ func (c *Config) Validate() error {
 	}
 	if c.Workers < 1 {
 		return fmt.Errorf("workers must be at least 1")
+	}
+	if c.PatternMaxFileBytes < 1 || c.PatternMaxLineBytes < 1 {
+		return fmt.Errorf("pattern file and line byte limits must be at least 1")
 	}
 	for domain, threshold := range c.Policy {
 		if !domain.Valid() {

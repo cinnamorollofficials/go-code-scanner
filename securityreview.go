@@ -90,8 +90,10 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 		return nil, fmt.Errorf("hash rule set: %w", err)
 	}
 	r := &reviewer{
-		config:      cfg,
-		scanners:    []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers), required: true}},
+		config: cfg,
+		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers, patternscanner.Limits{
+			MaxFileBytes: cfg.PatternMaxFileBytes, MaxLineBytes: cfg.PatternMaxLineBytes,
+		}), required: true}},
 		now:         time.Now,
 		configHash:  configHash,
 		ruleSetHash: ruleSetHash,
