@@ -17,5 +17,19 @@ func DefaultSecurity() []Rule {
 		{ID: "dynamic-order", Pattern: `\.Order\(.*fmt\.Sprintf`, Severity: finding.High, Domain: finding.Security, Category: "injection", Description: "ORDER BY dinamis harus memakai whitelist", Extensions: []string{".go"}},
 		{ID: "api-struct-response", Pattern: `c\.JSON\(.*,\s*\*?(user|account|member|staff|karyawan)\b`, Severity: finding.High, Domain: finding.Security, Category: "data_leak", Description: "Struct sensitif mungkin dikirim langsung ke response", Extensions: []string{".go"}},
 		{ID: "sensitive-json-field", Pattern: `(Password|PasswordHash|Hash|SecretKey|ApiKey)\s+\w+.*json:\"[^-]`, Severity: finding.High, Domain: finding.Security, Category: "data_leak", Description: "Field sensitif mungkin terekspos dalam JSON", Extensions: []string{".go"}},
+		{
+			ID: "go-shell-command", Pattern: `exec\.Command(Context)?\([^)]*['\"](sh|bash)['\"]\s*,\s*['\"]-c['\"]`,
+			Severity: finding.High, Domain: finding.Security, Category: "command_injection",
+			Description:    "Shell command interpreter digunakan melalui os/exec",
+			Recommendation: "Jalankan executable secara langsung dengan argument array dan validasi input yang tidak dipercaya",
+			Extensions:     []string{".go"},
+		},
+		{
+			ID: "go-weak-cryptographic-hash", Pattern: `(md5|sha1)\.(New|Sum)\(`,
+			Severity: finding.Medium, Domain: finding.Security, Category: "weak_cryptography",
+			Description:    "Algoritma hash kriptografi yang lemah ditemukan",
+			Recommendation: "Gunakan SHA-256 atau algoritma yang sesuai; gunakan password KDF untuk password",
+			Extensions:     []string{".go"},
+		},
 	}
 }
