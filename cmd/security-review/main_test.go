@@ -544,6 +544,28 @@ func TestReleaseVerifyCommand(t *testing.T) {
 	}
 }
 
+func TestReleaseChangelogValidateCommand(t *testing.T) {
+	directory := t.TempDir()
+	path := filepath.Join(directory, "CHANGELOG.md")
+	valid := "# Changelog\n\n## [Unreleased]\n\n## [1.0.0] - 2026-01-01\n"
+	if err := os.WriteFile(path, []byte(valid), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	args := []string{"release", "changelog", "validate", "--file", path}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 || !strings.Contains(stdout.String(), "valid") {
+		t.Fatalf("valid changelog exit=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	if err := os.WriteFile(path, []byte("invalid\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
+		t.Fatalf("invalid changelog exit=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
 func TestUpgradeCheckCommand(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	if code := run(context.Background(), []string{"upgrade", "check"}, &stdout, &stderr); code != 0 {

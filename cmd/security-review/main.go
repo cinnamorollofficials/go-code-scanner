@@ -451,8 +451,11 @@ func runCache(args []string, stdout, stderr io.Writer) int {
 }
 
 func runRelease(args []string, stdout, stderr io.Writer) int {
+	if len(args) >= 2 && args[0] == "changelog" && args[1] == "validate" {
+		return runChangelogValidate(args[2:], stdout, stderr)
+	}
 	if len(args) == 0 || args[0] != "verify" {
-		fmt.Fprintln(stderr, "usage: security-review release verify --provenance <path> --signature <path> --public-key <path>")
+		fmt.Fprintln(stderr, "usage: security-review release <verify|changelog validate> [options]")
 		return 2
 	}
 	flags := flag.NewFlagSet("release verify", flag.ContinueOnError)
@@ -482,6 +485,30 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintln(stdout, "Provenance signature verified")
+	return 0
+}
+
+func runChangelogValidate(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("release changelog validate", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	path := flags.String("file", "CHANGELOG.md", "changelog path")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "release changelog validate does not accept positional arguments")
+		return 2
+	}
+	data, err := os.ReadFile(*path)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	if err := releasepkg.ValidateChangelog(data); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "Changelog valid: %s\n", *path)
 	return 0
 }
 
