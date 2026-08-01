@@ -68,6 +68,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	failOn := flags.String("fail-on", "", "critical, high, medium, or low")
 	quiet := flags.Bool("quiet", false, "suppress terminal summary")
 	verbose := flags.Bool("verbose", false, "show scanner metadata and timing")
+	color := flags.String("color", "auto", "terminal color: auto, always, or never")
 	explain := flags.String("explain", "", "explain a configured rule ID and exit")
 	profile := flags.String("profile", "", "scanner profile to run")
 	baselinePath := flags.String("baseline", "", "finding baseline path")
@@ -130,6 +131,11 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "invalid report format %q\n", *format)
 		return 2
 	}
+	colorEnabled, err := terminalColor(*color, stdout)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
 	reviewer, err := securityreview.New(cfg, securityreview.WithToolVersion(version))
 	if err != nil {
 		fmt.Fprintln(stderr, err)
@@ -182,7 +188,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	if !*quiet {
 		if err := reporter.WriteTerminalWithOptions(stdout, report, reporter.TerminalOptions{
-			MaxFindings: reporter.DefaultTerminalFindingLimit, Verbose: *verbose,
+			MaxFindings: reporter.DefaultTerminalFindingLimit, Verbose: *verbose, Color: colorEnabled,
 		}); err != nil {
 			fmt.Fprintln(stderr, err)
 			return 3
@@ -198,6 +204,30 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+func terminalColor(mode string, writer io.Writer) (bool, error) {
+	switch mode {
+	case "always":
+		return true, nil
+	case "never":
+		return false, nil
+	case "auto":
+		if _, disabled := os.LookupEnv("NO_COLOR"); disabled {
+			return false, nil
+		}
+		file, ok := writer.(*os.File)
+		if !ok {
+			return false, nil
+		}
+		info, err := file.Stat()
+		if err != nil {
+			return false, nil
+		}
+		return info.Mode()&os.ModeCharDevice != 0, nil
+	default:
+		return false, fmt.Errorf("invalid color mode %q", mode)
+	}
 }
 
 func explainRule(cfg config.Config, id string, stdout, stderr io.Writer) int {

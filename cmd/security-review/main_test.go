@@ -422,3 +422,27 @@ func TestScanFixDryRunAndApply(t *testing.T) {
 		}
 	}
 }
+
+func TestScanColorModes(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "bad.go"), []byte("package bad  \n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		mode      string
+		wantColor bool
+	}{
+		{mode: "always", wantColor: true},
+		{mode: "never", wantColor: false},
+		{mode: "auto", wantColor: false},
+	} {
+		var stdout, stderr bytes.Buffer
+		if code := run(context.Background(), []string{"scan", "--root", root, "--color", test.mode}, &stdout, &stderr); code != 0 {
+			t.Fatalf("color=%s exit=%d stderr=%s", test.mode, code, stderr.String())
+		}
+		hasColor := strings.Contains(stdout.String(), "\x1b[")
+		if hasColor != test.wantColor {
+			t.Fatalf("color=%s hasColor=%t output=%q", test.mode, hasColor, stdout.String())
+		}
+	}
+}

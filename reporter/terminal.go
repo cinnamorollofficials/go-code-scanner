@@ -13,6 +13,7 @@ const DefaultTerminalFindingLimit = 50
 type TerminalOptions struct {
 	MaxFindings int
 	Verbose     bool
+	Color       bool
 }
 
 func WriteTerminal(writer io.Writer, report *finding.Report) error {
@@ -30,7 +31,11 @@ func WriteTerminalWithOptions(writer io.Writer, report *finding.Report, options 
 		return err
 	}
 	for _, status := range report.Scanners {
-		if _, err := fmt.Fprintf(writer, "  scanner %-16s %s", status.ID, status.State); err != nil {
+		state := string(status.State)
+		if options.Color {
+			state = colorState(status.State, state)
+		}
+		if _, err := fmt.Fprintf(writer, "  scanner %-16s %s", status.ID, state); err != nil {
 			return err
 		}
 		if status.Message != "" {
@@ -93,7 +98,11 @@ func WriteTerminalWithOptions(writer io.Writer, report *finding.Report, options 
 		if item.BaselineState != "" {
 			state = " [" + string(item.BaselineState) + "]"
 		}
-		if _, err := fmt.Fprintf(writer, "\n[%s]%s %s/%s\n", item.Severity, state, item.Domain, item.RuleID); err != nil {
+		severity := string(item.Severity)
+		if options.Color {
+			severity = colorSeverity(item.Severity, severity)
+		}
+		if _, err := fmt.Fprintf(writer, "\n[%s]%s %s/%s\n", severity, state, item.Domain, item.RuleID); err != nil {
 			return err
 		}
 		if _, err := fmt.Fprintf(writer, "  %s:%d %s\n", item.Location.File, item.Location.Line, item.Description); err != nil {
@@ -121,6 +130,34 @@ func WriteTerminalWithOptions(writer io.Writer, report *finding.Report, options 
 		}
 	}
 	return nil
+}
+
+func colorSeverity(severity finding.Severity, value string) string {
+	code := "36"
+	switch severity {
+	case finding.Critical:
+		code = "1;31"
+	case finding.High:
+		code = "31"
+	case finding.Medium:
+		code = "33"
+	}
+	return "\x1b[" + code + "m" + value + "\x1b[0m"
+}
+
+func colorState(state finding.ScannerState, value string) string {
+	code := "36"
+	switch state {
+	case finding.ScannerClean:
+		code = "32"
+	case finding.ScannerFailed:
+		code = "31"
+	case finding.ScannerPartial:
+		code = "33"
+	case finding.ScannerSkipped:
+		code = "2"
+	}
+	return "\x1b[" + code + "m" + value + "\x1b[0m"
 }
 
 func baselineRank(state finding.BaselineState) int {
