@@ -1,12 +1,28 @@
 package baseline
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
+
+func TestLoadRejectsUnknownFieldsAndTrailingDocuments(t *testing.T) {
+	for _, content := range []string{
+		`{"version":1,"fingerprint_version":"3","generated_at":"1970-01-01T00:00:00Z","entries":[],"unexpected":true}`,
+		`{"version":1,"fingerprint_version":"3","generated_at":"1970-01-01T00:00:00Z","entries":[]} {}`,
+	} {
+		path := filepath.Join(t.TempDir(), "baseline.json")
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Load(path); err == nil {
+			t.Fatalf("invalid baseline accepted: %s", content)
+		}
+	}
+}
 
 func TestBaselineRoundTripAndComparison(t *testing.T) {
 	report := reportWith("v2", finding.Finding{

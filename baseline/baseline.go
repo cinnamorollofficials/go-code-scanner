@@ -1,8 +1,10 @@
 package baseline
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -68,8 +70,16 @@ func Load(path string) (*File, error) {
 		return nil, fmt.Errorf("read baseline: %w", err)
 	}
 	var file File
-	if err := json.Unmarshal(data, &file); err != nil {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&file); err != nil {
 		return nil, fmt.Errorf("decode baseline: %w", err)
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("decode baseline: multiple JSON documents are not allowed")
+		}
+		return nil, fmt.Errorf("decode baseline: trailing data: %w", err)
 	}
 	if err := file.Validate(); err != nil {
 		return nil, err
