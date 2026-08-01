@@ -18,6 +18,9 @@ type Finding struct {
 	Description       string            `json:"description"`
 	Snippet           string            `json:"snippet,omitempty"`
 	Recommendation    string            `json:"recommendation,omitempty"`
+	Documentation     string            `json:"documentation,omitempty"`
+	Tags              []string          `json:"tags,omitempty"`
+	Fixable           bool              `json:"fixable,omitempty"`
 	Location          Location          `json:"location"`
 	Suppressed        bool              `json:"suppressed"`
 	SuppressionReason string            `json:"suppression_reason,omitempty"`

@@ -31,9 +31,11 @@ type sarifDriver struct {
 }
 
 type sarifRule struct {
-	ID               string       `json:"id"`
-	ShortDescription sarifMessage `json:"shortDescription"`
-	Help             sarifMessage `json:"help,omitempty"`
+	ID               string         `json:"id"`
+	ShortDescription sarifMessage   `json:"shortDescription"`
+	Help             sarifMessage   `json:"help,omitempty"`
+	HelpURI          string         `json:"helpUri,omitempty"`
+	Properties       map[string]any `json:"properties,omitempty"`
 }
 
 type sarifMessage struct {
@@ -79,7 +81,8 @@ func WriteSARIF(path string, report *finding.Report) error {
 		}
 		rulesByID[item.RuleID] = sarifRule{
 			ID: item.RuleID, ShortDescription: sarifMessage{Text: item.Description},
-			Help: sarifMessage{Text: help},
+			Help: sarifMessage{Text: help}, HelpURI: item.Documentation,
+			Properties: map[string]any{"tags": item.Tags, "fixable": item.Fixable, "domain": item.Domain},
 		}
 		line := item.Location.Line
 		if line < 1 {

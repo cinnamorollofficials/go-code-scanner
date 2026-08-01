@@ -18,6 +18,9 @@ type Rule struct {
 	Category       string           `json:"category"`
 	Description    string           `json:"description"`
 	Recommendation string           `json:"recommendation,omitempty"`
+	Documentation  string           `json:"documentation,omitempty"`
+	Tags           []string         `json:"tags,omitempty"`
+	Fixable        bool             `json:"fixable,omitempty"`
 	Extensions     []string         `json:"extensions,omitempty"`
 	Enabled        *bool            `json:"enabled,omitempty"`
 }
@@ -73,6 +76,18 @@ func Compile(input []Rule) ([]Compiled, error) {
 		seen[rule.ID] = struct{}{}
 		if !rule.Severity.Valid() {
 			return nil, fmt.Errorf("rule %s: invalid severity %q", rule.ID, rule.Severity)
+		}
+		tags := make(map[string]struct{}, len(rule.Tags))
+		for index, tag := range rule.Tags {
+			tag = strings.TrimSpace(tag)
+			if tag == "" {
+				return nil, fmt.Errorf("rule %s: tag %d is empty", rule.ID, index+1)
+			}
+			if _, ok := tags[tag]; ok {
+				return nil, fmt.Errorf("rule %s: duplicate tag %q", rule.ID, tag)
+			}
+			tags[tag] = struct{}{}
+			rule.Tags[index] = tag
 		}
 		re, err := regexp.Compile("(?i)" + rule.Pattern)
 		if err != nil {
