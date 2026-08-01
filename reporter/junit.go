@@ -17,6 +17,7 @@ type junitSuite struct {
 	Name     string          `xml:"name,attr"`
 	Tests    int             `xml:"tests,attr"`
 	Failures int             `xml:"failures,attr"`
+	Errors   int             `xml:"errors,attr"`
 	Cases    []junitTestCase `xml:"testcase"`
 }
 
@@ -26,11 +27,18 @@ type junitTestCase struct {
 	File      string        `xml:"file,attr,omitempty"`
 	Line      string        `xml:"line,attr,omitempty"`
 	Failure   *junitFailure `xml:"failure,omitempty"`
+	Error     *junitError   `xml:"error,omitempty"`
 }
 
 type junitFailure struct {
 	Message string `xml:"message,attr"`
 	Type    string `xml:"type,attr"`
+	Body    string `xml:",chardata"`
+}
+
+type junitError struct {
+	Message string `xml:"message,attr"`
+	Type    string `xml:"type,attr,omitempty"`
 	Body    string `xml:",chardata"`
 }
 
@@ -50,8 +58,26 @@ func WriteJUnit(path string, report *finding.Report) error {
 			Failure: &junitFailure{Message: item.Description, Type: string(item.Severity), Body: body},
 		})
 	}
+	errors := 0
+	for _, status := range report.Scanners {
+		if status.State != finding.ScannerFailed && status.State != finding.ScannerPartial {
+			continue
+		}
+		errors++
+		failureType := status.FailureKind
+		if failureType == "" {
+			failureType = string(status.State)
+		}
+		cases = append(cases, junitTestCase{
+			Name: "scanner/" + status.ID, Classname: "operational.scanner",
+			Error: &junitError{
+				Message: "scanner did not complete successfully", Type: failureType,
+				Body: fmt.Sprintf("Scanner %s ended in state %s", status.ID, status.State),
+			},
+		})
+	}
 	document := junitTestSuites{Suites: []junitSuite{{
-		Name: report.Project, Tests: len(cases), Failures: len(cases), Cases: cases,
+		Name: report.Project, Tests: len(cases), Failures: len(report.Findings), Errors: errors, Cases: cases,
 	}}}
 	data, err := xml.MarshalIndent(document, "", "  ")
 	if err != nil {

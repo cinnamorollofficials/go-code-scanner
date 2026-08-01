@@ -84,6 +84,33 @@ func TestJUnitStructure(t *testing.T) {
 	}
 }
 
+func TestJUnitSeparatesPolicyFailuresAndOperationalErrors(t *testing.T) {
+	report := formatFixtureReport()
+	report.Scanners = []finding.ScannerStatus{
+		{ID: "pattern", State: finding.ScannerFindings},
+		{ID: "external", State: finding.ScannerFailed, FailureKind: "timeout", Message: "TOP-SECRET-SNIPPET"},
+	}
+	path := filepath.Join(t.TempDir(), "report.xml")
+	if err := WriteJUnit(path, report); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document junitTestSuites
+	if err := xml.Unmarshal(data, &document); err != nil {
+		t.Fatal(err)
+	}
+	suite := document.Suites[0]
+	if suite.Tests != 2 || suite.Failures != 1 || suite.Errors != 1 || suite.Cases[1].Error == nil || suite.Cases[1].Error.Type != "timeout" {
+		t.Fatalf("unexpected JUnit policy/operational mapping: %+v", suite)
+	}
+	if strings.Contains(string(data), "TOP-SECRET-SNIPPET") {
+		t.Fatalf("JUnit leaked operational scanner message: %s", data)
+	}
+}
+
 func formatFixtureReport() *finding.Report {
 	return &finding.Report{
 		Project: "fixture", ToolVersion: "test", FingerprintVersion: "2",
