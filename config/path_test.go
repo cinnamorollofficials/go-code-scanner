@@ -22,3 +22,21 @@ func TestResolveProjectPathRejectsTraversalAndSymlinkEscape(t *testing.T) {
 		t.Fatal("symlink escape accepted")
 	}
 }
+
+func TestConfigRejectsRuleFilesOutsideProject(t *testing.T) {
+	cfg := Default()
+	cfg.Root = t.TempDir()
+	cfg.RuleFiles = []string{"../outside-rules.json"}
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("outside-project rule file accepted")
+	}
+
+	out := t.TempDir()
+	if err := os.Symlink(out, filepath.Join(cfg.Root, "linked")); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	cfg.RuleFiles = []string{"linked/rules.json"}
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("symlink-escaped rule file accepted")
+	}
+}
