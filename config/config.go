@@ -254,6 +254,9 @@ func (c *Config) Validate() error {
 	if c.Project == "" {
 		return fmt.Errorf("project is required")
 	}
+	if _, err := ResolveProjectPath(c.Root, c.Output); err != nil {
+		return fmt.Errorf("output: %w", err)
+	}
 	if c.Mode != ModeFull && c.Mode != ModeChanged && c.Mode != ModeStaged {
 		return fmt.Errorf("invalid scan mode %q", c.Mode)
 	}

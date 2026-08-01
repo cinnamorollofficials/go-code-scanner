@@ -184,9 +184,10 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 			operationalErr = errors.Join(operationalErr, err)
 		}
 	}
-	outputPath := cfg.Output
-	if !filepath.IsAbs(outputPath) {
-		outputPath = filepath.Join(cfg.Root, outputPath)
+	outputPath, err := config.ResolveProjectPath(cfg.Root, cfg.Output)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
 	}
 	if err := writeReport(*format, outputPath, report); err != nil {
 		fmt.Fprintln(stderr, err)
