@@ -198,6 +198,8 @@ func runBaseline(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	reportPath := flags.String("report", "", "JSON report path")
 	baselinePath := flags.String("baseline", ".security-baseline.json", "baseline path")
+	dryRun := flags.Bool("dry-run", false, "preview baseline changes without writing")
+	acceptResolved := flags.Bool("accept-resolved", false, "allow update to remove resolved baseline entries")
 	if err := flags.Parse(args[1:]); err != nil {
 		return 2
 	}
@@ -228,6 +230,27 @@ func runBaseline(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
+	}
+	if command == "update" {
+		current, loadErr := baseline.Load(*baselinePath)
+		if loadErr != nil {
+			fmt.Fprintln(stderr, loadErr)
+			return 2
+		}
+		comparison, compareErr := baseline.Compare(report, current)
+		if compareErr != nil {
+			fmt.Fprintln(stderr, compareErr)
+			return 2
+		}
+		fmt.Fprintf(stdout, "Baseline update preview: new=%d existing=%d resolved=%d\n", len(comparison.New), len(comparison.Existing), len(comparison.Resolved))
+		if len(comparison.Resolved) > 0 && !*dryRun && !*acceptResolved {
+			fmt.Fprintln(stderr, "baseline update would remove resolved findings; review with --dry-run, then pass --accept-resolved")
+			return 2
+		}
+	}
+	if *dryRun {
+		fmt.Fprintf(stdout, "Baseline dry-run: %d findings would be written to %s\n", len(file.Entries), *baselinePath)
+		return 0
 	}
 	if err := baseline.Write(*baselinePath, file); err != nil {
 		fmt.Fprintln(stderr, err)

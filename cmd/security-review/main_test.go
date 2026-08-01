@@ -3,10 +3,16 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	securityreview "github.com/cinnamorollofficials/go-code-scanner"
+	"github.com/cinnamorollofficials/go-code-scanner/baseline"
+	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
 
 func TestScanExitCodes(t *testing.T) {
@@ -263,6 +269,76 @@ func TestBaselineCommandsAndNewOnlyPolicy(t *testing.T) {
 	}
 	if stdout.String() != "Baseline: new=1 existing=1 resolved=0\n" {
 		t.Fatalf("unexpected baseline status %q", stdout.String())
+	}
+}
+
+func TestBaselineUpdateRequiresResolvedFindingApproval(t *testing.T) {
+	root := t.TempDir()
+	reportPath := filepath.Join(root, "report.json")
+	baselinePath := filepath.Join(root, "baseline.json")
+	writeBaselineReport(t, reportPath, "first", "second")
+	var stdout, stderr bytes.Buffer
+	create := []string{"baseline", "create", "--report", reportPath, "--baseline", baselinePath}
+	if code := run(context.Background(), create, &stdout, &stderr); code != 0 {
+		t.Fatalf("create exit=%d stderr=%s", code, stderr.String())
+	}
+	original, err := os.ReadFile(baselinePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeBaselineReport(t, reportPath, "first")
+
+	stdout.Reset()
+	stderr.Reset()
+	update := []string{"baseline", "update", "--report", reportPath, "--baseline", baselinePath}
+	if code := run(context.Background(), append(update, "--dry-run"), &stdout, &stderr); code != 0 {
+		t.Fatalf("dry-run exit=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "resolved=1") || !strings.Contains(stdout.String(), "dry-run") {
+		t.Fatalf("unexpected dry-run output: %q", stdout.String())
+	}
+	unchanged, err := os.ReadFile(baselinePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(original, unchanged) {
+		t.Fatal("dry-run modified baseline")
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), update, &stdout, &stderr); code != 2 || !strings.Contains(stderr.String(), "--accept-resolved") {
+		t.Fatalf("unapproved update exit=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), append(update, "--accept-resolved"), &stdout, &stderr); code != 0 {
+		t.Fatalf("approved update exit=%d stderr=%s", code, stderr.String())
+	}
+	updated, err := baseline.Load(baselinePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(updated.Entries) != 1 {
+		t.Fatalf("approved update wrote %d entries", len(updated.Entries))
+	}
+}
+
+func writeBaselineReport(t *testing.T, path string, fingerprints ...string) {
+	t.Helper()
+	report := finding.Report{FingerprintVersion: securityreview.FingerprintVersion}
+	for _, fingerprint := range fingerprints {
+		report.Findings = append(report.Findings, finding.Finding{
+			ID: fingerprint, Fingerprint: fingerprint, RuleID: "fixture-rule", Domain: finding.Quality,
+			Location: finding.Location{File: fingerprint + ".go", Line: 1},
+		})
+	}
+	data, err := json.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		t.Fatal(err)
 	}
 }
 
