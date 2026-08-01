@@ -112,7 +112,7 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 		configHash:  configHash,
 		ruleSetHash: ruleSetHash,
 	}
-	if len(cfg.Architecture.Layers) > 0 {
+	if len(cfg.Architecture.Layers) > 0 || cfg.Architecture.DetectCycles {
 		layers := make([]architecturescanner.Layer, len(cfg.Architecture.Layers))
 		for index, layer := range cfg.Architecture.Layers {
 			layers[index] = architecturescanner.Layer{Name: layer.Name, Paths: append([]string(nil), layer.Paths...)}
@@ -121,7 +121,9 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 		for index, boundary := range cfg.Architecture.ForbiddenDependencies {
 			boundaries[index] = architecturescanner.Boundary{From: boundary.From, To: boundary.To}
 		}
-		r.scanners = append(r.scanners, registeredScanner{scanner: architecturescanner.New(layers, boundaries), required: true})
+		r.scanners = append(r.scanners, registeredScanner{scanner: architecturescanner.New(layers, boundaries, architecturescanner.Options{
+			DetectCycles: cfg.Architecture.DetectCycles,
+		}), required: true})
 	}
 	configuredIDs := make([]string, 0, len(cfg.Scanners))
 	for id, configured := range cfg.Scanners {

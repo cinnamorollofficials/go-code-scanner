@@ -90,6 +90,7 @@ type RequiredHeader struct {
 type ArchitecturePolicy struct {
 	Layers                []ArchitectureLayer   `json:"layers,omitempty"`
 	ForbiddenDependencies []ForbiddenDependency `json:"forbidden_dependencies,omitempty"`
+	DetectCycles          bool                  `json:"detect_cycles,omitempty"`
 }
 
 type ArchitectureLayer struct {
