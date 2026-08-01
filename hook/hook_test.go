@@ -96,6 +96,40 @@ func TestManagerRefusesUnmanagedHook(t *testing.T) {
 	}
 }
 
+func TestManagerRefusesHookSymlinkWithoutTouchingTarget(t *testing.T) {
+	manager, repository := newManager(t)
+	ctx := context.Background()
+	hooksDir, err := repository.HooksDir(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	outside := filepath.Join(t.TempDir(), "outside-hook")
+	content := []byte("#!/bin/sh\necho outside\n")
+	if err := os.WriteFile(outside, content, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(hooksDir, PreCommit)
+	if err := os.Symlink(outside, target); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	if state, err := manager.Status(ctx, PreCommit); err != nil || state != Conflict {
+		t.Fatalf("symlink status=%s err=%v", state, err)
+	}
+	if err := manager.Install(ctx, PreCommit); err == nil {
+		t.Fatal("hook install accepted symlink target")
+	}
+	if err := manager.Uninstall(ctx, PreCommit); err == nil {
+		t.Fatal("hook uninstall accepted symlink target")
+	}
+	got, err := os.ReadFile(outside)
+	if err != nil || string(got) != string(content) {
+		t.Fatalf("outside hook changed: content=%q err=%v", got, err)
+	}
+}
+
 func newManager(t *testing.T) (*Manager, *gitrepo.Repository) {
 	t.Helper()
 	root := t.TempDir()
