@@ -21,6 +21,7 @@ type Finding struct {
 	Location          Location          `json:"location"`
 	Suppressed        bool              `json:"suppressed"`
 	SuppressionReason string            `json:"suppression_reason,omitempty"`
+	BaselineState     BaselineState     `json:"baseline_state,omitempty"`
 	Metadata          map[string]string `json:"metadata,omitempty"`
 }
 
