@@ -90,10 +90,19 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	for _, registered := range r.scanners {
 		source := registered.scanner
 		required := registered.required
-		if configured, ok := r.config.Scanners[source.ID()]; ok {
+		configured, hasConfig := r.config.Scanners[source.ID()]
+		if hasConfig {
 			required = configured.Required
 		}
-		result := source.Scan(ctx, request)
+		if hasConfig && !configured.Enabled {
+			statuses = append(statuses, finding.ScannerStatus{
+				ID: source.ID(), State: finding.ScannerSkipped, Required: required,
+				Message: "disabled by configuration",
+			})
+			continue
+		}
+		timeout, _ := configured.TimeoutDuration()
+		result := executeScanner(ctx, source, request, timeout)
 		all = append(all, result.Findings...)
 		statuses = append(statuses, finding.ScannerStatus{
 			ID: source.ID(), State: result.State, Duration: result.Duration,
@@ -122,6 +131,33 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	}
 	report.Summary = summarize(active, suppressed, stale)
 	return report, errors.Join(operationalErrors...)
+}
+
+func executeScanner(ctx context.Context, source scanner.Scanner, request scanner.Request, timeout time.Duration) scanner.Result {
+	if timeout <= 0 {
+		return source.Scan(ctx, request)
+	}
+
+	started := time.Now()
+	scanCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	results := make(chan scanner.Result, 1)
+	go func() {
+		results <- source.Scan(scanCtx, request)
+	}()
+
+	select {
+	case result := <-results:
+		return result
+	case <-scanCtx.Done():
+		message := scanCtx.Err().Error()
+		if errors.Is(scanCtx.Err(), context.DeadlineExceeded) {
+			message = fmt.Sprintf("timeout after %s", timeout)
+		}
+		return scanner.Result{
+			State: finding.ScannerFailed, Message: message, Duration: time.Since(started),
+		}
+	}
 }
 
 func normalize(input []finding.Finding) []finding.Finding {

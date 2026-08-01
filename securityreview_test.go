@@ -48,6 +48,62 @@ func (f failingScanner) Scan(context.Context, scanner.Request) scanner.Result {
 	return scanner.Result{State: finding.ScannerFailed, Message: "fixture failure", Duration: time.Millisecond}
 }
 
+type panicScanner struct{ id string }
+
+func (s panicScanner) ID() string { return s.id }
+
+func (s panicScanner) Scan(context.Context, scanner.Request) scanner.Result {
+	panic("disabled scanner was executed")
+}
+
+func TestDisabledScannerIsSkipped(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.Scanners = map[string]config.Scanner{
+		"disabled": {Enabled: false, Required: true},
+	}
+	reviewer, err := New(cfg, WithRequiredScanner(panicScanner{id: "disabled"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Scanners) != 2 || report.Scanners[1].State != finding.ScannerSkipped {
+		t.Fatalf("expected skipped scanner status, got %+v", report.Scanners)
+	}
+}
+
+type slowScanner struct{ id string }
+
+func (s slowScanner) ID() string { return s.id }
+
+func (s slowScanner) Scan(ctx context.Context, _ scanner.Request) scanner.Result {
+	<-ctx.Done()
+	time.Sleep(10 * time.Millisecond)
+	return scanner.Result{State: finding.ScannerFailed, Message: ctx.Err().Error()}
+}
+
+func TestScannerTimeoutReturnsPartialReport(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.Scanners = map[string]config.Scanner{
+		"slow": {Enabled: true, Timeout: "5ms"},
+	}
+	reviewer, err := New(cfg, WithScanner(slowScanner{id: "slow"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatalf("optional timeout returned an operational error: %v", err)
+	}
+	if report.Scanners[1].State != finding.ScannerFailed || len(report.Warnings) != 1 {
+		t.Fatalf("expected timeout failure and warning, got %+v", report)
+	}
+}
+
 func TestOptionalScannerFailureReturnsReportAndWarning(t *testing.T) {
 	cfg := config.Default()
 	cfg.Root = t.TempDir()

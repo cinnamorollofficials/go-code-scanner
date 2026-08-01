@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
@@ -75,6 +76,31 @@ func TestConfigRejectsDuplicateScannerInProfile(t *testing.T) {
 	cfg.Profiles[ProfileFast] = []string{"pattern", "pattern"}
 	if err := cfg.Validate(); err == nil {
 		t.Fatal("expected duplicate scanner validation error")
+	}
+}
+
+func TestConfigValidatesScannerTimeout(t *testing.T) {
+	tests := []string{"not-a-duration", "0s", "-1s"}
+	for _, timeout := range tests {
+		t.Run(timeout, func(t *testing.T) {
+			cfg := Default()
+			cfg.Scanners = map[string]Scanner{
+				"pattern": {Enabled: true, Timeout: timeout},
+			}
+			if err := cfg.Validate(); err == nil {
+				t.Fatal("expected timeout validation error")
+			}
+		})
+	}
+}
+
+func TestScannerTimeoutDuration(t *testing.T) {
+	duration, err := (Scanner{Timeout: "250ms"}).TimeoutDuration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if duration != 250*time.Millisecond {
+		t.Fatalf("expected 250ms, got %s", duration)
 	}
 }
 

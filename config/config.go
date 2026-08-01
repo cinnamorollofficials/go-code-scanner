@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
@@ -24,6 +25,20 @@ type Scanner struct {
 	Required bool           `json:"required"`
 	Timeout  string         `json:"timeout,omitempty"`
 	Options  map[string]any `json:"options,omitempty"`
+}
+
+func (s Scanner) TimeoutDuration() (time.Duration, error) {
+	if s.Timeout == "" {
+		return 0, nil
+	}
+	duration, err := time.ParseDuration(s.Timeout)
+	if err != nil {
+		return 0, fmt.Errorf("invalid timeout %q: %w", s.Timeout, err)
+	}
+	if duration <= 0 {
+		return 0, fmt.Errorf("timeout must be greater than zero")
+	}
+	return duration, nil
 }
 
 const (
@@ -122,6 +137,14 @@ func (c *Config) Validate() error {
 		}
 		if !threshold.Valid() {
 			return fmt.Errorf("invalid policy threshold %q for domain %s", threshold, domain)
+		}
+	}
+	for id, configured := range c.Scanners {
+		if strings.TrimSpace(id) == "" {
+			return fmt.Errorf("scanner id is required")
+		}
+		if _, err := configured.TimeoutDuration(); err != nil {
+			return fmt.Errorf("scanner %s: %w", id, err)
 		}
 	}
 	for name, scanners := range c.Profiles {
