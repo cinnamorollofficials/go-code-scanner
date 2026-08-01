@@ -195,6 +195,9 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	}
 
 	command := exec.CommandContext(ctx, executable, s.spec.Command[1:]...)
+	configureProcessGroup(command)
+	command.Cancel = func() error { return terminateProcessGroup(command.Process) }
+	command.WaitDelay = 2 * time.Second
 	command.Dir = root
 	command.Env = allowedEnvironment(s.spec.Environment)
 	stdout := &limitedBuffer{limit: s.spec.MaxOutputBytes}

@@ -5,8 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/scanner"
@@ -205,6 +207,22 @@ func TestCommandHelperProcess(t *testing.T) {
 		if os.Getenv("COMMAND_SCANNER_SECRET") != "must-not-leak" {
 			os.Exit(12)
 		}
+		os.Exit(0)
+	case "spawn-child":
+		if separator+2 >= len(os.Args) {
+			os.Exit(12)
+		}
+		child := exec.Command(os.Args[0], "-test.run=TestCommandHelperProcess", "--", "wait-child")
+		if err := child.Start(); err != nil {
+			os.Exit(12)
+		}
+		if err := os.WriteFile(os.Args[separator+2], []byte(strconv.Itoa(child.Process.Pid)), 0o600); err != nil {
+			os.Exit(12)
+		}
+		_ = child.Wait()
+		os.Exit(0)
+	case "wait-child":
+		time.Sleep(30 * time.Second)
 		os.Exit(0)
 	}
 }
