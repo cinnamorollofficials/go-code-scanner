@@ -20,6 +20,13 @@ func TestCIWorkflowUsesPinnedActionsAndVerificationScript(t *testing.T) {
 	if !strings.Contains(contents, "run: ./scripts/verify.sh") {
 		t.Fatal("CI workflow must run the canonical verification script")
 	}
+	verification, err := os.ReadFile("verify.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(verification), "./scripts/fuzz-smoke.sh") {
+		t.Fatal("canonical verification must run bounded fuzz smoke tests")
+	}
 	if !strings.Contains(contents, "persist-credentials: false") {
 		t.Fatal("checkout credentials must not persist after checkout")
 	}
