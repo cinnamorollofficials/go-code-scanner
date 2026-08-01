@@ -84,6 +84,20 @@ func (s panicScanner) Scan(context.Context, scanner.Request) scanner.Result {
 	panic("disabled scanner was executed")
 }
 
+type describedScanner struct {
+	id         string
+	descriptor scanner.Descriptor
+	result     scanner.Result
+	called     bool
+}
+
+func (s *describedScanner) ID() string                   { return s.id }
+func (s *describedScanner) Describe() scanner.Descriptor { return s.descriptor }
+func (s *describedScanner) Scan(context.Context, scanner.Request) scanner.Result {
+	s.called = true
+	return s.result
+}
+
 func TestDisabledScannerIsSkipped(t *testing.T) {
 	cfg := config.Default()
 	cfg.Root = t.TempDir()
@@ -111,6 +125,21 @@ func (s slowScanner) Scan(ctx context.Context, _ scanner.Request) scanner.Result
 	<-ctx.Done()
 	time.Sleep(10 * time.Millisecond)
 	return scanner.Result{State: finding.ScannerFailed, Message: ctx.Err().Error()}
+}
+
+type cancelScanner struct {
+	id      string
+	started chan<- struct{}
+}
+
+func (s cancelScanner) ID() string { return s.id }
+
+func (s cancelScanner) Scan(ctx context.Context, _ scanner.Request) scanner.Result {
+	s.started <- struct{}{}
+	<-ctx.Done()
+	return scanner.Result{
+		State: finding.ScannerFailed, Message: ctx.Err().Error(), Failure: scanner.FailureCanceled,
+	}
 }
 
 func TestScannerTimeoutReturnsPartialReport(t *testing.T) {
@@ -220,6 +249,86 @@ func TestScannerPanicBecomesOptionalFailure(t *testing.T) {
 	}
 	if report.Scanners[1].FailureKind != string(scanner.FailurePanic) {
 		t.Fatalf("expected panic failure kind, got %+v", report.Scanners[1])
+	}
+}
+
+func TestCallerCancellationIsClassified(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	started := make(chan struct{}, 1)
+	reviewer, err := New(cfg, WithScanner(cancelScanner{id: "canceled", started: started}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	type runResult struct {
+		report *finding.Report
+		err    error
+	}
+	completed := make(chan runResult, 1)
+	go func() {
+		report, runErr := reviewer.Run(ctx)
+		completed <- runResult{report: report, err: runErr}
+	}()
+	<-started
+	cancel()
+	result := <-completed
+	report, err := result.report, result.err
+	if err != nil {
+		t.Fatalf("optional cancellation returned an operational error: %v", err)
+	}
+	status := report.Scanners[1]
+	if status.State != finding.ScannerFailed || status.FailureKind != string(scanner.FailureCanceled) {
+		t.Fatalf("unexpected cancellation status: %+v", status)
+	}
+}
+
+func TestPartialScannerGetsStructuredFailureKind(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	partial := &describedScanner{
+		id: "partial",
+		result: scanner.Result{
+			State: finding.ScannerPartial, Message: "one input could not be read",
+		},
+	}
+	reviewer, err := New(cfg, WithScanner(partial))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatalf("optional partial result returned an operational error: %v", err)
+	}
+	status := report.Scanners[1]
+	if status.State != finding.ScannerPartial || status.FailureKind != string(scanner.FailurePartial) || len(report.Warnings) != 1 {
+		t.Fatalf("unexpected partial status: %+v warnings=%v", status, report.Warnings)
+	}
+}
+
+func TestUnsupportedScanModeSkipsScannerWithoutCallingIt(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.Mode = "full"
+	modeLimited := &describedScanner{
+		id: "staged-only",
+		descriptor: scanner.Descriptor{
+			Domain: finding.Quality, SupportedModes: []string{"staged"},
+		},
+		result: scanner.Result{State: finding.ScannerClean},
+	}
+	reviewer, err := New(cfg, WithScanner(modeLimited))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	status := report.Scanners[1]
+	if status.State != finding.ScannerSkipped || modeLimited.called {
+		t.Fatalf("mode-limited scanner was not skipped: status=%+v called=%t", status, modeLimited.called)
 	}
 }
 
