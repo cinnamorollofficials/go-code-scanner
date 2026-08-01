@@ -17,6 +17,7 @@ import (
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
 	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
+	compatibilitypkg "github.com/cinnamorollofficials/go-code-scanner/compatibility"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	releasepkg "github.com/cinnamorollofficials/go-code-scanner/release"
 	"github.com/cinnamorollofficials/go-code-scanner/scanner"
@@ -540,5 +541,42 @@ func TestReleaseVerifyCommand(t *testing.T) {
 	}
 	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
 		t.Fatalf("tampered provenance exit=%d", code)
+	}
+}
+
+func TestUpgradeCheckCommand(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), []string{"upgrade", "check"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("print contract exit=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"config_schema": 1`) {
+		t.Fatalf("current contract missing from output: %q", stdout.String())
+	}
+
+	contract := compatibilitypkg.Current()
+	data, err := json.Marshal(contract)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "contract.json")
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	args := []string{"upgrade", "check", "--contract", path}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 || !strings.Contains(stdout.String(), "unchanged") {
+		t.Fatalf("unchanged contract exit=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+
+	contract.ReportSchema = "security-review/v-next"
+	data, _ = json.Marshal(contract)
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 || !strings.Contains(stdout.String(), "migration required") {
+		t.Fatalf("changed contract exit=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
 	}
 }

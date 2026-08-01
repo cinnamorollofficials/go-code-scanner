@@ -16,6 +16,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
 	"github.com/cinnamorollofficials/go-code-scanner/buildinfo"
 	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
+	compatibilitypkg "github.com/cinnamorollofficials/go-code-scanner/compatibility"
 	"github.com/cinnamorollofficials/go-code-scanner/config"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/fixer"
@@ -51,6 +52,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runCache(args[1:], stdout, stderr)
 	case "release":
 		return runRelease(args[1:], stdout, stderr)
+	case "upgrade":
+		return runUpgrade(args[1:], stdout, stderr)
 	case "version", "--version", "-version":
 		fmt.Fprintln(stdout, buildinfo.String())
 		return 0
@@ -482,6 +485,53 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func runUpgrade(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "check" {
+		fmt.Fprintln(stderr, "usage: security-review upgrade check [--contract <path>]")
+		return 2
+	}
+	flags := flag.NewFlagSet("upgrade check", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	contractPath := flags.String("contract", "", "previous compatibility contract path")
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "upgrade check does not accept positional arguments")
+		return 2
+	}
+	current := compatibilitypkg.Current()
+	if *contractPath == "" {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(current); err != nil {
+			fmt.Fprintln(stderr, err)
+			return 3
+		}
+		return 0
+	}
+	data, err := os.ReadFile(*contractPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	previous, err := compatibilitypkg.Decode(data)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	changes := compatibilitypkg.Compare(previous, current)
+	if len(changes) == 0 {
+		fmt.Fprintln(stdout, "Compatibility contract unchanged")
+		return 0
+	}
+	fmt.Fprintln(stdout, "Compatibility migration required:")
+	for _, change := range changes {
+		fmt.Fprintf(stdout, "- %s: %s -> %s\n", change.Field, change.From, change.To)
+	}
+	return 1
+}
+
 func loadReport(path string) (*finding.Report, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -659,5 +709,5 @@ func loadConfig(path, root string) (config.Config, error) {
 }
 
 func writeUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|cache|release|version> [options]")
+	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|cache|release|upgrade|version> [options]")
 }
