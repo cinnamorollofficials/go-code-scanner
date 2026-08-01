@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
@@ -8,11 +9,12 @@ import (
 
 func TestDefaultRulePacks(t *testing.T) {
 	all := Default()
-	if len(all) != 14 {
-		t.Fatalf("expected 14 default rules, got %d", len(all))
+	if len(all) != 16 {
+		t.Fatalf("expected 16 default rules, got %d", len(all))
 	}
 
 	wantCounts := map[finding.Domain]int{
+		finding.Quality:     2,
 		finding.Security:    12,
 		finding.Hardening:   1,
 		finding.Reliability: 1,
@@ -33,6 +35,36 @@ func TestDefaultRulePacks(t *testing.T) {
 	for domain, want := range wantCounts {
 		if counts[domain] != want {
 			t.Fatalf("expected %d %s rules, got %d", want, domain, counts[domain])
+		}
+	}
+}
+
+type ruleExample struct {
+	positive string
+	negative string
+}
+
+func testRuleExamples(t *testing.T, rules []Rule, examples map[string]ruleExample) {
+	t.Helper()
+	if len(rules) != len(examples) {
+		t.Fatalf("expected examples for all %d rules, got %d", len(rules), len(examples))
+	}
+	for _, rule := range rules {
+		example, ok := examples[rule.ID]
+		if !ok {
+			t.Errorf("missing example for rule %q", rule.ID)
+			continue
+		}
+		expression, err := regexp.Compile("(?i)" + rule.Pattern)
+		if err != nil {
+			t.Errorf("compile rule %q: %v", rule.ID, err)
+			continue
+		}
+		if !expression.MatchString(example.positive) {
+			t.Errorf("rule %q did not match positive example %q", rule.ID, example.positive)
+		}
+		if expression.MatchString(example.negative) {
+			t.Errorf("rule %q matched negative example %q", rule.ID, example.negative)
 		}
 	}
 }
