@@ -24,10 +24,17 @@ func TestCIWorkflowUsesPinnedActionsAndVerificationScript(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(verification), "./scripts/fuzz-smoke.sh") {
+	if !strings.Contains(string(verification), "./scripts/release-candidate.sh") {
+		t.Fatal("canonical verification must delegate to the release-candidate gate")
+	}
+	releaseCandidate, err := os.ReadFile("release-candidate.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(releaseCandidate), "./scripts/fuzz-smoke.sh") {
 		t.Fatal("canonical verification must run bounded fuzz smoke tests")
 	}
-	if !strings.Contains(string(verification), "./scripts/vulnerability-scan.sh --if-available") {
+	if !strings.Contains(string(releaseCandidate), "./scripts/vulnerability-scan.sh --if-available") {
 		t.Fatal("canonical verification must run vulnerability scanning when available")
 	}
 	if !strings.Contains(contents, "go install golang.org/x/vuln/cmd/govulncheck@v1.1.4") {

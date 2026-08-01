@@ -1,18 +1,4 @@
 #!/bin/sh
 set -eu
 
-report_path=".self-scan-report.json"
-cleanup() {
-  rm -f -- "$report_path"
-}
-trap cleanup EXIT INT TERM
-
-go test ./...
-go test -race ./...
-go vet ./...
-./scripts/fuzz-smoke.sh
-./scripts/vulnerability-scan.sh --if-available
-./scripts/performance-budget.sh
-go run ./cmd/security-review scan --root . --quiet --output "$report_path"
-
-echo "verification and self-scan completed"
+exec ./scripts/release-candidate.sh
