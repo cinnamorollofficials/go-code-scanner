@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -130,6 +131,31 @@ func TestCommandScannerEnforcesConfiguredSnapshotLimits(t *testing.T) {
 	result := source.Scan(context.Background(), scanner.Request{Root: root, Mode: "staged"})
 	if result.State != finding.ScannerFailed || !strings.Contains(result.Message, "file limit") {
 		t.Fatalf("expected snapshot limit failure, got %+v", result)
+	}
+}
+
+func TestCommandScannerDoesNotExposeExternalDiagnostics(t *testing.T) {
+	root := t.TempDir()
+	executable := filepath.Join(root, "scanner")
+	if runtime.GOOS == "windows" {
+		t.Skip("shell fixture is Unix-specific")
+	}
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\necho 'CANARY-SECRET-DO-NOT-LEAK' >&2\nexit 2\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	source, err := New(Spec{
+		ID: "external", Domain: finding.Security, Command: []string{executable},
+		Severity: finding.High, Category: "external", Description: "external finding",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := source.Scan(context.Background(), scanner.Request{Root: root})
+	if result.State != finding.ScannerFailed {
+		t.Fatalf("expected scanner failure, got %+v", result)
+	}
+	if strings.Contains(result.Message, "CANARY-SECRET-DO-NOT-LEAK") {
+		t.Fatalf("external diagnostic leaked into scanner result: %s", result.Message)
 	}
 }
 

@@ -11,13 +11,14 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
 
-func TestSARIFAndJUnitDoNotExposeSnippets(t *testing.T) {
+func TestArtifactReportsDoNotExposeSnippets(t *testing.T) {
 	report := formatFixtureReport()
 	tests := []struct {
 		name  string
 		ext   string
 		write func(string, *finding.Report) error
 	}{
+		{name: "json", ext: ".json", write: WriteJSON},
 		{name: "sarif", ext: ".sarif", write: WriteSARIF},
 		{name: "junit", ext: ".xml", write: WriteJUnit},
 	}

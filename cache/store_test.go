@@ -18,7 +18,7 @@ func TestStoreRoundTripRedactsSnippetsAndUsesSafePermissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result := scanner.Result{State: finding.ScannerFindings, Findings: []finding.Finding{{RuleID: "secret", Snippet: "TOP-SECRET"}}}
+	result := scanner.Result{State: finding.ScannerFindings, Findings: []finding.Finding{{RuleID: "secret", Snippet: "CANARY-SECRET-DO-NOT-LEAK"}}}
 	if err := store.Put(key, result); err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestStoreRoundTripRedactsSnippetsAndUsesSafePermissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(data), "TOP-SECRET") {
+	if strings.Contains(string(data), "CANARY-SECRET-DO-NOT-LEAK") {
 		t.Fatal("cache persisted a source snippet")
 	}
 	info, _ := os.Stat(filepath.Join(directory, key+".json"))

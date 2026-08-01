@@ -68,3 +68,27 @@ func TestVerifyProvenanceRejectsUnknownFields(t *testing.T) {
 		t.Fatalf("expected strict decode error, got %v", err)
 	}
 }
+
+func TestProvenanceErrorsDoNotExposeArtifactContents(t *testing.T) {
+	directory := t.TempDir()
+	artifact := filepath.Join(directory, "release.tar.gz")
+	const secret = "CANARY-SECRET-DO-NOT-LEAK"
+	if err := os.WriteFile(artifact, []byte(secret), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(directory, "provenance.json")
+	options := ProvenanceOptions{Version: "v1.2.3", Commit: "abc123", BuildDate: time.Unix(1, 0), Builder: "test"}
+	if err := WriteProvenance(directory, path, options); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(artifact, []byte("tampered"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	err := VerifyProvenance(path, directory)
+	if err == nil {
+		t.Fatal("expected provenance mismatch")
+	}
+	if strings.Contains(err.Error(), secret) {
+		t.Fatalf("provenance error exposed artifact content: %v", err)
+	}
+}
