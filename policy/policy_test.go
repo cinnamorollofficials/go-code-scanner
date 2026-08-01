@@ -43,3 +43,20 @@ func TestNewViolationsIgnoreExistingFindings(t *testing.T) {
 		t.Fatalf("unexpected new violations: %+v", violations)
 	}
 }
+
+func TestEvaluateReturnsStructuredDecision(t *testing.T) {
+	report := &finding.Report{Findings: []finding.Finding{
+		{Domain: finding.Security, Severity: finding.High},
+		{Domain: finding.Quality, Severity: finding.Medium},
+		{Domain: finding.Security, Severity: finding.Critical},
+	}}
+	decision := Evaluate(report, finding.High, map[finding.Domain]finding.Severity{
+		finding.Quality: finding.Medium,
+	}, false)
+	if decision.Allowed || len(decision.Violations) != 3 || len(decision.Reasons) != 2 {
+		t.Fatalf("unexpected decision: %+v", decision)
+	}
+	if decision.Reasons[0].Domain != finding.Quality || decision.Reasons[0].Threshold != finding.Medium || decision.Reasons[0].Count != 1 {
+		t.Fatalf("unexpected deterministic reasons: %+v", decision.Reasons)
+	}
+}

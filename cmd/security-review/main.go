@@ -147,11 +147,8 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, operationalErr)
 		return 3
 	}
-	violations := policy.ViolationsByDomain(report, cfg.FailOn, cfg.Policy)
-	if *newOnly {
-		violations = policy.NewViolationsByDomain(report, cfg.FailOn, cfg.Policy)
-	}
-	if *ci && len(violations) > 0 {
+	decision := policy.Evaluate(report, cfg.FailOn, cfg.Policy, *newOnly)
+	if *ci && !decision.Allowed {
 		return 1
 	}
 	return 0
