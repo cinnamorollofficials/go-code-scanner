@@ -73,6 +73,24 @@ type SupplyChainPolicy struct {
 	LicenseDenylist     []string `json:"license_denylist,omitempty"`
 }
 
+type CachePolicy struct {
+	Enabled   bool   `json:"enabled,omitempty"`
+	Directory string `json:"directory,omitempty"`
+	MaxAge    string `json:"max_age,omitempty"`
+	MaxBytes  int64  `json:"max_bytes,omitempty"`
+}
+
+func (c CachePolicy) MaxAgeDuration() (time.Duration, error) {
+	if c.MaxAge == "" {
+		return 0, nil
+	}
+	duration, err := time.ParseDuration(c.MaxAge)
+	if err != nil || duration <= 0 {
+		return 0, fmt.Errorf("cache max_age must be a positive duration")
+	}
+	return duration, nil
+}
+
 type GovernancePolicy struct {
 	RequiredFiles           []string                 `json:"required_files,omitempty"`
 	RequiredHeaders         []RequiredHeader         `json:"required_headers,omitempty"`
@@ -206,6 +224,7 @@ type Config struct {
 	SupplyChain          SupplyChainPolicy                   `json:"supply_chain,omitempty"`
 	Governance           GovernancePolicy                    `json:"governance,omitempty"`
 	Architecture         ArchitecturePolicy                  `json:"architecture,omitempty"`
+	Cache                CachePolicy                         `json:"cache,omitempty"`
 	SelectedProfile      string                              `json:"-"`
 }
 
@@ -225,6 +244,7 @@ func Default() Config {
 		Workers:             runtime.GOMAXPROCS(0),
 		PatternMaxFileBytes: 2 * 1024 * 1024,
 		PatternMaxLineBytes: 1024 * 1024,
+		Cache:               CachePolicy{Directory: ".go-code-scanner-cache", MaxAge: "168h", MaxBytes: 256 * 1024 * 1024},
 		Profiles: map[string][]string{
 			ProfileFast:     {"pattern"},
 			ProfileStandard: {"pattern", "govulncheck"},
@@ -272,6 +292,17 @@ func (c *Config) Validate() error {
 	}
 	if c.QualityMaxFileBytes < 0 || c.QualityMaxLineLength < 0 {
 		return fmt.Errorf("quality file and line limits cannot be negative")
+	}
+	if c.Cache.Enabled {
+		if _, err := ResolveProjectPath(c.Root, c.Cache.Directory); err != nil {
+			return fmt.Errorf("cache.directory: %w", err)
+		}
+		if _, err := c.Cache.MaxAgeDuration(); err != nil {
+			return err
+		}
+		if c.Cache.MaxBytes < 1 {
+			return fmt.Errorf("cache.max_bytes must be at least 1 when cache is enabled")
+		}
 	}
 	for name, patterns := range map[string][]string{
 		"dependency_allowlist": c.SupplyChain.DependencyAllowlist,

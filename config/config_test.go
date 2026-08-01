@@ -41,6 +41,27 @@ func TestDefaultProfilesUseBuiltInPatternScanner(t *testing.T) {
 	}
 }
 
+func TestCachePolicyValidation(t *testing.T) {
+	valid := Default()
+	valid.Root = t.TempDir()
+	valid.Cache.Enabled = true
+	if err := valid.Validate(); err != nil {
+		t.Fatalf("valid cache policy rejected: %v", err)
+	}
+	for _, policy := range []CachePolicy{
+		{Enabled: true, Directory: "../cache", MaxAge: "1h", MaxBytes: 1},
+		{Enabled: true, Directory: "cache", MaxAge: "invalid", MaxBytes: 1},
+		{Enabled: true, Directory: "cache", MaxAge: "1h", MaxBytes: 0},
+	} {
+		cfg := Default()
+		cfg.Root = t.TempDir()
+		cfg.Cache = policy
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("invalid cache policy accepted: %+v", policy)
+		}
+	}
+}
+
 func TestDefaultHookProfilesKeepSupplyChainOutOfPreCommit(t *testing.T) {
 	cfg := Default()
 	if profileContainsForTest(cfg.Profiles[cfg.Hooks.PreCommit.Profile], "govulncheck") {
