@@ -22,7 +22,7 @@ func TestReviewerRunsDefaultPatternScanner(t *testing.T) {
 	cfg := config.Default()
 	cfg.Root = root
 	cfg.Project = "fixture"
-	reviewer, err := New(cfg)
+	reviewer, err := New(cfg, WithToolVersion("test-version"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,6 +38,33 @@ func TestReviewerRunsDefaultPatternScanner(t *testing.T) {
 	}
 	if report.Findings[0].Domain != finding.Security {
 		t.Fatalf("expected security domain, got %q", report.Findings[0].Domain)
+	}
+	if report.ToolVersion != "test-version" || report.ConfigHash == "" || report.RuleSetHash == "" {
+		t.Fatalf("missing report provenance: %+v", report)
+	}
+}
+
+func TestReportHashesAreDeterministic(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	firstReviewer, err := New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondReviewer, err := New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := firstReviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := secondReviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.ConfigHash != second.ConfigHash || first.RuleSetHash != second.RuleSetHash {
+		t.Fatalf("report hashes are not deterministic: first=%+v second=%+v", first, second)
 	}
 }
 

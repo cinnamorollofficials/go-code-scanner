@@ -24,6 +24,10 @@ func WriteJSON(path string, report *finding.Report) error {
 	}
 	temporaryPath := temporary.Name()
 	defer os.Remove(temporaryPath)
+	if err := temporary.Chmod(0o600); err != nil {
+		temporary.Close()
+		return fmt.Errorf("secure temporary report: %w", err)
+	}
 	if _, err := temporary.Write(append(data, '\n')); err != nil {
 		temporary.Close()
 		return err

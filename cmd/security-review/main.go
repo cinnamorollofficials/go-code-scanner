@@ -107,7 +107,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
-	reviewer, err := securityreview.New(cfg)
+	reviewer, err := securityreview.New(cfg, securityreview.WithToolVersion(version))
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2

@@ -28,4 +28,11 @@ func TestWriteJSONReplacesExistingReport(t *testing.T) {
 	if _, err := os.Stat(path + ".previous"); !os.IsNotExist(err) {
 		t.Fatal("backup should be removed after successful replacement")
 	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("expected report mode 0600, got %o", info.Mode().Perm())
+	}
 }

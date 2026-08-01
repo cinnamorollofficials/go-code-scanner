@@ -3,6 +3,7 @@ package securityreview
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -28,9 +29,12 @@ type Reviewer interface {
 }
 
 type reviewer struct {
-	config   config.Config
-	scanners []registeredScanner
-	now      func() time.Time
+	config      config.Config
+	scanners    []registeredScanner
+	now         func() time.Time
+	toolVersion string
+	configHash  string
+	ruleSetHash string
 }
 
 type registeredScanner struct {
@@ -46,6 +50,13 @@ func WithScanner(value scanner.Scanner) Option {
 
 func WithRequiredScanner(value scanner.Scanner) Option {
 	return withScanner(value, true)
+}
+
+func WithToolVersion(version string) Option {
+	return func(r *reviewer) error {
+		r.toolVersion = strings.TrimSpace(version)
+		return nil
+	}
 }
 
 func withScanner(value scanner.Scanner, required bool) Option {
@@ -66,10 +77,24 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 	if err != nil {
 		return nil, err
 	}
+	configHash, err := hashJSON(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("hash configuration: %w", err)
+	}
+	ruleValues := make([]rules.Rule, len(compiled))
+	for index := range compiled {
+		ruleValues[index] = compiled[index].Rule
+	}
+	ruleSetHash, err := hashJSON(ruleValues)
+	if err != nil {
+		return nil, fmt.Errorf("hash rule set: %w", err)
+	}
 	r := &reviewer{
-		config:   cfg,
-		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers), required: true}},
-		now:      time.Now,
+		config:      cfg,
+		scanners:    []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers), required: true}},
+		now:         time.Now,
+		configHash:  configHash,
+		ruleSetHash: ruleSetHash,
 	}
 	configuredIDs := make([]string, 0, len(cfg.Scanners))
 	for id, configured := range cfg.Scanners {
@@ -125,6 +150,7 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	active, suppressed, stale := suppression.Apply(all, suppressions, started)
 	report := &finding.Report{
 		SchemaVersion: SchemaVersion, FingerprintVersion: FingerprintVersion,
+		ToolVersion: r.toolVersion, ConfigHash: r.configHash, RuleSetHash: r.ruleSetHash,
 		Timestamp: started, Duration: time.Since(started),
 		ScanMode: string(r.config.Mode), Project: r.config.Project,
 		Findings: active, SuppressionsApplied: suppressed,
@@ -132,6 +158,15 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	}
 	report.Summary = summarize(active, suppressed, stale)
 	return report, errors.Join(operationalErrors...)
+}
+
+func hashJSON(value any) (string, error) {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return "", err
+	}
+	digest := sha256.Sum256(data)
+	return fmt.Sprintf("%x", digest[:8]), nil
 }
 
 type scannerOutcome struct {
