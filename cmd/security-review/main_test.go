@@ -189,6 +189,37 @@ func TestCommitMsgHookValidatesConfiguredPolicy(t *testing.T) {
 	}
 }
 
+func TestPrePushHookRunsConfiguredFullWorkspaceProfile(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v: %s", err, output)
+	}
+	data := []byte(`{
+		"project":"pre-push-hook",
+		"hooks":{"pre_push":{"enabled":true,"profile":"standard"}}
+	}`)
+	if err := os.WriteFile(filepath.Join(root, "security-review.json"), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	unsafePath := filepath.Join(root, "unstaged.ts")
+	if err := os.WriteFile(unsafePath, []byte("google-mock-jwt-token\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	args := []string{"hook", "run", "pre-push", "--root", root}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
+		t.Fatalf("unsafe full workspace did not block pre-push: exit=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if err := os.WriteFile(unsafePath, []byte("const safe = true\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("safe full workspace blocked pre-push: exit=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+}
+
 func TestBaselineCommandsAndNewOnlyPolicy(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "existing.go"), []byte("change-me-in-production\n"), 0o600); err != nil {
