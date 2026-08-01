@@ -59,20 +59,20 @@ func Spec(id, name string, options Options) (command.Spec, error) {
 		spec = command.Spec{ID: id, Domain: finding.SupplyChain, Command: []string{"govulncheck", "./..."},
 			FindingExitCodes: []int{3}, Severity: finding.High, Category: "vulnerability", Description: "govulncheck reported a reachable vulnerability"}
 	case Gosec:
-		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"gosec", "./..."},
-			FindingExitCodes: []int{1}, Severity: finding.High, Category: "static_analysis", Description: "gosec reported a security issue"}
+		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"gosec", "-fmt=json", "./..."},
+			FindingExitCodes: []int{1}, Severity: finding.High, Category: "static_analysis", Description: "gosec reported a security issue", Parser: parseGosec}
 	case Gitleaks:
 		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"gitleaks", "dir", "--redact", "--no-banner", "."},
 			FindingExitCodes: []int{1}, Severity: finding.Critical, Category: "secret_leak", Description: "Gitleaks reported a potential secret"}
 	case Trivy:
-		spec = command.Spec{ID: id, Domain: finding.SupplyChain, Command: []string{"trivy", "fs", "--exit-code", "1", "--quiet", "."},
-			FindingExitCodes: []int{1}, Severity: finding.High, Category: "vulnerability", Description: "Trivy reported a filesystem vulnerability"}
+		spec = command.Spec{ID: id, Domain: finding.SupplyChain, Command: []string{"trivy", "fs", "--exit-code", "1", "--quiet", "--format", "json", "."},
+			FindingExitCodes: []int{1}, Severity: finding.High, Category: "vulnerability", Description: "Trivy reported a filesystem vulnerability", Parser: parseTrivy}
 	case OSVScanner:
 		spec = command.Spec{ID: id, Domain: finding.SupplyChain, Command: []string{"osv-scanner", "scan", "source", "--verbosity=error", "--recursive", "."},
 			FindingExitCodes: []int{1}, Severity: finding.High, Category: "vulnerability", Description: "OSV-Scanner reported a dependency vulnerability"}
 	case Semgrep:
-		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"semgrep", "scan", "--error", "--quiet", "."},
-			FindingExitCodes: []int{1}, Severity: finding.High, Category: "static_analysis", Description: "Semgrep reported a security finding"}
+		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"semgrep", "scan", "--error", "--quiet", "--json", "."},
+			FindingExitCodes: []int{1}, Severity: finding.High, Category: "static_analysis", Description: "Semgrep reported a security finding", Parser: parseSemgrep}
 	default:
 		return command.Spec{}, fmt.Errorf("unknown adapter %q", name)
 	}

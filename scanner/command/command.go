@@ -49,6 +49,7 @@ type Spec struct {
 	OutputFormat     string
 	Environment      []string
 	FindingsOnOutput bool
+	Parser           func([]byte) ([]ParsedFinding, error)
 }
 
 type Scanner struct {
@@ -259,6 +260,21 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 				result.Message = fmt.Sprintf("decode structured command output: %v", err)
 				return finish()
 			}
+		} else if s.spec.Parser != nil {
+			if stdout.truncated {
+				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, "structured command output exceeded configured limit"
+				return finish()
+			}
+			parsed, parseErr := s.spec.Parser(stdout.buffer.Bytes())
+			if parseErr != nil {
+				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("decode adapter output: %v", parseErr)
+				return finish()
+			}
+			result.Findings, err = normalizeParsedFindings(parsed, root, s.spec)
+			if err != nil {
+				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("decode adapter output: %v", err)
+				return finish()
+			}
 		} else {
 			result.Findings = []finding.Finding{{
 				RuleID: s.spec.ID, Tool: s.spec.ID, Domain: s.spec.Domain,
@@ -304,26 +320,36 @@ func parsePathLines(data []byte, root string, spec Spec) ([]finding.Finding, err
 	return findings, nil
 }
 
-type outputFinding struct {
-	RuleID         string           `json:"rule_id"`
-	Category       string           `json:"category"`
-	Severity       finding.Severity `json:"severity"`
-	Description    string           `json:"description"`
-	Recommendation string           `json:"recommendation,omitempty"`
-	File           string           `json:"file"`
-	Line           int              `json:"line"`
+type ParsedFinding struct {
+	RuleID         string            `json:"rule_id"`
+	Category       string            `json:"category"`
+	Severity       finding.Severity  `json:"severity"`
+	Description    string            `json:"description"`
+	Recommendation string            `json:"recommendation,omitempty"`
+	Documentation  string            `json:"documentation,omitempty"`
+	File           string            `json:"file"`
+	Line           int               `json:"line"`
+	Metadata       map[string]string `json:"metadata,omitempty"`
 }
 
 func parseJSONLines(data []byte, root string, spec Spec) ([]finding.Finding, error) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	var result []finding.Finding
+	var parsed []ParsedFinding
 	for {
-		var item outputFinding
+		var item ParsedFinding
 		if err := decoder.Decode(&item); errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return nil, err
 		}
+		parsed = append(parsed, item)
+	}
+	return normalizeParsedFindings(parsed, root, spec)
+}
+
+func normalizeParsedFindings(parsed []ParsedFinding, root string, spec Spec) ([]finding.Finding, error) {
+	result := make([]finding.Finding, 0, len(parsed))
+	for _, item := range parsed {
 		if item.RuleID == "" {
 			item.RuleID = spec.ID
 		}
@@ -349,8 +375,8 @@ func parseJSONLines(data []byte, root string, spec Spec) ([]finding.Finding, err
 		result = append(result, finding.Finding{
 			RuleID: item.RuleID, Tool: spec.ID, Domain: spec.Domain,
 			Category: item.Category, Severity: item.Severity,
-			Description: item.Description, Recommendation: item.Recommendation,
-			Location: finding.Location{File: file, Line: item.Line},
+			Description: item.Description, Recommendation: item.Recommendation, Documentation: item.Documentation,
+			Location: finding.Location{File: file, Line: item.Line}, Metadata: item.Metadata,
 		})
 	}
 	if len(result) == 0 {
