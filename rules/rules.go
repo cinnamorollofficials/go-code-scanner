@@ -1,8 +1,10 @@
 package rules
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -45,8 +47,16 @@ func Load(paths []string) ([]Compiled, error) {
 			return nil, fmt.Errorf("read rules %s: %w", path, err)
 		}
 		var set Set
-		if err := json.Unmarshal(data, &set); err != nil {
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&set); err != nil {
 			return nil, fmt.Errorf("decode rules %s: %w", path, err)
+		}
+		if err := decoder.Decode(&struct{}{}); err != io.EOF {
+			if err == nil {
+				return nil, fmt.Errorf("decode rules %s: multiple JSON documents are not allowed", path)
+			}
+			return nil, fmt.Errorf("decode rules %s: trailing data: %w", path, err)
 		}
 		if set.Version != SchemaVersion {
 			return nil, fmt.Errorf("rules %s: unsupported version %d", path, set.Version)

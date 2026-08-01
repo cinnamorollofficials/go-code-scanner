@@ -1,10 +1,27 @@
 package rules
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
+
+func TestLoadRejectsUnknownFieldsAndTrailingDocuments(t *testing.T) {
+	for _, content := range []string{
+		`{"version":1,"rules":[],"unexpected":true}`,
+		`{"version":1,"rules":[]} {"version":1,"rules":[]}`,
+	} {
+		path := filepath.Join(t.TempDir(), "rules.json")
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Load([]string{path}); err == nil {
+			t.Fatalf("invalid rule file accepted: %s", content)
+		}
+	}
+}
 
 func TestCompileDefaultsLegacyRuleToSecurityDomain(t *testing.T) {
 	compiled, err := Compile([]Rule{{
