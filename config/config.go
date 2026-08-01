@@ -87,6 +87,21 @@ type RequiredHeader struct {
 	Recommendation string           `json:"recommendation,omitempty"`
 }
 
+type ArchitecturePolicy struct {
+	Layers                []ArchitectureLayer   `json:"layers,omitempty"`
+	ForbiddenDependencies []ForbiddenDependency `json:"forbidden_dependencies,omitempty"`
+}
+
+type ArchitectureLayer struct {
+	Name  string   `json:"name"`
+	Paths []string `json:"paths"`
+}
+
+type ForbiddenDependency struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
 func (s Scanner) TimeoutDuration() (time.Duration, error) {
 	if s.Timeout == "" {
 		return 0, nil
@@ -170,6 +185,7 @@ type Config struct {
 	Hooks                Hooks                               `json:"hooks,omitempty"`
 	SupplyChain          SupplyChainPolicy                   `json:"supply_chain,omitempty"`
 	Governance           GovernancePolicy                    `json:"governance,omitempty"`
+	Architecture         ArchitecturePolicy                  `json:"architecture,omitempty"`
 	SelectedProfile      string                              `json:"-"`
 }
 
@@ -294,6 +310,35 @@ func (c *Config) Validate() error {
 		if header.Severity != "" && !header.Severity.Valid() {
 			return fmt.Errorf("governance.required_headers[%d]: invalid severity %q", index, header.Severity)
 		}
+	}
+	layers := make(map[string]struct{}, len(c.Architecture.Layers))
+	for index, layer := range c.Architecture.Layers {
+		if strings.TrimSpace(layer.Name) == "" || len(layer.Paths) == 0 {
+			return fmt.Errorf("architecture.layers[%d]: name and paths are required", index)
+		}
+		if _, ok := layers[layer.Name]; ok {
+			return fmt.Errorf("architecture.layers[%d]: duplicate name %q", index, layer.Name)
+		}
+		layers[layer.Name] = struct{}{}
+		for _, pattern := range layer.Paths {
+			if _, err := pathpkg.Match(pattern, "fixture"); err != nil || strings.TrimSpace(pattern) == "" {
+				return fmt.Errorf("architecture.layers[%d]: invalid path pattern %q", index, pattern)
+			}
+		}
+	}
+	seenBoundaries := make(map[string]struct{}, len(c.Architecture.ForbiddenDependencies))
+	for index, boundary := range c.Architecture.ForbiddenDependencies {
+		if _, ok := layers[boundary.From]; !ok {
+			return fmt.Errorf("architecture.forbidden_dependencies[%d]: unknown from layer %q", index, boundary.From)
+		}
+		if _, ok := layers[boundary.To]; !ok {
+			return fmt.Errorf("architecture.forbidden_dependencies[%d]: unknown to layer %q", index, boundary.To)
+		}
+		key := boundary.From + "\x00" + boundary.To
+		if _, ok := seenBoundaries[key]; ok {
+			return fmt.Errorf("architecture.forbidden_dependencies[%d]: duplicate boundary %s -> %s", index, boundary.From, boundary.To)
+		}
+		seenBoundaries[key] = struct{}{}
 	}
 	for domain, threshold := range c.Policy {
 		if !domain.Valid() {

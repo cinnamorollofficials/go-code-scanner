@@ -111,6 +111,22 @@ func TestGovernanceRequiredHeaderValidation(t *testing.T) {
 	}
 }
 
+func TestArchitecturePolicyValidation(t *testing.T) {
+	cfg := Default()
+	cfg.Root = t.TempDir()
+	cfg.Architecture = ArchitecturePolicy{
+		Layers:                []ArchitectureLayer{{Name: "domain", Paths: []string{"internal/domain/*.go"}}, {Name: "infra", Paths: []string{"internal/infra/*.go"}}},
+		ForbiddenDependencies: []ForbiddenDependency{{From: "domain", To: "infra"}},
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("valid architecture policy rejected: %v", err)
+	}
+	cfg.Architecture.ForbiddenDependencies[0].To = "missing"
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("unknown architecture layer accepted")
+	}
+}
+
 func TestDefaultBaselinePath(t *testing.T) {
 	if got := Default().BaselineFile; got != ".security-baseline.json" {
 		t.Fatalf("unexpected default baseline path %q", got)

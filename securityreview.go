@@ -17,6 +17,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/rules"
 	"github.com/cinnamorollofficials/go-code-scanner/scanner"
 	"github.com/cinnamorollofficials/go-code-scanner/scanner/adapters"
+	architecturescanner "github.com/cinnamorollofficials/go-code-scanner/scanner/architecture"
 	commandscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/command"
 	patternscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/pattern"
 	"github.com/cinnamorollofficials/go-code-scanner/suppression"
@@ -110,6 +111,17 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 		now:         time.Now,
 		configHash:  configHash,
 		ruleSetHash: ruleSetHash,
+	}
+	if len(cfg.Architecture.Layers) > 0 {
+		layers := make([]architecturescanner.Layer, len(cfg.Architecture.Layers))
+		for index, layer := range cfg.Architecture.Layers {
+			layers[index] = architecturescanner.Layer{Name: layer.Name, Paths: append([]string(nil), layer.Paths...)}
+		}
+		boundaries := make([]architecturescanner.Boundary, len(cfg.Architecture.ForbiddenDependencies))
+		for index, boundary := range cfg.Architecture.ForbiddenDependencies {
+			boundaries[index] = architecturescanner.Boundary{From: boundary.From, To: boundary.To}
+		}
+		r.scanners = append(r.scanners, registeredScanner{scanner: architecturescanner.New(layers, boundaries), required: true})
 	}
 	configuredIDs := make([]string, 0, len(cfg.Scanners))
 	for id, configured := range cfg.Scanners {
