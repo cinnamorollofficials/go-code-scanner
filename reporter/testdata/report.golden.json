@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "fingerprint_version": "2",
+  "tool_version": "v1.2.3",
+  "config_hash": "config-hash",
+  "rule_set_hash": "rules-hash",
+  "timestamp": "1970-01-01T00:00:00Z",
+  "duration_ns": 42,
+  "scan_mode": "staged",
+  "project": "fixture",
+  "summary": {
+    "total": 1,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 0,
+    "suppressed": 0,
+    "stale_suppressions": 0,
+    "new": 1,
+    "existing": 0,
+    "resolved": 0,
+    "by_domain": {
+      "security": 1
+    }
+  },
+  "findings": [
+    {
+      "id": "finding-1",
+      "fingerprint": "fingerprint-1",
+      "rule_id": "security/example",
+      "tool": "pattern",
+      "domain": "security",
+      "category": "example",
+      "severity": "HIGH",
+      "description": "example finding",
+      "recommendation": "fix it",
+      "tags": [
+        "example"
+      ],
+      "location": {
+        "file": "app.go",
+        "line": 7
+      },
+      "suppressed": false,
+      "baseline_state": "new",
+      "metadata": {
+        "symbol": "main"
+      }
+    }
+  ],
+  "scanner_status": [
+    {
+      "id": "pattern",
+      "state": "findings",
+      "required": true,
+      "duration_ns": 12,
+      "domain": "security",
+      "capabilities": [
+        "line-patterns"
+      ],
+      "supported_modes": [
+        "staged"
+      ]
+    }
+  ]
+}
