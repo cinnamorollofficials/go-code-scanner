@@ -1,0 +1,17 @@
+{
+  "schema": "go-code-scanner/provenance/v1",
+  "version": "v1.2.3",
+  "commit": "abc123",
+  "build_date": "1970-01-01T00:00:00Z",
+  "builder": "ci/example",
+  "subjects": [
+    {
+      "name": "a-binary",
+      "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+    },
+    {
+      "name": "z-binary",
+      "sha256": "594e519ae499312b29433b7dd8a97ff068defcba9755b6d5d00e84c524d67b06"
+    }
+  ]
+}

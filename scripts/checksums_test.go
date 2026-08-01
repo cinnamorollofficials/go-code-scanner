@@ -1,6 +1,7 @@
 package scripts
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,5 +36,12 @@ func TestChecksumsAreDeterministicAndExcludeManifest(t *testing.T) {
 	}
 	if strings.Index(first, "a-binary") > strings.Index(first, "z-binary") || strings.Contains(first, "SHA256SUMS") {
 		t.Fatalf("checksum manifest is not sorted or contains itself: %s", first)
+	}
+	expected, err := os.ReadFile("testdata/SHA256SUMS.golden")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal([]byte(first), expected) {
+		t.Fatalf("checksum manifest contract changed\nactual:\n%s\nexpected:\n%s", first, expected)
 	}
 }

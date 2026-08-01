@@ -62,6 +62,9 @@ func TestSARIFStructure(t *testing.T) {
 	if document.Version != "2.1.0" || len(document.Runs) != 1 || len(document.Runs[0].Results) != 1 {
 		t.Fatalf("unexpected SARIF structure: %+v", document)
 	}
+	if document.Schema != "https://json.schemastore.org/sarif-2.1.0.json" || document.Runs[0].Tool.Driver.Name != "go-code-scanner" {
+		t.Fatalf("unexpected SARIF public schema identity: %+v", document)
+	}
 	if document.Runs[0].Results[0].BaselineState != "new" {
 		t.Fatalf("baseline state was not mapped: %+v", document.Runs[0].Results[0])
 	}
@@ -82,6 +85,9 @@ func TestJUnitStructure(t *testing.T) {
 	}
 	if len(document.Suites) != 1 || document.Suites[0].Tests != 1 || document.Suites[0].Failures != 1 {
 		t.Fatalf("unexpected JUnit structure: %+v", document)
+	}
+	if document.XMLName.Local != "testsuites" || document.Suites[0].Name != "fixture" {
+		t.Fatalf("unexpected JUnit public schema identity: %+v", document)
 	}
 }
 

@@ -1,6 +1,7 @@
 package release
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -22,6 +23,13 @@ func TestWriteProvenanceHashesSortedArtifacts(t *testing.T) {
 		t.Fatal(err)
 	}
 	data, _ := os.ReadFile(output)
+	expected, err := os.ReadFile("testdata/provenance.golden.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(data, expected) {
+		t.Fatalf("provenance contract changed\nactual:\n%s\nexpected:\n%s", data, expected)
+	}
 	var document Provenance
 	if err := json.Unmarshal(data, &document); err != nil {
 		t.Fatal(err)
