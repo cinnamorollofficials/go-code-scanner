@@ -66,6 +66,12 @@ func New(spec Spec) (*Scanner, error) {
 	if len(spec.Command) == 0 || strings.TrimSpace(spec.Command[0]) == "" {
 		return nil, fmt.Errorf("command scanner %s: command is required", spec.ID)
 	}
+	if strings.ContainsAny(spec.Command[0], `/\`) && !filepath.IsAbs(spec.Command[0]) {
+		return nil, fmt.Errorf("command scanner %s: executable must be a PATH name or absolute path", spec.ID)
+	}
+	if filepath.IsAbs(spec.Command[0]) && filepath.Clean(spec.Command[0]) != spec.Command[0] {
+		return nil, fmt.Errorf("command scanner %s: absolute executable path must be clean", spec.ID)
+	}
 	if !spec.Domain.Valid() {
 		return nil, fmt.Errorf("command scanner %s: invalid domain %q", spec.ID, spec.Domain)
 	}
@@ -164,7 +170,7 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 		return result
 	}
 
-	executable, err := exec.LookPath(s.spec.Command[0])
+	executable, err := resolveExecutable(s.spec.Command[0])
 	if err != nil {
 		result.Message = fmt.Sprintf("executable %q not found", s.spec.Command[0])
 		if s.spec.OnMissing == OnMissingSkip {
@@ -347,6 +353,36 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 		result.Message += " (output truncated)"
 	}
 	return finish()
+}
+
+func resolveExecutable(configured string) (string, error) {
+	if filepath.IsAbs(configured) {
+		info, err := os.Lstat(configured)
+		if err != nil {
+			return "", err
+		}
+		if info.Mode()&os.ModeSymlink != 0 || !info.Mode().IsRegular() || info.Mode().Perm()&0o111 == 0 {
+			return "", fmt.Errorf("absolute executable is not a regular executable file")
+		}
+		return configured, nil
+	}
+	resolved, err := exec.LookPath(configured)
+	if err != nil {
+		return "", err
+	}
+	resolved, err = filepath.Abs(resolved)
+	if err != nil {
+		return "", err
+	}
+	real, err := filepath.EvalSymlinks(resolved)
+	if err != nil {
+		return "", err
+	}
+	info, err := os.Stat(real)
+	if err != nil || !info.Mode().IsRegular() {
+		return "", fmt.Errorf("resolved executable is not a regular file")
+	}
+	return real, nil
 }
 
 func readLimitedOutputFile(path string, limit int) ([]byte, error) {

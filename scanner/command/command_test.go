@@ -69,6 +69,34 @@ func TestMissingCommandCanSkipOrFail(t *testing.T) {
 	}
 }
 
+func TestCommandScannerRejectsRelativeExecutablePaths(t *testing.T) {
+	for _, executable := range []string{"./tool", "../tool", "tools/tool", `tools\tool`} {
+		_, err := New(Spec{ID: "unsafe", Domain: finding.Quality, Command: []string{executable}, Severity: finding.High, Category: "tool", Description: "unsafe tool"})
+		if err == nil {
+			t.Fatalf("relative executable path %q accepted", executable)
+		}
+	}
+}
+
+func TestAbsoluteExecutableSymlinkIsNotExecuted(t *testing.T) {
+	target, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(t.TempDir(), "tool")
+	if err := os.Symlink(target, link); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	source, err := New(Spec{ID: "symlink", Domain: finding.Quality, Command: []string{link}, OnMissing: OnMissingFail, Severity: finding.High, Category: "tool", Description: "symlink tool"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := source.Scan(context.Background(), scanner.Request{Root: t.TempDir(), Mode: "full"})
+	if result.State != finding.ScannerFailed || result.Failure != scanner.FailureMissing {
+		t.Fatalf("absolute executable symlink was not rejected: %+v", result)
+	}
+}
+
 func TestCommandScannerUsesStagedWorkspace(t *testing.T) {
 	root := t.TempDir()
 	runGit(t, root, "init")
