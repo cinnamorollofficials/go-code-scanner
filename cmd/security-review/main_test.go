@@ -384,3 +384,41 @@ func TestScanExplainRuleAndVerboseStatus(t *testing.T) {
 		t.Fatalf("verbose scanner metadata missing: %q", stdout.String())
 	}
 }
+
+func TestScanFixDryRunAndApply(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "app.go")
+	if err := os.WriteFile(path, []byte("package app  \n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), []string{"scan", "--root", root, "--fix", "--dry-run", "--quiet"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("fix dry-run exit=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Would fix app.go:1") {
+		t.Fatalf("missing dry-run preview: %q", stdout.String())
+	}
+	content, _ := os.ReadFile(path)
+	if string(content) != "package app  \n" {
+		t.Fatal("fix dry-run changed source")
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), []string{"scan", "--root", root, "--fix", "--quiet"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("fix exit=%d stderr=%s", code, stderr.String())
+	}
+	content, _ = os.ReadFile(path)
+	if string(content) != "package app\n" {
+		t.Fatalf("source was not fixed: %q", content)
+	}
+	var report finding.Report
+	reportData, _ := os.ReadFile(filepath.Join(root, "security_findings.json"))
+	if err := json.Unmarshal(reportData, &report); err != nil {
+		t.Fatal(err)
+	}
+	for _, item := range report.Findings {
+		if item.RuleID == "trailing-whitespace" {
+			t.Fatal("post-fix report retained fixed finding")
+		}
+	}
+}

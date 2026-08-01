@@ -16,6 +16,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
 	"github.com/cinnamorollofficials/go-code-scanner/config"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/fixer"
 	"github.com/cinnamorollofficials/go-code-scanner/gitrepo"
 	"github.com/cinnamorollofficials/go-code-scanner/hook"
 	"github.com/cinnamorollofficials/go-code-scanner/policy"
@@ -72,6 +73,8 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	baselinePath := flags.String("baseline", "", "finding baseline path")
 	newOnly := flags.Bool("new-only", false, "apply CI policy only to findings absent from the baseline")
 	format := flags.String("format", "json", "report format: json, sarif, or junit")
+	fix := flags.Bool("fix", false, "apply deterministic fixes and rescan")
+	dryRun := flags.Bool("dry-run", false, "preview --fix changes without writing")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -84,11 +87,19 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "--changed and --staged are mutually exclusive")
 		return 2
 	}
+	if *dryRun && !*fix {
+		fmt.Fprintln(stderr, "--dry-run requires --fix")
+		return 2
+	}
 	if *changed {
 		cfg.Mode = config.ModeChanged
 	}
 	if *staged {
 		cfg.Mode = config.ModeStaged
+	}
+	if *fix && cfg.Mode != config.ModeFull {
+		fmt.Fprintln(stderr, "--fix is only supported for full working-tree scans")
+		return 2
 	}
 	if *output != "" {
 		cfg.Output = *output
@@ -129,6 +140,32 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if report == nil {
 		fmt.Fprintln(stderr, operationalErr)
 		return 3
+	}
+	if *fix {
+		if operationalErr != nil {
+			fmt.Fprintln(stderr, "refusing to apply fixes after an operational scanner failure")
+			fmt.Fprintln(stderr, operationalErr)
+			return 3
+		}
+		changes, fixErr := fixer.Apply(cfg.Root, report.Findings, *dryRun)
+		if fixErr != nil {
+			fmt.Fprintln(stderr, fixErr)
+			return 3
+		}
+		for _, change := range changes {
+			prefix := "Fixed"
+			if *dryRun {
+				prefix = "Would fix"
+			}
+			fmt.Fprintf(stdout, "%s %s:%d (%s)\n", prefix, change.File, change.Line, change.RuleID)
+		}
+		if !*dryRun && len(changes) > 0 {
+			report, operationalErr = reviewer.Run(ctx)
+			if report == nil {
+				fmt.Fprintln(stderr, operationalErr)
+				return 3
+			}
+		}
 	}
 	if *newOnly || *baselinePath != "" {
 		if _, err := compareBaseline(report, cfg.Root, cfg.BaselineFile); err != nil {

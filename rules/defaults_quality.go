@@ -30,7 +30,7 @@ func DefaultQuality() []Rule {
 			Severity: finding.Low, Domain: finding.Quality, Category: "formatting",
 			Description:    "Tab dan spasi tercampur pada indentation baris yang sama",
 			Recommendation: "Gunakan satu gaya indentation yang konsisten",
-			Tags:           []string{"formatting"}, Fixable: true,
+			Tags:           []string{"formatting"},
 		},
 		{
 			ID: "javascript-console-debug", Pattern: `^\s*console\.(log|debug)\s*\(`,
