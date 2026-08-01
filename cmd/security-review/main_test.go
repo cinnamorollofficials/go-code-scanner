@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
@@ -544,6 +545,66 @@ func TestReleaseVerifyCommand(t *testing.T) {
 	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
 		t.Fatalf("tampered provenance exit=%d", code)
 	}
+}
+
+func TestReleaseVerifyCommandValidatesSubjectsWhenRequested(t *testing.T) {
+	directory := t.TempDir()
+	artifact := filepath.Join(directory, "release.tar.gz")
+	if err := os.WriteFile(artifact, []byte("artifact"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	provenance := filepath.Join(directory, "provenance.json")
+	options := releasepkg.ProvenanceOptions{Version: "v1.2.3", Commit: "abc123", BuildDate: time.Unix(1, 0), Builder: "test"}
+	if err := releasepkg.WriteProvenance(directory, provenance, options); err != nil {
+		t.Fatal(err)
+	}
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	privatePath, publicPath := writeReleaseKeys(t, directory, privateKey, publicKey)
+	signature, err := releasepkg.SignFile(provenance, privatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	signaturePath := filepath.Join(directory, "provenance.sig")
+	if err := os.WriteFile(signaturePath, []byte(signature+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	args := []string{"release", "verify", "--provenance", provenance, "--signature", signaturePath, "--public-key", publicPath, "--directory", directory}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("combined verification failed with %d: %s", code, stderr.String())
+	}
+	if err := os.WriteFile(artifact, []byte("tampered"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
+		t.Fatalf("expected subject mismatch exit 1, got %d: %s", code, stderr.String())
+	}
+}
+
+func writeReleaseKeys(t *testing.T, directory string, privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey) (string, string) {
+	t.Helper()
+	privateDER, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	privatePath := filepath.Join(directory, "private.pem")
+	if err := os.WriteFile(privatePath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateDER}), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	publicDER, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	publicPath := filepath.Join(directory, "public.pem")
+	if err := os.WriteFile(publicPath, pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicDER}), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return privatePath, publicPath
 }
 
 func TestReleaseArchiveCommand(t *testing.T) {

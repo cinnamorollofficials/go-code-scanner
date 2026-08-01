@@ -469,7 +469,12 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 	provenance := flags.String("provenance", "", "provenance manifest path")
 	signaturePath := flags.String("signature", "", "detached base64 signature path")
 	publicKeyPath := flags.String("public-key", "", "PEM Ed25519 public key path")
+	directory := flags.String("directory", "", "verify provenance subjects in this directory")
 	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "release verify does not accept positional arguments")
 		return 2
 	}
 	if *provenance == "" || *signaturePath == "" || *publicKeyPath == "" {
@@ -489,6 +494,13 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 	if err := releasepkg.VerifyFile(*provenance, string(signature), publicKey); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
+	}
+	if *directory != "" {
+		if err := releasepkg.VerifyProvenance(*provenance, *directory); err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Provenance subjects verified")
 	}
 	fmt.Fprintln(stdout, "Provenance signature verified")
 	return 0
