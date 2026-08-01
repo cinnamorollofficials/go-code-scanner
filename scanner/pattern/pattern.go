@@ -2,7 +2,9 @@ package pattern
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -111,6 +113,13 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request) ([]finding.Finding, []error) {
 	var findings []finding.Finding
 	var failures []error
+	knownFiles := make(map[string]struct{}, len(request.Files))
+	for _, source := range request.Files {
+		relative, err := filepath.Rel(request.Root, source.Path)
+		if err == nil {
+			knownFiles[strings.ToLower(filepath.ToSlash(relative))] = struct{}{}
+		}
+	}
 	for _, source := range request.Files {
 		if err := ctx.Err(); err != nil {
 			return findings, append(failures, err)
@@ -126,15 +135,27 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 			findings = append(findings, fileFinding("temporary-artifact", finding.Quality, "repository_hygiene", finding.Medium,
 				"Temporary atau build artifact ikut dalam perubahan", "Hapus artefak dan tambahkan pola yang sesuai ke .gitignore", relative, 1))
 		}
+		if base == "package.json" && !hasJavaScriptLockfile(knownFiles, filepath.ToSlash(filepath.Dir(relative))) {
+			findings = append(findings, fileFinding("manifest-without-lockfile", finding.SupplyChain, "dependency_lock", finding.High,
+				"JavaScript dependency manifest tidak memiliki lockfile pada directory yang sama", "Commit lockfile package manager untuk resolution dependency yang reproducible", relative, 1))
+		}
 		if base != "dockerfile" && !strings.HasPrefix(base, "dockerfile.") && request.Mode == "full" {
-			continue
+			if base != "go.mod" && base != "package.json" && !isGitHubWorkflow(relative) {
+				continue
+			}
 		}
 		reader, openErr := source.Open(ctx)
 		if openErr != nil {
 			failures = append(failures, fmt.Errorf("inspect %s: %w", relative, openErr))
 			continue
 		}
-		lineScanner := bufio.NewScanner(io.LimitReader(reader, 64*1024))
+		content, readErr := io.ReadAll(io.LimitReader(reader, 64*1024+1))
+		if readErr != nil {
+			_ = reader.Close()
+			failures = append(failures, fmt.Errorf("inspect %s: %w", relative, readErr))
+			continue
+		}
+		lineScanner := bufio.NewScanner(bytes.NewReader(content))
 		line := 0
 		for lineScanner.Scan() {
 			line++
@@ -143,11 +164,26 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 				findings = append(findings, fileFinding("docker-root-user", finding.Hardening, "container_security", finding.High,
 					"Docker container dikonfigurasi berjalan sebagai root", "Gunakan USER non-root dengan permission minimum", relative, line))
 			}
+			if (base == "dockerfile" || strings.HasPrefix(base, "dockerfile.")) && dockerLatest(text) {
+				findings = append(findings, fileFinding("docker-latest-tag", finding.SupplyChain, "unpinned_dependency", finding.High,
+					"Docker base image menggunakan mutable tag latest", "Pin base image ke digest sha256 atau version tag yang immutable", relative, line))
+			}
+			if base == "go.mod" && localGoReplace(text) {
+				findings = append(findings, fileFinding("go-local-replace", finding.SupplyChain, "unpinned_dependency", finding.High,
+					"go.mod menggunakan replace ke path lokal", "Gunakan module version yang dapat direproduksi atau workspace file yang tidak di-commit", relative, line))
+			}
+			if isGitHubWorkflow(relative) && mutableActionReference(text) {
+				findings = append(findings, fileFinding("github-action-mutable-ref", finding.SupplyChain, "ci_dependency", finding.High,
+					"GitHub Action menggunakan ref yang dapat berubah", "Pin action ke full commit SHA dan catat version tag sebagai komentar", relative, line))
+			}
 			if request.Mode != "full" && strings.Contains(text, "Code generated") && strings.Contains(text, "DO NOT EDIT") {
 				findings = append(findings, fileFinding("generated-file-changed", finding.Quality, "generated_code", finding.Low,
 					"Generated file termasuk dalam perubahan", "Pastikan file dihasilkan ulang dari source generator, bukan diedit manual", relative, line))
 				break
 			}
+		}
+		if base == "package.json" {
+			findings = append(findings, unpinnedPackageDependencies(content, relative)...)
 		}
 		if scanErr := lineScanner.Err(); scanErr != nil {
 			failures = append(failures, fmt.Errorf("inspect %s: %w", relative, scanErr))
@@ -157,6 +193,94 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 		}
 	}
 	return findings, failures
+}
+
+func hasJavaScriptLockfile(files map[string]struct{}, directory string) bool {
+	if directory == "." {
+		directory = ""
+	} else if directory != "" {
+		directory += "/"
+	}
+	for _, name := range []string{"package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"} {
+		if _, ok := files[strings.ToLower(directory+name)]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func dockerLatest(line string) bool {
+	fields := strings.Fields(strings.TrimSpace(line))
+	if len(fields) < 2 || !strings.EqualFold(fields[0], "FROM") {
+		return false
+	}
+	image := strings.ToLower(fields[1])
+	return strings.HasSuffix(image, ":latest")
+}
+
+func localGoReplace(line string) bool {
+	parts := strings.SplitN(strings.TrimSpace(line), "=>", 2)
+	if len(parts) != 2 {
+		return false
+	}
+	target := strings.Fields(strings.TrimSpace(parts[1]))
+	return len(target) > 0 && (strings.HasPrefix(target[0], "./") || strings.HasPrefix(target[0], "../") || filepath.IsAbs(target[0]))
+}
+
+func isGitHubWorkflow(path string) bool {
+	path = strings.ToLower(filepath.ToSlash(path))
+	return strings.HasPrefix(path, ".github/workflows/") && (strings.HasSuffix(path, ".yml") || strings.HasSuffix(path, ".yaml"))
+}
+
+func mutableActionReference(line string) bool {
+	line = strings.TrimSpace(line)
+	if !strings.HasPrefix(line, "uses:") && !strings.HasPrefix(line, "- uses:") {
+		return false
+	}
+	at := strings.LastIndex(line, "@")
+	if at < 0 {
+		return true
+	}
+	if strings.TrimSpace(line[at+1:]) == "" {
+		return true
+	}
+	ref := strings.Fields(line[at+1:])[0]
+	if len(ref) != 40 {
+		return true
+	}
+	for _, character := range ref {
+		if !((character >= '0' && character <= '9') || (character >= 'a' && character <= 'f') || (character >= 'A' && character <= 'F')) {
+			return true
+		}
+	}
+	return false
+}
+
+func unpinnedPackageDependencies(content []byte, path string) []finding.Finding {
+	var manifest struct {
+		Dependencies         map[string]string `json:"dependencies"`
+		DevDependencies      map[string]string `json:"devDependencies"`
+		OptionalDependencies map[string]string `json:"optionalDependencies"`
+		PeerDependencies     map[string]string `json:"peerDependencies"`
+	}
+	if json.Unmarshal(content, &manifest) != nil {
+		return nil
+	}
+	var findings []finding.Finding
+	groups := []map[string]string{manifest.Dependencies, manifest.DevDependencies, manifest.OptionalDependencies, manifest.PeerDependencies}
+	for _, group := range groups {
+		for name, version := range group {
+			value := strings.ToLower(strings.TrimSpace(version))
+			if value != "*" && value != "latest" && !strings.HasPrefix(value, "git+") && !strings.HasPrefix(value, "github:") {
+				continue
+			}
+			item := fileFinding("javascript-unpinned-dependency", finding.SupplyChain, "unpinned_dependency", finding.High,
+				fmt.Sprintf("Dependency %s menggunakan version reference yang tidak dikunci", name), "Pin dependency ke version range yang terkontrol dan commit lockfile", path, 1)
+			item.Metadata = map[string]string{"dependency": name, "version": version}
+			findings = append(findings, item)
+		}
+	}
+	return findings
 }
 
 func temporaryArtifact(base, extension string) bool {

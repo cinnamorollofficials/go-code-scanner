@@ -58,6 +58,30 @@ func TestFilesIncludesMetadataCandidatesWithoutScanningDependencies(t *testing.T
 	}
 }
 
+func TestFilesIncludesRegexExcludedLockfileForMetadataPolicy(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "package-lock.json"))
+	cfg := config.Default()
+	cfg.Root = root
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	files, err := Files(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := sourceBasenames(files); len(got) != 1 || got[0] != "package-lock.json" {
+		t.Fatalf("lockfile missing from metadata candidates: %v", got)
+	}
+	sources, err := Sources(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sources) != 0 {
+		t.Fatalf("lockfile leaked into regex sources: %v", sourceBasenames(sources))
+	}
+}
+
 func TestStagedSourceReadsGitIndexInsteadOfWorkingTree(t *testing.T) {
 	root := t.TempDir()
 	runGit(t, root, "init")

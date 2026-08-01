@@ -172,6 +172,47 @@ func TestScanAppliesOptionalQualitySizePolicies(t *testing.T) {
 	}
 }
 
+func TestScanAppliesOfflineSupplyChainPolicies(t *testing.T) {
+	files := []scanner.Source{
+		memorySource("/repo/package.json", `{"dependencies":{"unsafe":"latest","safe":"^1.2.3"}}`),
+		memorySource("/repo/go.mod", "module example.test/app\nreplace example.test/lib => ../lib\n"),
+		memorySource("/repo/Dockerfile", "FROM alpine:latest\nUSER app\n"),
+		memorySource("/repo/.github/workflows/ci.yml", "steps:\n  - uses: actions/checkout@v4\n"),
+	}
+	result := New(nil, 1).Scan(context.Background(), scanner.Request{Root: "/repo", Mode: "staged", Files: files})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 5 {
+		t.Fatalf("unexpected supply-chain result: %+v", result)
+	}
+	want := map[string]bool{
+		"manifest-without-lockfile": true, "javascript-unpinned-dependency": true,
+		"go-local-replace": true, "docker-latest-tag": true, "github-action-mutable-ref": true,
+	}
+	for _, item := range result.Findings {
+		if item.Domain != finding.SupplyChain || !want[item.RuleID] {
+			t.Fatalf("unexpected supply-chain finding: %+v", item)
+		}
+		delete(want, item.RuleID)
+	}
+	if len(want) != 0 {
+		t.Fatalf("missing supply-chain findings: %v", want)
+	}
+}
+
+func TestOfflineSupplyChainPoliciesAcceptPinnedInputs(t *testing.T) {
+	sha := strings.Repeat("a", 40)
+	files := []scanner.Source{
+		memorySource("/repo/package.json", `{"dependencies":{"safe":"^1.2.3"}}`),
+		memorySource("/repo/package-lock.json", `{}`),
+		memorySource("/repo/go.mod", "module example.test/app\nrequire example.test/lib v1.2.3\n"),
+		memorySource("/repo/Dockerfile", "FROM alpine:3.22\nUSER app\n"),
+		memorySource("/repo/.github/workflows/ci.yml", "steps:\n  - uses: actions/checkout@"+sha+"\n"),
+	}
+	result := New(nil, 1).Scan(context.Background(), scanner.Request{Root: "/repo", Mode: "staged", Files: files})
+	if result.State != finding.ScannerClean || len(result.Findings) != 0 {
+		t.Fatalf("pinned inputs produced findings: %+v", result)
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil

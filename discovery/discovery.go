@@ -57,7 +57,7 @@ func walk(ctx context.Context, cfg config.Config, allFiles bool) ([]scanner.Sour
 		if entry.IsDir() && path != cfg.Root && contains(cfg.ExcludeDirectories, entry.Name()) {
 			return filepath.SkipDir
 		}
-		if entry.Type().IsRegular() && pathAllowed(path, cfg) && (allFiles || allowed(path, cfg)) {
+		if entry.Type().IsRegular() && pathAllowed(path, cfg, allFiles) && (allFiles || allowed(path, cfg)) {
 			sources = append(sources, fileSource(path))
 		}
 		return nil
@@ -79,7 +79,7 @@ func gitSources(ctx context.Context, cfg config.Config, staged, allFiles bool, a
 		}
 		relative := filepath.ToSlash(string(name))
 		path := filepath.Join(cfg.Root, filepath.FromSlash(relative))
-		if !pathAllowed(path, cfg) || (!allFiles && !allowed(path, cfg)) {
+		if !pathAllowed(path, cfg, allFiles) || (!allFiles && !allowed(path, cfg)) {
 			continue
 		}
 		if staged {
@@ -120,7 +120,7 @@ func allowed(path string, cfg config.Config) bool {
 	return contains(cfg.IncludeExtensions, ext)
 }
 
-func pathAllowed(path string, cfg config.Config) bool {
+func pathAllowed(path string, cfg config.Config, includeExcludedFiles bool) bool {
 	relative, err := filepath.Rel(cfg.Root, path)
 	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
 		return false
@@ -130,7 +130,7 @@ func pathAllowed(path string, cfg config.Config) bool {
 			return false
 		}
 	}
-	return !contains(cfg.ExcludeFiles, filepath.Base(path))
+	return includeExcludedFiles || !contains(cfg.ExcludeFiles, filepath.Base(path))
 }
 
 func contains(values []string, target string) bool {
