@@ -14,8 +14,8 @@ func TestCIWorkflowUsesPinnedActionsAndVerificationScript(t *testing.T) {
 	}
 	contents := string(workflow)
 	actions := regexp.MustCompile(`(?m)^\s*uses:\s+[^@\s]+@([0-9a-f]{40})(?:\s|$)`).FindAllStringSubmatch(contents, -1)
-	if len(actions) != 2 {
-		t.Fatalf("expected 2 actions pinned to full commit SHAs, found %d", len(actions))
+	if len(actions) != 4 {
+		t.Fatalf("expected 4 pinned action uses across verification and platform jobs, found %d", len(actions))
 	}
 	if !strings.Contains(contents, "run: ./scripts/verify.sh") {
 		t.Fatal("CI workflow must run the canonical verification script")
@@ -35,6 +35,17 @@ func TestCIWorkflowUsesPinnedActionsAndVerificationScript(t *testing.T) {
 	}
 	if !strings.Contains(contents, "persist-credentials: false") {
 		t.Fatal("checkout credentials must not persist after checkout")
+	}
+	for _, platform := range []string{"ubuntu-latest", "macos-latest", "windows-latest"} {
+		if !strings.Contains(contents, platform) {
+			t.Fatalf("cross-platform matrix is missing %s", platform)
+		}
+	}
+	if !strings.Contains(contents, "run: go build ./cmd/security-review") || !strings.Contains(contents, "run: go test ./...") {
+		t.Fatal("cross-platform matrix must build the CLI and run all tests")
+	}
+	if strings.Count(contents, "go test -race") != 0 {
+		t.Fatal("race tests belong in the supported Linux verification script, not every matrix runner")
 	}
 }
 

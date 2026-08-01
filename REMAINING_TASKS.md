@@ -34,7 +34,7 @@ This document is the handoff checklist for continuing the project in a new sessi
 
 - [x] **11. Add fuzz-smoke execution to verification.** Run existing fuzz targets for a short bounded duration covering config, rules, suppression, baseline, and external adapter parsing. Ensure the command is stable in CI. Commit suggestion: `ci(test): run parser fuzz smoke tests`.
 - [x] **12. Add vulnerability scanning.** Run `govulncheck ./...` when available, pin installation/version behavior, and distinguish tool unavailability from discovered vulnerabilities. Commit suggestion: `ci(security): scan Go vulnerabilities`.
-- [ ] **13. Add cross-platform CI.** Verify build and platform-sensitive tests on Linux, macOS, and Windows. Keep expensive race tests on supported runners only and ensure path/permission expectations are portable. Commit suggestion: `ci: verify supported platforms`.
+- [x] **13. Add cross-platform CI.** Verify build and platform-sensitive tests on Linux, macOS, and Windows. Keep expensive race tests on supported runners only and ensure path/permission expectations are portable. Commit suggestion: `ci: verify supported platforms`.
 - [ ] **14. Add artifact and report redaction tests.** Assert secrets cannot appear in terminal, JSON, SARIF, JUnit, cache entries, provenance errors, or external scanner diagnostics. Commit suggestion: `test(security): verify output redaction`.
 - [ ] **15. Add resource-boundary integration tests.** Cover oversized files, excessive file counts, command output limits, timeouts, cancellation, snapshot cleanup, and cache retention under boundary conditions. Commit suggestion: `test(hardening): cover resource boundaries`.
 
