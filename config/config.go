@@ -305,8 +305,14 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("quality file and line limits cannot be negative")
 	}
 	if c.Cache.Enabled {
-		if _, err := ResolveProjectPath(c.Root, c.Cache.Directory); err != nil {
+		cacheDirectory, err := ResolveProjectPath(c.Root, c.Cache.Directory)
+		if err != nil {
 			return fmt.Errorf("cache.directory: %w", err)
+		}
+		if info, statErr := os.Lstat(cacheDirectory); statErr == nil && info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("cache.directory: symlink directories are not allowed")
+		} else if statErr != nil && !os.IsNotExist(statErr) {
+			return fmt.Errorf("cache.directory: %w", statErr)
 		}
 		if _, err := c.Cache.MaxAgeDuration(); err != nil {
 			return err

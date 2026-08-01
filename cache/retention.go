@@ -87,6 +87,9 @@ func (s Store) Prune(maxAge time.Duration, maxBytes int64) (int, error) {
 }
 
 func (s Store) cacheFiles() ([]cacheFile, error) {
+	if err := s.rejectDirectorySymlink(); err != nil {
+		return nil, err
+	}
 	entries, err := os.ReadDir(s.Directory)
 	if os.IsNotExist(err) {
 		return nil, nil

@@ -122,5 +122,25 @@ func (s Store) entryPath(key string) (string, error) {
 	if s.Directory == "" {
 		return "", fmt.Errorf("cache directory is required")
 	}
+	if err := s.rejectDirectorySymlink(); err != nil {
+		return "", err
+	}
 	return filepath.Join(s.Directory, key+".json"), nil
+}
+
+func (s Store) rejectDirectorySymlink() error {
+	info, err := os.Lstat(s.Directory)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("inspect cache directory: %w", err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("cache directory must not be a symlink")
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("cache directory path is not a directory")
+	}
+	return nil
 }

@@ -71,3 +71,23 @@ func TestStoreQuarantinesCorruptEntryAsCacheMiss(t *testing.T) {
 		t.Fatalf("healthy replacement was not readable: found=%t err=%v", found, err)
 	}
 }
+
+func TestStoreRejectsSymlinkDirectory(t *testing.T) {
+	outside := t.TempDir()
+	link := filepath.Join(t.TempDir(), "cache")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	store := Store{Directory: link}
+	key, _ := Key(KeyInput{ScannerID: "pattern", ScannerVersion: "1"})
+	if err := store.Put(key, scanner.Result{}); err == nil {
+		t.Fatal("cache store accepted symlink directory")
+	}
+	if _, err := store.Stats(); err == nil {
+		t.Fatal("cache stats accepted symlink directory")
+	}
+	entries, err := os.ReadDir(outside)
+	if err != nil || len(entries) != 0 {
+		t.Fatalf("outside directory was modified: entries=%v err=%v", entries, err)
+	}
+}
