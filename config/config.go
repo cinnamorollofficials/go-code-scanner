@@ -283,6 +283,9 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("rule_files[%d]: %w", index, err)
 		}
 	}
+	if _, err := ResolveProjectPath(c.Root, c.SuppressionFile); err != nil {
+		return fmt.Errorf("suppression_file: %w", err)
+	}
 	if c.Mode != ModeFull && c.Mode != ModeChanged && c.Mode != ModeStaged {
 		return fmt.Errorf("invalid scan mode %q", c.Mode)
 	}
