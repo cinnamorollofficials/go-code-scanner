@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	pathpkg "path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -72,7 +73,18 @@ type SupplyChainPolicy struct {
 }
 
 type GovernancePolicy struct {
-	RequiredFiles []string `json:"required_files,omitempty"`
+	RequiredFiles   []string         `json:"required_files,omitempty"`
+	RequiredHeaders []RequiredHeader `json:"required_headers,omitempty"`
+}
+
+type RequiredHeader struct {
+	ID             string           `json:"id"`
+	Paths          []string         `json:"paths"`
+	Pattern        string           `json:"pattern"`
+	MaxLines       int              `json:"max_lines,omitempty"`
+	Severity       finding.Severity `json:"severity,omitempty"`
+	Description    string           `json:"description,omitempty"`
+	Recommendation string           `json:"recommendation,omitempty"`
 }
 
 func (s Scanner) TimeoutDuration() (time.Duration, error) {
@@ -252,6 +264,36 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("governance.required_files contains duplicate path %q", required)
 		}
 		seenRequiredFiles[key] = struct{}{}
+	}
+	seenHeaders := make(map[string]struct{}, len(c.Governance.RequiredHeaders))
+	for index, header := range c.Governance.RequiredHeaders {
+		if strings.TrimSpace(header.ID) == "" {
+			return fmt.Errorf("governance.required_headers[%d]: id is required", index)
+		}
+		if _, ok := seenHeaders[header.ID]; ok {
+			return fmt.Errorf("governance.required_headers[%d]: duplicate id %q", index, header.ID)
+		}
+		seenHeaders[header.ID] = struct{}{}
+		if len(header.Paths) == 0 {
+			return fmt.Errorf("governance.required_headers[%d]: paths are required", index)
+		}
+		for _, pattern := range header.Paths {
+			if strings.TrimSpace(pattern) == "" {
+				return fmt.Errorf("governance.required_headers[%d]: empty path pattern", index)
+			}
+			if _, err := pathpkg.Match(pattern, "fixture"); err != nil {
+				return fmt.Errorf("governance.required_headers[%d]: invalid path pattern %q: %w", index, pattern, err)
+			}
+		}
+		if _, err := regexp.Compile(header.Pattern); err != nil || header.Pattern == "" {
+			return fmt.Errorf("governance.required_headers[%d]: invalid pattern %q", index, header.Pattern)
+		}
+		if header.MaxLines < 0 {
+			return fmt.Errorf("governance.required_headers[%d]: max_lines cannot be negative", index)
+		}
+		if header.Severity != "" && !header.Severity.Valid() {
+			return fmt.Errorf("governance.required_headers[%d]: invalid severity %q", index, header.Severity)
+		}
 	}
 	for domain, threshold := range c.Policy {
 		if !domain.Valid() {

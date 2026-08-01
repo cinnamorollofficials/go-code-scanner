@@ -90,6 +90,13 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("hash rule set: %w", err)
 	}
+	headerPolicies := make([]patternscanner.HeaderPolicy, len(cfg.Governance.RequiredHeaders))
+	for index, header := range cfg.Governance.RequiredHeaders {
+		headerPolicies[index] = patternscanner.HeaderPolicy{
+			ID: header.ID, Paths: header.Paths, Pattern: header.Pattern, MaxLines: header.MaxLines,
+			Severity: header.Severity, Description: header.Description, Recommendation: header.Recommendation,
+		}
+	}
 	r := &reviewer{
 		config: cfg,
 		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers, patternscanner.Limits{
@@ -97,7 +104,8 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 			QualityMaxFileBytes: cfg.QualityMaxFileBytes, QualityMaxLineLength: cfg.QualityMaxLineLength,
 			DependencyAllowlist: cfg.SupplyChain.DependencyAllowlist, DependencyDenylist: cfg.SupplyChain.DependencyDenylist,
 			LicenseAllowlist: cfg.SupplyChain.LicenseAllowlist, LicenseDenylist: cfg.SupplyChain.LicenseDenylist,
-			RequiredFiles: cfg.Governance.RequiredFiles,
+			RequiredFiles:   cfg.Governance.RequiredFiles,
+			RequiredHeaders: headerPolicies,
 		}), required: true}},
 		now:         time.Now,
 		configHash:  configHash,

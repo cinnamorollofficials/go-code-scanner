@@ -86,6 +86,31 @@ func TestGovernanceRequiredFilesRejectUnsafeAndDuplicatePaths(t *testing.T) {
 	}
 }
 
+func TestGovernanceRequiredHeaderValidation(t *testing.T) {
+	valid := Default()
+	valid.Root = t.TempDir()
+	valid.Governance.RequiredHeaders = []RequiredHeader{{
+		ID: "license-header", Paths: []string{"**/*.go"}, Pattern: `^// Copyright`, MaxLines: 5, Severity: finding.High,
+	}}
+	if err := valid.Validate(); err != nil {
+		t.Fatalf("valid required header rejected: %v", err)
+	}
+	invalid := []RequiredHeader{
+		{ID: "", Paths: []string{"*.go"}, Pattern: "header"},
+		{ID: "bad-glob", Paths: []string{"[bad"}, Pattern: "header"},
+		{ID: "bad-regex", Paths: []string{"*.go"}, Pattern: "[bad"},
+		{ID: "bad-limit", Paths: []string{"*.go"}, Pattern: "header", MaxLines: -1},
+	}
+	for _, header := range invalid {
+		cfg := Default()
+		cfg.Root = t.TempDir()
+		cfg.Governance.RequiredHeaders = []RequiredHeader{header}
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("invalid required header accepted: %+v", header)
+		}
+	}
+}
+
 func TestDefaultBaselinePath(t *testing.T) {
 	if got := Default().BaselineFile; got != ".security-baseline.json" {
 		t.Fatalf("unexpected default baseline path %q", got)

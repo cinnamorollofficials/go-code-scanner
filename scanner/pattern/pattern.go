@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	pathpkg "path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -21,6 +23,7 @@ type Scanner struct {
 	rulesBySuffix map[string][]rules.Compiled
 	workers       int
 	limits        Limits
+	headers       []compiledHeader
 }
 
 type Limits struct {
@@ -33,6 +36,22 @@ type Limits struct {
 	LicenseAllowlist     []string
 	LicenseDenylist      []string
 	RequiredFiles        []string
+	RequiredHeaders      []HeaderPolicy
+}
+
+type HeaderPolicy struct {
+	ID             string
+	Paths          []string
+	Pattern        string
+	MaxLines       int
+	Severity       finding.Severity
+	Description    string
+	Recommendation string
+}
+
+type compiledHeader struct {
+	HeaderPolicy
+	expression *regexp.Regexp
 }
 
 func New(compiled []rules.Compiled, workers int, configured ...Limits) *Scanner {
@@ -41,6 +60,12 @@ func New(compiled []rules.Compiled, workers int, configured ...Limits) *Scanner 
 		limits = configured[0]
 	}
 	s := &Scanner{rulesBySuffix: make(map[string][]rules.Compiled), workers: max(workers, 1), limits: limits}
+	for _, header := range limits.RequiredHeaders {
+		expression, err := regexp.Compile(header.Pattern)
+		if err == nil {
+			s.headers = append(s.headers, compiledHeader{HeaderPolicy: header, expression: expression})
+		}
+	}
 	for _, rule := range compiled {
 		if len(rule.Extensions) == 0 {
 			s.genericRules = append(s.genericRules, rule)
@@ -419,6 +444,8 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 		relative = source.Path
 	}
 	relative = filepath.ToSlash(relative)
+	headers := s.headersFor(relative)
+	headerMatches := make([]bool, len(headers))
 	extension := strings.ToLower(filepath.Ext(source.Path))
 	applicableRules := s.rulesFor(extension)
 	var findings []finding.Finding
@@ -429,6 +456,15 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 	for lineScanner.Scan() {
 		lineNumber++
 		line := lineScanner.Text()
+		for index, header := range headers {
+			maxLines := header.MaxLines
+			if maxLines == 0 {
+				maxLines = 20
+			}
+			if lineNumber <= maxLines && header.expression.MatchString(line) {
+				headerMatches[index] = true
+			}
+		}
 		if s.limits.QualityMaxLineLength > 0 && len([]rune(line)) > s.limits.QualityMaxLineLength {
 			findings = append(findings, fileFinding("line-length", finding.Quality, "maintainability", finding.Low,
 				fmt.Sprintf("Baris melebihi batas %d karakter", s.limits.QualityMaxLineLength),
@@ -456,6 +492,21 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 			fmt.Sprintf("Source file melebihi batas %d bytes", s.limits.QualityMaxFileBytes),
 			"Pisahkan file berdasarkan tanggung jawab atau pindahkan data besar ke format yang sesuai", relative, 1))
 	}
+	for index, header := range headers {
+		if headerMatches[index] {
+			continue
+		}
+		severity := header.Severity
+		if severity == "" {
+			severity = finding.Medium
+		}
+		description := header.Description
+		if description == "" {
+			description = fmt.Sprintf("Required header %s is missing", header.ID)
+		}
+		findings = append(findings, fileFinding(header.ID, finding.Governance, "required_header", severity,
+			description, header.Recommendation, relative, 1))
+	}
 	if err := lineScanner.Err(); err != nil {
 		if strings.Contains(err.Error(), "token too long") {
 			return findings, fmt.Errorf("%s contains a line exceeding %d bytes; increase pattern_max_line_bytes", relative, s.limits.MaxLineBytes)
@@ -463,6 +514,19 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 		return findings, err
 	}
 	return findings, nil
+}
+
+func (s *Scanner) headersFor(path string) []compiledHeader {
+	var result []compiledHeader
+	for _, header := range s.headers {
+		for _, pattern := range header.Paths {
+			if matched, _ := pathpkg.Match(pattern, path); matched {
+				result = append(result, header)
+				break
+			}
+		}
+	}
+	return result
 }
 
 type countingReader struct {

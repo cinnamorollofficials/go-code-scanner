@@ -248,6 +248,29 @@ func TestRequiredRepositoryFilePolicyUsesCompleteInventory(t *testing.T) {
 	}
 }
 
+func TestRequiredHeaderPolicyMatchesSelectedFiles(t *testing.T) {
+	limits := Limits{
+		MaxFileBytes: 1024, MaxLineBytes: 1024,
+		RequiredHeaders: []HeaderPolicy{{
+			ID: "license-header", Paths: []string{"**/*.go", "*.go"}, Pattern: `^// Copyright 2026 Example$`,
+			MaxLines: 3, Severity: finding.High, Recommendation: "Add the approved copyright header",
+		}},
+	}
+	sources := []scanner.Source{
+		memorySource("/repo/good.go", "// Copyright 2026 Example\npackage good\n"),
+		memorySource("/repo/nested/bad.go", "// generated fixture\npackage bad\n"),
+		memorySource("/repo/notes.txt", "no header\n"),
+	}
+	result := New(nil, 1, limits).Scan(context.Background(), scanner.Request{Root: "/repo", Mode: "full", Sources: sources})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 1 {
+		t.Fatalf("unexpected header policy result: %+v", result)
+	}
+	item := result.Findings[0]
+	if item.RuleID != "license-header" || item.Domain != finding.Governance || item.Location.File != "nested/bad.go" {
+		t.Fatalf("unexpected required-header finding: %+v", item)
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil
