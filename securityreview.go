@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/config"
@@ -20,6 +21,7 @@ import (
 )
 
 const SchemaVersion = "1.0"
+const FingerprintVersion = "2"
 
 type Reviewer interface {
 	Run(context.Context) (*finding.Report, error)
@@ -122,7 +124,8 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	}
 	active, suppressed, stale := suppression.Apply(all, suppressions, started)
 	report := &finding.Report{
-		SchemaVersion: SchemaVersion, Timestamp: started, Duration: time.Since(started),
+		SchemaVersion: SchemaVersion, FingerprintVersion: FingerprintVersion,
+		Timestamp: started, Duration: time.Since(started),
 		ScanMode: string(r.config.Mode), Project: r.config.Project,
 		Findings: active, SuppressionsApplied: suppressed,
 		StaleSuppressionFiles: stale, Scanners: statuses, Warnings: warnings,
@@ -250,7 +253,10 @@ func scanSafely(ctx context.Context, source scanner.Scanner, request scanner.Req
 }
 
 func normalize(input []finding.Finding) []finding.Finding {
+	input = append([]finding.Finding(nil), input...)
+	sortFindings(input)
 	seen := make(map[string]struct{}, len(input))
+	occurrences := make(map[string]int, len(input))
 	output := make([]finding.Finding, 0, len(input))
 	for _, item := range input {
 		// Findings produced by scanners built against the original API predate
@@ -259,28 +265,52 @@ func normalize(input []finding.Finding) []finding.Finding {
 		if item.Domain == "" {
 			item.Domain = finding.Security
 		}
-		key := fmt.Sprintf("%s\x00%s\x00%d\x00%s", item.RuleID, filepath.ToSlash(item.Location.File), item.Location.Line, item.Description)
-		fingerprint := fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
-		if _, ok := seen[fingerprint]; ok {
+		path := filepath.ToSlash(item.Location.File)
+		deduplicationKey := fmt.Sprintf("%s\x00%s\x00%d\x00%s", item.RuleID, path, item.Location.Line, item.Description)
+		if _, ok := seen[deduplicationKey]; ok {
 			continue
 		}
-		seen[fingerprint] = struct{}{}
+		seen[deduplicationKey] = struct{}{}
+		identity := strings.Join([]string{
+			FingerprintVersion, string(item.Domain), item.RuleID, path,
+			normalizeFingerprintText(item.Description), normalizeFingerprintText(item.Snippet),
+		}, "\x00")
+		occurrences[identity]++
+		fingerprintInput := fmt.Sprintf("%s\x00%d", identity, occurrences[identity])
+		fingerprint := fmt.Sprintf("%x", sha256.Sum256([]byte(fingerprintInput)))
 		item.Fingerprint = fingerprint[:16]
 		output = append(output, item)
 	}
-	sort.SliceStable(output, func(i, j int) bool {
-		if output[i].Severity.Rank() != output[j].Severity.Rank() {
-			return output[i].Severity.Rank() < output[j].Severity.Rank()
-		}
-		if output[i].Location.File != output[j].Location.File {
-			return output[i].Location.File < output[j].Location.File
-		}
-		return output[i].Location.Line < output[j].Location.Line
-	})
+	sortFindings(output)
 	for index := range output {
 		output[index].ID = fmt.Sprintf("F-%04d", index+1)
 	}
 	return output
+}
+
+func sortFindings(items []finding.Finding) {
+	sort.SliceStable(items, func(i, j int) bool {
+		if items[i].Severity.Rank() != items[j].Severity.Rank() {
+			return items[i].Severity.Rank() < items[j].Severity.Rank()
+		}
+		if items[i].Location.File != items[j].Location.File {
+			return items[i].Location.File < items[j].Location.File
+		}
+		if items[i].Location.Line != items[j].Location.Line {
+			return items[i].Location.Line < items[j].Location.Line
+		}
+		if items[i].RuleID != items[j].RuleID {
+			return items[i].RuleID < items[j].RuleID
+		}
+		if items[i].Description != items[j].Description {
+			return items[i].Description < items[j].Description
+		}
+		return items[i].Tool < items[j].Tool
+	})
+}
+
+func normalizeFingerprintText(value string) string {
+	return strings.Join(strings.Fields(value), " ")
 }
 
 func summarize(active, suppressed []finding.Finding, stale []string) finding.Summary {

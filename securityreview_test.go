@@ -256,6 +256,47 @@ func TestConfiguredCommandHelperProcess(t *testing.T) {
 	os.Exit(0)
 }
 
+func TestFingerprintIsStableAcrossLineMoves(t *testing.T) {
+	base := finding.Finding{
+		RuleID: "fixture", Tool: "pattern", Domain: finding.Security,
+		Severity: finding.High, Description: "fixture finding", Snippet: "dangerousCall(input)",
+		Location: finding.Location{File: "app.go", Line: 10},
+	}
+	moved := base
+	moved.Location.Line = 200
+	first := normalize([]finding.Finding{base})[0]
+	second := normalize([]finding.Finding{moved})[0]
+	if first.Fingerprint != second.Fingerprint {
+		t.Fatalf("line move changed fingerprint: %s != %s", first.Fingerprint, second.Fingerprint)
+	}
+}
+
+func TestFingerprintDistinguishesContentAndRepeatedOccurrences(t *testing.T) {
+	items := []finding.Finding{
+		{RuleID: "fixture", Domain: finding.Security, Severity: finding.High, Description: "finding", Snippet: "first()", Location: finding.Location{File: "app.go", Line: 1}},
+		{RuleID: "fixture", Domain: finding.Security, Severity: finding.High, Description: "finding", Snippet: "second()", Location: finding.Location{File: "app.go", Line: 2}},
+		{RuleID: "fixture", Domain: finding.Security, Severity: finding.High, Description: "finding", Snippet: "first()", Location: finding.Location{File: "app.go", Line: 3}},
+	}
+	normalized := normalize(items)
+	seen := make(map[string]bool, len(normalized))
+	for _, item := range normalized {
+		if seen[item.Fingerprint] {
+			t.Fatalf("duplicate fingerprint in %+v", normalized)
+		}
+		seen[item.Fingerprint] = true
+	}
+}
+
+func TestNormalizeDeduplicatesExactFinding(t *testing.T) {
+	item := finding.Finding{
+		RuleID: "fixture", Domain: finding.Security, Severity: finding.High,
+		Description: "finding", Location: finding.Location{File: "app.go", Line: 4},
+	}
+	if got := len(normalize([]finding.Finding{item, item})); got != 1 {
+		t.Fatalf("expected one finding after deduplication, got %d", got)
+	}
+}
+
 func TestOptionalScannerFailureReturnsReportAndWarning(t *testing.T) {
 	cfg := config.Default()
 	cfg.Root = t.TempDir()

@@ -55,6 +55,7 @@ type ScannerStatus struct {
 
 type Report struct {
 	SchemaVersion         string          `json:"schema_version"`
+	FingerprintVersion    string          `json:"fingerprint_version"`
 	Timestamp             time.Time       `json:"timestamp"`
 	Duration              time.Duration   `json:"duration_ns"`
 	ScanMode              string          `json:"scan_mode"`
