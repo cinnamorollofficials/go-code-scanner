@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -101,6 +102,91 @@ func TestScannerTimeoutReturnsPartialReport(t *testing.T) {
 	}
 	if report.Scanners[1].State != finding.ScannerFailed || len(report.Warnings) != 1 {
 		t.Fatalf("expected timeout failure and warning, got %+v", report)
+	}
+}
+
+type barrierScanner struct {
+	id      string
+	started chan<- string
+	release <-chan struct{}
+}
+
+func (s barrierScanner) ID() string { return s.id }
+
+func (s barrierScanner) Scan(ctx context.Context, _ scanner.Request) scanner.Result {
+	s.started <- s.id
+	select {
+	case <-s.release:
+		return scanner.Result{State: finding.ScannerClean}
+	case <-ctx.Done():
+		return scanner.Result{State: finding.ScannerFailed, Message: ctx.Err().Error()}
+	}
+}
+
+func TestScannersRunConcurrentlyAndKeepRegistrationOrder(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.Workers = 2
+	started := make(chan string, 2)
+	release := make(chan struct{})
+	reviewer, err := New(cfg,
+		WithScanner(barrierScanner{id: "first", started: started, release: release}),
+		WithScanner(barrierScanner{id: "second", started: started, release: release}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type runResult struct {
+		report *finding.Report
+		err    error
+	}
+	completed := make(chan runResult, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	go func() {
+		report, runErr := reviewer.Run(ctx)
+		completed <- runResult{report: report, err: runErr}
+	}()
+
+	seen := map[string]bool{}
+	for range 2 {
+		select {
+		case id := <-started:
+			seen[id] = true
+		case <-ctx.Done():
+			t.Fatal("scanners did not reach the barrier concurrently")
+		}
+	}
+	close(release)
+	result := <-completed
+	if result.err != nil {
+		t.Fatal(result.err)
+	}
+	if !seen["first"] || !seen["second"] {
+		t.Fatalf("unexpected scanners reached barrier: %v", seen)
+	}
+	if got := []string{result.report.Scanners[1].ID, result.report.Scanners[2].ID}; got[0] != "first" || got[1] != "second" {
+		t.Fatalf("scanner statuses are not deterministic: %v", got)
+	}
+}
+
+func TestScannerPanicBecomesOptionalFailure(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	reviewer, err := New(cfg, WithScanner(panicScanner{id: "panic"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatalf("optional panic returned operational error: %v", err)
+	}
+	if report.Scanners[1].State != finding.ScannerFailed || len(report.Warnings) != 1 {
+		t.Fatalf("expected failed scanner and warning, got %+v", report)
+	}
+	if !strings.Contains(report.Scanners[1].Message, "panic") {
+		t.Fatalf("expected panic message, got %q", report.Scanners[1].Message)
 	}
 }
 

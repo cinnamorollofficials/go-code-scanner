@@ -87,34 +87,16 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	statuses := make([]finding.ScannerStatus, 0, len(r.scanners))
 	var operationalErrors []error
 	var warnings []string
-	for _, registered := range r.scanners {
-		source := registered.scanner
-		required := registered.required
-		configured, hasConfig := r.config.Scanners[source.ID()]
-		if hasConfig {
-			required = configured.Required
-		}
-		if hasConfig && !configured.Enabled {
-			statuses = append(statuses, finding.ScannerStatus{
-				ID: source.ID(), State: finding.ScannerSkipped, Required: required,
-				Message: "disabled by configuration",
-			})
+	for _, outcome := range r.runScanners(ctx, request) {
+		all = append(all, outcome.findings...)
+		statuses = append(statuses, outcome.status)
+		if outcome.failure == nil {
 			continue
 		}
-		timeout, _ := configured.TimeoutDuration()
-		result := executeScanner(ctx, source, request, timeout)
-		all = append(all, result.Findings...)
-		statuses = append(statuses, finding.ScannerStatus{
-			ID: source.ID(), State: result.State, Duration: result.Duration,
-			Message: result.Message, Version: result.Version, Required: required,
-		})
-		if result.State == finding.ScannerFailed || result.State == finding.ScannerPartial {
-			failure := fmt.Errorf("scanner %s failed: %s", source.ID(), result.Message)
-			if required {
-				operationalErrors = append(operationalErrors, failure)
-			} else {
-				warnings = append(warnings, failure.Error())
-			}
+		if outcome.status.Required {
+			operationalErrors = append(operationalErrors, outcome.failure)
+		} else {
+			warnings = append(warnings, outcome.failure.Error())
 		}
 	}
 	all = normalize(all)
@@ -133,9 +115,71 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	return report, errors.Join(operationalErrors...)
 }
 
-func executeScanner(ctx context.Context, source scanner.Scanner, request scanner.Request, timeout time.Duration) scanner.Result {
+type scannerOutcome struct {
+	findings []finding.Finding
+	status   finding.ScannerStatus
+	failure  error
+}
+
+func (r *reviewer) runScanners(ctx context.Context, request scanner.Request) []scannerOutcome {
+	outcomes := make([]scannerOutcome, len(r.scanners))
+	if len(r.scanners) == 0 {
+		return outcomes
+	}
+
+	jobs := make(chan int)
+	workerCount := min(r.config.Workers, len(r.scanners))
+	done := make(chan struct{}, workerCount)
+	for range workerCount {
+		go func() {
+			defer func() { done <- struct{}{} }()
+			for index := range jobs {
+				outcomes[index] = r.runScanner(ctx, r.scanners[index], request)
+			}
+		}()
+	}
+	for index := range r.scanners {
+		jobs <- index
+	}
+	close(jobs)
+	for range workerCount {
+		<-done
+	}
+	return outcomes
+}
+
+func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner, request scanner.Request) scannerOutcome {
+	source := registered.scanner
+	required := registered.required
+	configured, hasConfig := r.config.Scanners[source.ID()]
+	if hasConfig {
+		required = configured.Required
+	}
+	if hasConfig && !configured.Enabled {
+		return scannerOutcome{status: finding.ScannerStatus{
+			ID: source.ID(), State: finding.ScannerSkipped, Required: required,
+			Message: "disabled by configuration",
+		}}
+	}
+
+	timeout, _ := configured.TimeoutDuration()
+	result := executeScanner(ctx, source, request, timeout)
+	outcome := scannerOutcome{
+		findings: result.Findings,
+		status: finding.ScannerStatus{
+			ID: source.ID(), State: result.State, Duration: result.Duration,
+			Message: result.Message, Version: result.Version, Required: required,
+		},
+	}
+	if result.State == finding.ScannerFailed || result.State == finding.ScannerPartial {
+		outcome.failure = fmt.Errorf("scanner %s failed: %s", source.ID(), result.Message)
+	}
+	return outcome
+}
+
+func executeScanner(ctx context.Context, source scanner.Scanner, request scanner.Request, timeout time.Duration) (result scanner.Result) {
 	if timeout <= 0 {
-		return source.Scan(ctx, request)
+		return scanSafely(ctx, source, request)
 	}
 
 	started := time.Now()
@@ -143,7 +187,7 @@ func executeScanner(ctx context.Context, source scanner.Scanner, request scanner
 	defer cancel()
 	results := make(chan scanner.Result, 1)
 	go func() {
-		results <- source.Scan(scanCtx, request)
+		results <- scanSafely(scanCtx, source, request)
 	}()
 
 	select {
@@ -158,6 +202,20 @@ func executeScanner(ctx context.Context, source scanner.Scanner, request scanner
 			State: finding.ScannerFailed, Message: message, Duration: time.Since(started),
 		}
 	}
+}
+
+func scanSafely(ctx context.Context, source scanner.Scanner, request scanner.Request) (result scanner.Result) {
+	started := time.Now()
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			result = scanner.Result{
+				State:    finding.ScannerFailed,
+				Message:  fmt.Sprintf("panic: %v", recovered),
+				Duration: time.Since(started),
+			}
+		}
+	}()
+	return source.Scan(ctx, request)
 }
 
 func normalize(input []finding.Finding) []finding.Finding {
