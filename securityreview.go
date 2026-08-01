@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
 	"github.com/cinnamorollofficials/go-code-scanner/config"
 	"github.com/cinnamorollofficials/go-code-scanner/discovery"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
@@ -175,11 +176,23 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 		return nil, err
 	}
 	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Sources: sources, Files: files, RepositoryFiles: repositoryFiles}
+	var runtimeCache *scannerCache
+	if r.config.Cache.Enabled {
+		directory, resolveErr := config.ResolveProjectPath(r.config.Root, r.config.Cache.Directory)
+		if resolveErr != nil {
+			return nil, resolveErr
+		}
+		hashes, hashErr := cachepkg.HashSources(ctx, r.config.Root, sources, files, repositoryFiles)
+		if hashErr != nil {
+			return nil, hashErr
+		}
+		runtimeCache = &scannerCache{store: cachepkg.Store{Directory: directory}, files: hashes}
+	}
 	var all []finding.Finding
 	statuses := make([]finding.ScannerStatus, 0, len(r.scanners))
 	var operationalErrors []error
 	var warnings []string
-	for _, outcome := range r.runScanners(ctx, request) {
+	for _, outcome := range r.runScanners(ctx, request, runtimeCache) {
 		all = append(all, outcome.findings...)
 		statuses = append(statuses, outcome.status)
 		if outcome.failure == nil {
@@ -212,6 +225,12 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 		StaleSuppressionFiles: stale, Scanners: statuses, Warnings: warnings,
 	}
 	report.Summary = summarize(active, suppressed, stale)
+	if runtimeCache != nil {
+		maxAge, _ := r.config.Cache.MaxAgeDuration()
+		if _, pruneErr := runtimeCache.store.Prune(maxAge, r.config.Cache.MaxBytes); pruneErr != nil {
+			return report, errors.Join(errors.Join(operationalErrors...), pruneErr)
+		}
+	}
 	return report, errors.Join(operationalErrors...)
 }
 
@@ -230,7 +249,12 @@ type scannerOutcome struct {
 	failure  error
 }
 
-func (r *reviewer) runScanners(ctx context.Context, request scanner.Request) []scannerOutcome {
+type scannerCache struct {
+	store cachepkg.Store
+	files map[string]string
+}
+
+func (r *reviewer) runScanners(ctx context.Context, request scanner.Request, runtimeCache *scannerCache) []scannerOutcome {
 	outcomes := make([]scannerOutcome, len(r.scanners))
 	if len(r.scanners) == 0 {
 		return outcomes
@@ -243,7 +267,7 @@ func (r *reviewer) runScanners(ctx context.Context, request scanner.Request) []s
 		go func() {
 			defer func() { done <- struct{}{} }()
 			for index := range jobs {
-				outcomes[index] = r.runScanner(ctx, r.scanners[index], request)
+				outcomes[index] = r.runScanner(ctx, r.scanners[index], request, runtimeCache)
 			}
 		}()
 	}
@@ -257,7 +281,7 @@ func (r *reviewer) runScanners(ctx context.Context, request scanner.Request) []s
 	return outcomes
 }
 
-func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner, request scanner.Request) scannerOutcome {
+func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner, request scanner.Request, runtimeCache *scannerCache) scannerOutcome {
 	source := registered.scanner
 	required := registered.required
 	descriptor := describeScanner(source)
@@ -295,7 +319,49 @@ func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner,
 	}
 
 	timeout, _ := configured.TimeoutDuration()
-	result := executeScanner(ctx, source, request, timeout)
+	result := scanner.Result{}
+	cacheHit := false
+	if runtimeCache != nil {
+		version := descriptor.Version
+		if version == "" {
+			version = r.toolVersion
+		}
+		if version == "" {
+			version = "builtin"
+		}
+		key, keyErr := cachepkg.Key(cachepkg.KeyInput{ScannerID: source.ID(), ScannerVersion: version, ConfigHash: r.configHash, RuleSetHash: r.ruleSetHash, Files: runtimeCache.files})
+		if keyErr == nil {
+			if cached, found, getErr := runtimeCache.store.Get(key); getErr == nil && found {
+				result, cacheHit = cached, true
+			} else if getErr == nil {
+				lockErr := runtimeCache.store.WithLock(ctx, key, 0, func() error {
+					if cached, found, err := runtimeCache.store.Get(key); err != nil {
+						return err
+					} else if found {
+						result, cacheHit = cached, true
+						return nil
+					}
+					result = executeScanner(ctx, source, request, timeout)
+					result = cachepkg.Sanitize(result)
+					return runtimeCache.store.Put(key, result)
+				})
+				if lockErr != nil {
+					result = scanner.Result{State: finding.ScannerFailed, Failure: scanner.FailureExecution, Message: lockErr.Error()}
+				}
+			} else {
+				result = scanner.Result{State: finding.ScannerFailed, Failure: scanner.FailureExecution, Message: getErr.Error()}
+			}
+		}
+	} else {
+		result = executeScanner(ctx, source, request, timeout)
+	}
+	if cacheHit {
+		if result.Message == "" {
+			result.Message = "cache hit"
+		} else {
+			result.Message += "; cache hit"
+		}
+	}
 	if result.Version == "" {
 		result.Version = descriptor.Version
 	}

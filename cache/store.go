@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/scanner"
 )
 
@@ -48,9 +49,7 @@ func (s Store) Put(key string, result scanner.Result) error {
 	if err != nil {
 		return err
 	}
-	for index := range result.Findings {
-		result.Findings[index].Snippet = ""
-	}
+	result = Sanitize(result)
 	now := time.Now
 	if s.Now != nil {
 		now = s.Now
@@ -87,6 +86,15 @@ func (s Store) Put(key string, result scanner.Result) error {
 		return fmt.Errorf("replace cache entry: %w", err)
 	}
 	return nil
+}
+
+// Sanitize returns a cache-safe deep copy without source snippets.
+func Sanitize(result scanner.Result) scanner.Result {
+	result.Findings = append([]finding.Finding(nil), result.Findings...)
+	for index := range result.Findings {
+		result.Findings[index].Snippet = ""
+	}
+	return result
 }
 
 func (s Store) entryPath(key string) (string, error) {
