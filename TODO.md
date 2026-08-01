@@ -84,5 +84,5 @@ for the current release. They remain intentionally open for a future roadmap:
 
 ## Documentation handoff
 
-- [ ] Complete English user documentation — tracked by tasks 22–25 in
+- [x] Complete English user documentation — tracked by tasks 22–25 in
   [`REMAINING_TASKS.md`](REMAINING_TASKS.md).

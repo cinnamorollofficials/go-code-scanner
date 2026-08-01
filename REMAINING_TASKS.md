@@ -52,7 +52,7 @@ This document is the handoff checklist for continuing the project in a new sessi
 - [x] **22. Rewrite the README in English.** Cover purpose, architecture, supported domains, installation, quick start, exit codes, profiles, hooks, staged behavior, reports, baseline, suppression, cache, release verification, and troubleshooting. Commit suggestion: `docs: complete project README`.
 - [x] **23. Add a complete configuration reference.** Document every config field, default, validation rule, compatibility behavior, scanner type, adapter, environment allowlist, workspace mode, policy threshold, and hook option with minimal and full examples. Commit suggestion: `docs(config): add complete reference`.
 - [x] **24. Add security and release documentation.** Document threat model, trust boundaries, redaction, symlink/path hardening, external command execution, signing-key handling, checksum/provenance verification, reproducible builds, and the release process. Commit suggestion: `docs(security): document hardening and releases`.
-- [ ] **25. Add contribution and migration guides.** Explain development setup, tests, adding rules/scanners/adapters, commit conventions, compatibility contracts, schema migrations, upgrade checks, and release checklist ownership. Commit suggestion: `docs: add contribution and migration guides`.
+- [x] **25. Add contribution and migration guides.** Explain development setup, tests, adding rules/scanners/adapters, commit conventions, compatibility contracts, schema migrations, upgrade checks, and release checklist ownership. Commit suggestion: `docs: add contribution and migration guides`.
 
 ## Mandatory verification commands
 
