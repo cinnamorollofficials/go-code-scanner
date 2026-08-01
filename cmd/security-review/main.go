@@ -11,6 +11,8 @@ import (
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
 	"github.com/cinnamorollofficials/go-code-scanner/config"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/gitrepo"
+	"github.com/cinnamorollofficials/go-code-scanner/hook"
 	"github.com/cinnamorollofficials/go-code-scanner/policy"
 	"github.com/cinnamorollofficials/go-code-scanner/reporter"
 )
@@ -30,6 +32,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runScan(ctx, args[1:], stdout, stderr)
 	case "config":
 		return runConfig(args[1:], stdout, stderr)
+	case "hook":
+		return runHook(ctx, args[1:], stdout, stderr)
 	case "version", "--version", "-version":
 		fmt.Fprintln(stdout, version)
 		return 0
@@ -138,6 +142,82 @@ func runConfig(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func runHook(ctx context.Context, args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprintln(stderr, "usage: security-review hook <install|uninstall|status|run> [options]")
+		return 2
+	}
+	if args[0] == "run" {
+		return runHookEvent(ctx, args[1:], stdout, stderr)
+	}
+	if args[0] != "install" && args[0] != "uninstall" && args[0] != "status" {
+		fmt.Fprintf(stderr, "unknown hook command %q\n", args[0])
+		return 2
+	}
+	flags := flag.NewFlagSet("hook "+args[0], flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	root := flags.String("root", ".", "path inside the Git repository")
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	repository, err := gitrepo.Open(ctx, *root)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	binary, err := os.Executable()
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 3
+	}
+	manager, err := hook.NewManager(repository, binary)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 3
+	}
+	switch args[0] {
+	case "install":
+		err = manager.Install(ctx, hook.PreCommit)
+	case "uninstall":
+		err = manager.Uninstall(ctx, hook.PreCommit)
+	case "status":
+		var state hook.State
+		state, err = manager.Status(ctx, hook.PreCommit)
+		if err == nil {
+			fmt.Fprintf(stdout, "%s: %s\n", hook.PreCommit, state)
+		}
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 3
+	}
+	return 0
+}
+
+func runHookEvent(ctx context.Context, args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != hook.PreCommit {
+		fmt.Fprintln(stderr, "usage: security-review hook run pre-commit [--root <path>]")
+		return 2
+	}
+	flags := flag.NewFlagSet("hook run pre-commit", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	root := flags.String("root", ".", "path inside the Git repository")
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	repository, err := gitrepo.Open(ctx, *root)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	scanArgs := []string{"--root", repository.Root(), "--staged", "--ci"}
+	configPath := filepath.Join(repository.Root(), "security-review.json")
+	if info, statErr := os.Stat(configPath); statErr == nil && info.Mode().IsRegular() {
+		scanArgs = []string{"--config", configPath, "--staged", "--ci"}
+	}
+	return runScan(ctx, scanArgs, stdout, stderr)
+}
+
 func loadConfig(path, root string) (config.Config, error) {
 	if path != "" {
 		return config.Load(path)
@@ -152,5 +232,5 @@ func loadConfig(path, root string) (config.Config, error) {
 }
 
 func writeUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: security-review <scan|config|version> [options]")
+	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|version> [options]")
 }

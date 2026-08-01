@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 )
@@ -53,5 +54,29 @@ func TestScanUsesDomainPolicyAndGlobalCLIOverride(t *testing.T) {
 	args = append(args, "--fail-on", "medium")
 	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
 		t.Fatalf("global override scan exit=%d stderr=%s", code, stderr.String())
+	}
+}
+
+func TestHookInstallStatusAndUninstall(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v: %s", err, output)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), []string{"hook", "install", "--root", root}, &stdout, &stderr); code != 0 {
+		t.Fatalf("install exit=%d stderr=%s", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), []string{"hook", "status", "--root", root}, &stdout, &stderr); code != 0 {
+		t.Fatalf("status exit=%d stderr=%s", code, stderr.String())
+	}
+	if stdout.String() != "pre-commit: installed\n" {
+		t.Fatalf("unexpected status output %q", stdout.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), []string{"hook", "uninstall", "--root", root}, &stdout, &stderr); code != 0 {
+		t.Fatalf("uninstall exit=%d stderr=%s", code, stderr.String())
 	}
 }
