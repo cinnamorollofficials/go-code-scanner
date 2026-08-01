@@ -159,7 +159,7 @@ func parseGovulncheck(data []byte) ([]command.ParsedFinding, error) {
 			item.Metadata["module"], item.Metadata["version"], item.Metadata["package"] = frame.Module, frame.Version, frame.Package
 			if frame.Position != nil && frame.Position.Line > 0 {
 				item.File, item.Line = frame.Position.Filename, frame.Position.Line
-				item.Metadata["function"] = frame.Function
+				item.Metadata["symbol"] = frame.Function
 			}
 		}
 		key := fmt.Sprintf("%s\x00%s\x00%d", item.RuleID, item.File, item.Line)

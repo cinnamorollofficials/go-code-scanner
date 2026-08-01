@@ -23,7 +23,7 @@ import (
 )
 
 const SchemaVersion = "1.0"
-const FingerprintVersion = "2"
+const FingerprintVersion = "3"
 
 type Reviewer interface {
 	Run(context.Context) (*finding.Report, error)
@@ -347,14 +347,15 @@ func normalize(input []finding.Finding) []finding.Finding {
 			item.Domain = finding.Security
 		}
 		path := filepath.ToSlash(item.Location.File)
-		deduplicationKey := fmt.Sprintf("%s\x00%s\x00%d\x00%s", item.RuleID, path, item.Location.Line, item.Description)
+		symbol := normalizeFingerprintText(item.Metadata["symbol"])
+		deduplicationKey := fmt.Sprintf("%s\x00%s\x00%d\x00%s\x00%s", item.RuleID, path, item.Location.Line, item.Description, symbol)
 		if _, ok := seen[deduplicationKey]; ok {
 			continue
 		}
 		seen[deduplicationKey] = struct{}{}
 		identity := strings.Join([]string{
 			FingerprintVersion, string(item.Domain), item.RuleID, path,
-			normalizeFingerprintText(item.Description), normalizeFingerprintText(item.Snippet),
+			normalizeFingerprintText(item.Description), normalizeFingerprintText(item.Snippet), symbol,
 		}, "\x00")
 		occurrences[identity]++
 		fingerprintInput := fmt.Sprintf("%s\x00%d", identity, occurrences[identity])

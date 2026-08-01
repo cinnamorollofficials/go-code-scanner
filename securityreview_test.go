@@ -448,6 +448,25 @@ func TestFingerprintDistinguishesContentAndRepeatedOccurrences(t *testing.T) {
 	}
 }
 
+func TestFingerprintUsesAnalyzerSymbolIdentity(t *testing.T) {
+	base := finding.Finding{
+		RuleID: "fixture", Domain: finding.Reliability, Severity: finding.High,
+		Description: "possible issue", Snippet: "return err",
+		Location: finding.Location{File: "app.go", Line: 10}, Metadata: map[string]string{"symbol": "Service.Create"},
+	}
+	otherSymbol := base
+	otherSymbol.Metadata = map[string]string{"symbol": "Service.Update"}
+	items := normalize([]finding.Finding{base, otherSymbol})
+	if len(items) != 2 || items[0].Fingerprint == items[1].Fingerprint {
+		t.Fatalf("symbol-specific findings collided: %+v", items)
+	}
+	moved := base
+	moved.Location.Line = 100
+	if normalize([]finding.Finding{base})[0].Fingerprint != normalize([]finding.Finding{moved})[0].Fingerprint {
+		t.Fatal("symbol-aware fingerprint changed after line relocation")
+	}
+}
+
 func TestNormalizeDeduplicatesExactFinding(t *testing.T) {
 	item := finding.Finding{
 		RuleID: "fixture", Domain: finding.Security, Severity: finding.High,
