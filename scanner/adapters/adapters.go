@@ -64,7 +64,7 @@ func Spec(id, name string, options Options) (command.Spec, error) {
 			FindingExitCodes: []int{1}, Severity: finding.High, Category: "static_analysis", Description: "gosec reported a security issue", Parser: parseGosec}
 	case Gitleaks:
 		spec = command.Spec{ID: id, Domain: finding.Security,
-			Command: []string{"gitleaks", "dir", "--redact", "--no-banner", "--report-format", "json", "--report-path", "{output}", "."},
+			Command:          []string{"gitleaks", "dir", "--redact", "--no-banner", "--report-format", "json", "--report-path", "{output}", "."},
 			FindingExitCodes: []int{1}, Severity: finding.Critical, Category: "secret_leak", Description: "Gitleaks reported a potential secret",
 			Parser: parseGitleaks, OutputFile: true}
 	case Trivy:

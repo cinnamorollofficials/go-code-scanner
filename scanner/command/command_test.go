@@ -131,6 +131,33 @@ func TestCommandScannerParsesSuccessfulPathOutput(t *testing.T) {
 	}
 }
 
+func TestCommandScannerParsesAndCleansOutputFile(t *testing.T) {
+	temporaryRoot := t.TempDir()
+	t.Setenv("TMPDIR", temporaryRoot)
+	source := helperScanner(t, "output-file", WorkspaceRoot)
+	source.spec.Command = append(source.spec.Command, "{output}")
+	source.spec.OutputFile = true
+	source.spec.Parser = func(data []byte) ([]ParsedFinding, error) {
+		if string(data) != `{"rule":"fixture"}` {
+			t.Fatalf("unexpected output file data: %q", data)
+		}
+		return []ParsedFinding{{RuleID: "fixture-rule", File: "app.go", Line: 2}}, nil
+	}
+	result := source.Scan(context.Background(), scanner.Request{Root: t.TempDir(), Mode: "full"})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 1 || result.Findings[0].RuleID != "fixture-rule" {
+		t.Fatalf("unexpected output-file result: %+v", result)
+	}
+	entries, err := os.ReadDir(temporaryRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if strings.HasPrefix(entry.Name(), "security-review-output-") {
+			t.Fatalf("temporary adapter output was not removed: %s", entry.Name())
+		}
+	}
+}
+
 func TestCommandScannerRejectsEscapingStructuredPath(t *testing.T) {
 	source := helperScanner(t, "json-escape", WorkspaceRoot)
 	source.spec.OutputFormat = OutputJSONLines
@@ -214,6 +241,14 @@ func TestCommandHelperProcess(t *testing.T) {
 	case "path-output":
 		_, _ = os.Stdout.WriteString("a.go\nnested/b.go\na.go\n")
 		os.Exit(0)
+	case "output-file":
+		if separator+2 >= len(os.Args) {
+			os.Exit(12)
+		}
+		if err := os.WriteFile(os.Args[separator+2], []byte(`{"rule":"fixture"}`), 0o600); err != nil {
+			os.Exit(12)
+		}
+		os.Exit(10)
 	case "environment-filtered":
 		if os.Getenv("COMMAND_SCANNER_SECRET") != "" {
 			os.Exit(12)
