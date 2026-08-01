@@ -22,6 +22,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/gitrepo"
 	"github.com/cinnamorollofficials/go-code-scanner/hook"
 	"github.com/cinnamorollofficials/go-code-scanner/policy"
+	releasepkg "github.com/cinnamorollofficials/go-code-scanner/release"
 	"github.com/cinnamorollofficials/go-code-scanner/reporter"
 	"github.com/cinnamorollofficials/go-code-scanner/rules"
 	"github.com/cinnamorollofficials/go-code-scanner/suppression"
@@ -48,6 +49,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runSuppress(args[1:], stdout, stderr)
 	case "cache":
 		return runCache(args[1:], stdout, stderr)
+	case "release":
+		return runRelease(args[1:], stdout, stderr)
 	case "version", "--version", "-version":
 		fmt.Fprintln(stdout, buildinfo.String())
 		return 0
@@ -444,6 +447,41 @@ func runCache(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func runRelease(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "verify" {
+		fmt.Fprintln(stderr, "usage: security-review release verify --provenance <path> --signature <path> --public-key <path>")
+		return 2
+	}
+	flags := flag.NewFlagSet("release verify", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	provenance := flags.String("provenance", "", "provenance manifest path")
+	signaturePath := flags.String("signature", "", "detached base64 signature path")
+	publicKeyPath := flags.String("public-key", "", "PEM Ed25519 public key path")
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	if *provenance == "" || *signaturePath == "" || *publicKeyPath == "" {
+		fmt.Fprintln(stderr, "--provenance, --signature, and --public-key are required")
+		return 2
+	}
+	signature, err := os.ReadFile(*signaturePath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	publicKey, err := releasepkg.LoadPublicKey(*publicKeyPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	if err := releasepkg.VerifyFile(*provenance, string(signature), publicKey); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Provenance signature verified")
+	return 0
+}
+
 func loadReport(path string) (*finding.Report, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -621,5 +659,5 @@ func loadConfig(path, root string) (config.Config, error) {
 }
 
 func writeUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|cache|version> [options]")
+	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|cache|release|version> [options]")
 }

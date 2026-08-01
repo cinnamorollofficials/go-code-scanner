@@ -3,7 +3,11 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +18,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
 	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
+	releasepkg "github.com/cinnamorollofficials/go-code-scanner/release"
 	"github.com/cinnamorollofficials/go-code-scanner/scanner"
 )
 
@@ -494,5 +499,46 @@ func TestCacheStatsAndClean(t *testing.T) {
 	}
 	if _, err := os.Stat(foreign); err != nil {
 		t.Fatal("cache clean removed foreign file")
+	}
+}
+
+func TestReleaseVerifyCommand(t *testing.T) {
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory := t.TempDir()
+	provenance := filepath.Join(directory, "provenance.json")
+	if err := os.WriteFile(provenance, []byte("provenance"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	privateDER, _ := x509.MarshalPKCS8PrivateKey(privateKey)
+	privatePath := filepath.Join(directory, "private.pem")
+	if err := os.WriteFile(privatePath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateDER}), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	signature, err := releasepkg.SignFile(provenance, privatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	signaturePath := filepath.Join(directory, "provenance.sig")
+	if err := os.WriteFile(signaturePath, []byte(signature), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	publicDER, _ := x509.MarshalPKIXPublicKey(publicKey)
+	publicPath := filepath.Join(directory, "public.pem")
+	if err := os.WriteFile(publicPath, pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicDER}), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	args := []string{"release", "verify", "--provenance", provenance, "--signature", signaturePath, "--public-key", publicPath}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 || !strings.Contains(stdout.String(), "verified") {
+		t.Fatalf("verify code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	if err := os.WriteFile(provenance, []byte("tampered"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
+		t.Fatalf("tampered provenance exit=%d", code)
 	}
 }

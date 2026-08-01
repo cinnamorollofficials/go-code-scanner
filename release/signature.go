@@ -56,3 +56,23 @@ func VerifyFile(path, signature string, publicKey ed25519.PublicKey) error {
 	}
 	return nil
 }
+
+func LoadPublicKey(path string) (ed25519.PublicKey, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read verification key: %w", err)
+	}
+	block, rest := pem.Decode(data)
+	if block == nil || len(strings.TrimSpace(string(rest))) != 0 {
+		return nil, fmt.Errorf("verification key must contain one PEM public key")
+	}
+	parsed, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("parse verification key: %w", err)
+	}
+	publicKey, ok := parsed.(ed25519.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("verification key must be Ed25519")
+	}
+	return publicKey, nil
+}
