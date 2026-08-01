@@ -39,9 +39,27 @@ func (s Store) Get(key string) (scanner.Result, bool, error) {
 	}
 	var entry Entry
 	if err := json.Unmarshal(data, &entry); err != nil {
-		return scanner.Result{}, false, fmt.Errorf("decode cache entry: %w", err)
+		if quarantineErr := quarantine(path); quarantineErr != nil {
+			return scanner.Result{}, false, fmt.Errorf("decode cache entry: %v; quarantine: %w", err, quarantineErr)
+		}
+		return scanner.Result{}, false, nil
 	}
 	return entry.Result, true, nil
+}
+
+func quarantine(path string) error {
+	placeholder, err := os.CreateTemp(filepath.Dir(path), ".corrupt-"+filepath.Base(path)+"-*")
+	if err != nil {
+		return err
+	}
+	quarantinePath := placeholder.Name()
+	if err := placeholder.Close(); err != nil {
+		return err
+	}
+	if err := os.Remove(quarantinePath); err != nil {
+		return err
+	}
+	return os.Rename(path, quarantinePath)
 }
 
 func (s Store) Put(key string, result scanner.Result) error {

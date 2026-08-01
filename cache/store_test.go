@@ -45,3 +45,29 @@ func TestStoreRejectsTraversalKey(t *testing.T) {
 		t.Fatal("unsafe cache key accepted")
 	}
 }
+
+func TestStoreQuarantinesCorruptEntryAsCacheMiss(t *testing.T) {
+	directory := t.TempDir()
+	store := Store{Directory: directory}
+	key, _ := Key(KeyInput{ScannerID: "pattern", ScannerVersion: "1"})
+	path := filepath.Join(directory, key+".json")
+	if err := os.WriteFile(path, []byte(`{"created_at":`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, found, err := store.Get(key); err != nil || found {
+		t.Fatalf("corrupt entry was not treated as miss: found=%t err=%v", found, err)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatal("corrupt entry remained active")
+	}
+	matches, err := filepath.Glob(filepath.Join(directory, ".corrupt-"+key+".json-*"))
+	if err != nil || len(matches) != 1 {
+		t.Fatalf("corrupt entry was not quarantined: matches=%v err=%v", matches, err)
+	}
+	if err := store.Put(key, scanner.Result{State: finding.ScannerClean}); err != nil {
+		t.Fatal(err)
+	}
+	if _, found, err := store.Get(key); err != nil || !found {
+		t.Fatalf("healthy replacement was not readable: found=%t err=%v", found, err)
+	}
+}
