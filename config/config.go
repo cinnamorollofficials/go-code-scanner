@@ -121,26 +121,28 @@ func Load(path string) (Config, error) {
 }
 
 type Config struct {
-	Version             int                                 `json:"version"`
-	Project             string                              `json:"project"`
-	Root                string                              `json:"root"`
-	Mode                Mode                                `json:"mode"`
-	Output              string                              `json:"output"`
-	FailOn              finding.Severity                    `json:"fail_on"`
-	IncludeExtensions   []string                            `json:"include_extensions"`
-	ExcludeDirectories  []string                            `json:"exclude_directories"`
-	ExcludeFiles        []string                            `json:"exclude_files"`
-	RuleFiles           []string                            `json:"rule_files"`
-	SuppressionFile     string                              `json:"suppression_file"`
-	BaselineFile        string                              `json:"baseline_file,omitempty"`
-	Workers             int                                 `json:"workers"`
-	PatternMaxFileBytes int64                               `json:"pattern_max_file_bytes"`
-	PatternMaxLineBytes int                                 `json:"pattern_max_line_bytes"`
-	Scanners            map[string]Scanner                  `json:"scanners"`
-	Profiles            map[string][]string                 `json:"profiles,omitempty"`
-	Policy              map[finding.Domain]finding.Severity `json:"policy,omitempty"`
-	Hooks               Hooks                               `json:"hooks,omitempty"`
-	SelectedProfile     string                              `json:"-"`
+	Version              int                                 `json:"version"`
+	Project              string                              `json:"project"`
+	Root                 string                              `json:"root"`
+	Mode                 Mode                                `json:"mode"`
+	Output               string                              `json:"output"`
+	FailOn               finding.Severity                    `json:"fail_on"`
+	IncludeExtensions    []string                            `json:"include_extensions"`
+	ExcludeDirectories   []string                            `json:"exclude_directories"`
+	ExcludeFiles         []string                            `json:"exclude_files"`
+	RuleFiles            []string                            `json:"rule_files"`
+	SuppressionFile      string                              `json:"suppression_file"`
+	BaselineFile         string                              `json:"baseline_file,omitempty"`
+	Workers              int                                 `json:"workers"`
+	PatternMaxFileBytes  int64                               `json:"pattern_max_file_bytes"`
+	PatternMaxLineBytes  int                                 `json:"pattern_max_line_bytes"`
+	QualityMaxFileBytes  int64                               `json:"quality_max_file_bytes,omitempty"`
+	QualityMaxLineLength int                                 `json:"quality_max_line_length,omitempty"`
+	Scanners             map[string]Scanner                  `json:"scanners"`
+	Profiles             map[string][]string                 `json:"profiles,omitempty"`
+	Policy               map[finding.Domain]finding.Severity `json:"policy,omitempty"`
+	Hooks                Hooks                               `json:"hooks,omitempty"`
+	SelectedProfile      string                              `json:"-"`
 }
 
 func Default() Config {
@@ -198,6 +200,9 @@ func (c *Config) Validate() error {
 	}
 	if c.PatternMaxFileBytes < 1 || c.PatternMaxLineBytes < 1 {
 		return fmt.Errorf("pattern file and line byte limits must be at least 1")
+	}
+	if c.QualityMaxFileBytes < 0 || c.QualityMaxLineLength < 0 {
+		return fmt.Errorf("quality file and line limits cannot be negative")
 	}
 	for domain, threshold := range c.Policy {
 		if !domain.Valid() {

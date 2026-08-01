@@ -93,6 +93,7 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 		config: cfg,
 		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers, patternscanner.Limits{
 			MaxFileBytes: cfg.PatternMaxFileBytes, MaxLineBytes: cfg.PatternMaxLineBytes,
+			QualityMaxFileBytes: cfg.QualityMaxFileBytes, QualityMaxLineLength: cfg.QualityMaxLineLength,
 		}), required: true}},
 		now:         time.Now,
 		configHash:  configHash,

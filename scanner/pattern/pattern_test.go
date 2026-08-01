@@ -151,6 +151,27 @@ func TestScanAppliesFileLevelPolicies(t *testing.T) {
 	}
 }
 
+func TestScanAppliesOptionalQualitySizePolicies(t *testing.T) {
+	limits := Limits{
+		MaxFileBytes: 1024, MaxLineBytes: 1024,
+		QualityMaxFileBytes: 12, QualityMaxLineLength: 8,
+	}
+	source := memorySource("/repo/app.go", "package fixture\n")
+	result := New(nil, 1, limits).Scan(context.Background(), scanner.Request{
+		Root: "/repo", Mode: "full", Sources: []scanner.Source{source},
+	})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 2 {
+		t.Fatalf("unexpected quality size policy result: %+v", result)
+	}
+	ids := map[string]bool{}
+	for _, item := range result.Findings {
+		ids[item.RuleID] = true
+	}
+	if !ids["line-length"] || !ids["source-file-size"] {
+		t.Fatalf("missing quality policy findings: %v", ids)
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil

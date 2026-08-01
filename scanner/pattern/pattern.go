@@ -22,8 +22,10 @@ type Scanner struct {
 }
 
 type Limits struct {
-	MaxFileBytes int64
-	MaxLineBytes int
+	MaxFileBytes         int64
+	MaxLineBytes         int
+	QualityMaxFileBytes  int64
+	QualityMaxLineLength int
 }
 
 func New(compiled []rules.Compiled, workers int, configured ...Limits) *Scanner {
@@ -207,6 +209,11 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 	for lineScanner.Scan() {
 		lineNumber++
 		line := lineScanner.Text()
+		if s.limits.QualityMaxLineLength > 0 && len([]rune(line)) > s.limits.QualityMaxLineLength {
+			findings = append(findings, fileFinding("line-length", finding.Quality, "maintainability", finding.Low,
+				fmt.Sprintf("Baris melebihi batas %d karakter", s.limits.QualityMaxLineLength),
+				"Pecah expression atau data panjang menjadi struktur yang lebih mudah ditinjau", relative, lineNumber))
+		}
 		if counter.bytes > s.limits.MaxFileBytes {
 			return findings, fmt.Errorf("%s exceeds pattern file limit of %d bytes; increase pattern_max_file_bytes", relative, s.limits.MaxFileBytes)
 		}
@@ -223,6 +230,11 @@ func (s *Scanner) scanSource(ctx context.Context, source scanner.Source, root st
 				Location: finding.Location{File: relative, Line: lineNumber},
 			})
 		}
+	}
+	if s.limits.QualityMaxFileBytes > 0 && counter.bytes > s.limits.QualityMaxFileBytes {
+		findings = append(findings, fileFinding("source-file-size", finding.Quality, "maintainability", finding.Medium,
+			fmt.Sprintf("Source file melebihi batas %d bytes", s.limits.QualityMaxFileBytes),
+			"Pisahkan file berdasarkan tanggung jawab atau pindahkan data besar ke format yang sesuai", relative, 1))
 	}
 	if err := lineScanner.Err(); err != nil {
 		if strings.Contains(err.Error(), "token too long") {
