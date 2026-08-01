@@ -1,7 +1,6 @@
 package discovery
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -21,9 +20,9 @@ func Sources(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
 	case config.ModeFull:
 		return walk(ctx, cfg)
 	case config.ModeChanged:
-		return gitSources(ctx, cfg, false, "diff", "--name-only", "--diff-filter=ACMR", "HEAD")
+		return gitSources(ctx, cfg, false, "diff", "--name-only", "-z", "--diff-filter=ACMR", "HEAD")
 	case config.ModeStaged:
-		return gitSources(ctx, cfg, true, "diff", "--cached", "--name-only", "--diff-filter=ACMR")
+		return gitSources(ctx, cfg, true, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR")
 	default:
 		return nil, fmt.Errorf("unsupported mode %q", cfg.Mode)
 	}
@@ -57,9 +56,11 @@ func gitSources(ctx context.Context, cfg config.Config, staged bool, args ...str
 		return nil, fmt.Errorf("list git files: %w", err)
 	}
 	var sources []scanner.Source
-	lineScanner := bufio.NewScanner(strings.NewReader(string(output)))
-	for lineScanner.Scan() {
-		relative := filepath.ToSlash(strings.TrimSpace(lineScanner.Text()))
+	for _, name := range bytes.Split(output, []byte{0}) {
+		if len(name) == 0 {
+			continue
+		}
+		relative := filepath.ToSlash(string(name))
 		path := filepath.Join(cfg.Root, filepath.FromSlash(relative))
 		if !allowed(path, cfg) {
 			continue
@@ -73,7 +74,7 @@ func gitSources(ctx context.Context, cfg config.Config, staged bool, args ...str
 		}
 	}
 	sort.Slice(sources, func(i, j int) bool { return sources[i].Path < sources[j].Path })
-	return sources, lineScanner.Err()
+	return sources, nil
 }
 
 func fileSource(path string) scanner.Source {

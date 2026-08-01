@@ -68,6 +68,46 @@ func TestStagedSourceReadsGitIndexInsteadOfWorkingTree(t *testing.T) {
 	}
 }
 
+func TestStagedDiscoveryPreservesSpecialCharactersInPath(t *testing.T) {
+	root := t.TempDir()
+	runGit(t, root, "init")
+	name := "odd name\tline\napp.ts"
+	path := filepath.Join(root, name)
+	if err := os.WriteFile(path, []byte("staged content\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, root, "add", "--", name)
+
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Mode = config.ModeStaged
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	sources, err := Sources(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sources) != 1 {
+		t.Fatalf("got %d sources, want 1", len(sources))
+	}
+	if sources[0].Path != path {
+		t.Fatalf("path was not preserved: got %q want %q", sources[0].Path, path)
+	}
+	reader, err := sources[0].Open(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reader.Close()
+	content, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != "staged content\n" {
+		t.Fatalf("unexpected staged content %q", content)
+	}
+}
+
 func runGit(t *testing.T, root string, args ...string) {
 	t.Helper()
 	commandArgs := append([]string{"-C", root}, args...)
