@@ -65,6 +65,51 @@ func TestMaterializeIndexEnforcesLimits(t *testing.T) {
 	}
 }
 
+func TestMaterializeIndexCleansTemporaryDirectoryOnFailure(t *testing.T) {
+	temporaryRoot := t.TempDir()
+	t.Setenv("TMPDIR", temporaryRoot)
+	repository := initRepository(t)
+	if err := os.WriteFile(filepath.Join(repository.Root(), "large.go"), []byte("content"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, repository.Root(), "add", "large.go")
+	if _, err := MaterializeIndex(context.Background(), repository, Limits{MaxFiles: 1, MaxBytes: 1}); err == nil {
+		t.Fatal("expected size limit failure")
+	}
+	if entries := snapshotEntries(t, temporaryRoot); len(entries) != 0 {
+		t.Fatalf("failed snapshot leaked temporary entries: %v", entries)
+	}
+}
+
+func TestMaterializeIndexCleansTemporaryDirectoryOnCancellation(t *testing.T) {
+	temporaryRoot := t.TempDir()
+	t.Setenv("TMPDIR", temporaryRoot)
+	repository := initRepository(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := MaterializeIndex(ctx, repository, DefaultLimits()); err == nil {
+		t.Fatal("expected cancellation error")
+	}
+	if entries := snapshotEntries(t, temporaryRoot); len(entries) != 0 {
+		t.Fatalf("canceled snapshot leaked temporary entries: %v", entries)
+	}
+}
+
+func snapshotEntries(t *testing.T, root string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, entry := range entries {
+		if strings.HasPrefix(entry.Name(), "security-review-index-") {
+			names = append(names, entry.Name())
+		}
+	}
+	return names
+}
+
 func TestMaterializeIndexRejectsEscapingSymlink(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("symlink behavior requires additional privileges on Windows")

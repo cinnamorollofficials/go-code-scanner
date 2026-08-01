@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
@@ -82,6 +83,23 @@ func TestCommandScannerUsesStagedWorkspace(t *testing.T) {
 	result := source.Scan(context.Background(), scanner.Request{Root: root, Mode: "staged"})
 	if result.State != finding.ScannerClean {
 		t.Fatalf("expected staged snapshot content, got %+v", result)
+	}
+}
+
+func TestCommandScannerEnforcesConfiguredSnapshotLimits(t *testing.T) {
+	root := t.TempDir()
+	runGit(t, root, "init")
+	for _, name := range []string{"one.txt", "two.txt"} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte("content"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	runGit(t, root, "add", "one.txt", "two.txt")
+	source := helperScanner(t, "clean", WorkspaceStaged)
+	source.spec.SnapshotMaxFiles = 1
+	result := source.Scan(context.Background(), scanner.Request{Root: root, Mode: "staged"})
+	if result.State != finding.ScannerFailed || !strings.Contains(result.Message, "file limit") {
+		t.Fatalf("expected snapshot limit failure, got %+v", result)
 	}
 }
 

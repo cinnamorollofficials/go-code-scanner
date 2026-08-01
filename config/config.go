@@ -39,6 +39,8 @@ type Scanner struct {
 	Description      string           `json:"description,omitempty"`
 	Version          string           `json:"version,omitempty"`
 	MaxOutputBytes   int              `json:"max_output_bytes,omitempty"`
+	SnapshotMaxFiles int64            `json:"snapshot_max_files,omitempty"`
+	SnapshotMaxBytes int64            `json:"snapshot_max_bytes,omitempty"`
 	OutputFormat     string           `json:"output_format,omitempty"`
 	Environment      []string         `json:"environment,omitempty"`
 	Options          map[string]any   `json:"options,omitempty"`
@@ -79,6 +81,7 @@ func (s Scanner) CommandSpec(id string) commandscanner.Spec {
 		OnMissing: s.OnMissing, FindingExitCodes: s.FindingExitCodes,
 		Severity: s.Severity, Category: s.Category, Description: s.Description,
 		Version: s.Version, MaxOutputBytes: s.MaxOutputBytes,
+		SnapshotMaxFiles: s.SnapshotMaxFiles, SnapshotMaxBytes: s.SnapshotMaxBytes,
 		OutputFormat: s.OutputFormat, Environment: s.Environment,
 	}
 }

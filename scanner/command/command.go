@@ -43,6 +43,8 @@ type Spec struct {
 	Description      string
 	Version          string
 	MaxOutputBytes   int
+	SnapshotMaxFiles int64
+	SnapshotMaxBytes int64
 	OutputFormat     string
 	Environment      []string
 }
@@ -100,6 +102,15 @@ func New(spec Spec) (*Scanner, error) {
 	}
 	if spec.MaxOutputBytes < 1 {
 		return nil, fmt.Errorf("command scanner %s: max output bytes must be at least 1", spec.ID)
+	}
+	if spec.SnapshotMaxFiles == 0 {
+		spec.SnapshotMaxFiles = workspace.DefaultMaxFiles
+	}
+	if spec.SnapshotMaxBytes == 0 {
+		spec.SnapshotMaxBytes = workspace.DefaultMaxBytes
+	}
+	if spec.SnapshotMaxFiles < 1 || spec.SnapshotMaxBytes < 1 {
+		return nil, fmt.Errorf("command scanner %s: snapshot limits must be at least 1", spec.ID)
 	}
 	if spec.OutputFormat == "" {
 		spec.OutputFormat = OutputExitCode
@@ -169,7 +180,10 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 			result.Message = openErr.Error()
 			return finish()
 		}
-		snapshot, err = workspace.MaterializeIndex(ctx, repository, workspace.DefaultLimits())
+		snapshot, err = workspace.MaterializeIndex(ctx, repository, workspace.Limits{
+			MaxFiles: s.spec.SnapshotMaxFiles,
+			MaxBytes: s.spec.SnapshotMaxBytes,
+		})
 		if err != nil {
 			result.State = finding.ScannerFailed
 			result.Failure = scanner.FailureExecution
