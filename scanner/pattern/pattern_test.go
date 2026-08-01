@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/rules"
@@ -22,6 +23,39 @@ func TestRedactAlwaysHidesSecretLeakSource(t *testing.T) {
 	got := redact(compiled[0], `credential = "value-without-sensitive-keyword"`)
 	if got != "[REDACTED: credential]" {
 		t.Fatalf("got %q", got)
+	}
+}
+
+func TestRedactionUsesRuleClassification(t *testing.T) {
+	compiled, err := rules.Compile([]rules.Rule{
+		{ID: "authorization", Pattern: "Authorization", Severity: finding.High, Category: "authorization", Description: "header"},
+		{ID: "tagged", Pattern: "private", Severity: finding.High, Category: "logging", Description: "private data", Tags: []string{"sensitive"}},
+		{ID: "tokenizer", Pattern: "tokenizer", Severity: finding.Low, Category: "quality", Description: "safe term"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := redact(compiled[0], `Authorization: Bearer actual-value`); got != "[REDACTED: potentially sensitive source line]" {
+		t.Fatalf("authorization header leaked: %q", got)
+	}
+	if got := redact(compiled[1], `log.Info("private", customerRecord)`); got != "[REDACTED: potentially sensitive source line]" {
+		t.Fatalf("tagged sensitive line leaked: %q", got)
+	}
+	if got := redact(compiled[2], `tokenizer := strings.NewReader(input)`); got != `tokenizer := strings.NewReader(input)` {
+		t.Fatalf("safe token substring was over-redacted: %q", got)
+	}
+}
+
+func TestRedactionTruncatesLongUnicodeSnippetSafely(t *testing.T) {
+	compiled, err := rules.Compile([]rules.Rule{{
+		ID: "long-line", Pattern: "x", Severity: finding.Low, Category: "quality", Description: "long line",
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := redact(compiled[0], strings.Repeat("界", 250))
+	if !strings.HasSuffix(got, "…") || len([]rune(got)) != 201 || !utf8.ValidString(got) {
+		t.Fatalf("snippet was not safely truncated: rune_count=%d suffix=%q", len([]rune(got)), got[len(got)-3:])
 	}
 }
 

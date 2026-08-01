@@ -181,15 +181,29 @@ func redact(rule rules.Compiled, value string) string {
 	if rule.Category == "secret_leak" {
 		return "[REDACTED: " + rule.ID + "]"
 	}
-	value = strings.TrimSpace(value)
-	if len(value) > 200 {
-		value = value[:200]
-	}
-	lower := strings.ToLower(value)
-	if strings.Contains(lower, "password") || strings.Contains(lower, "secret") || strings.Contains(lower, "token") || strings.Contains(lower, "api_key") || strings.Contains(lower, "apikey") || strings.Contains(lower, "authorization") {
+	if sensitiveRule(rule) {
 		return "[REDACTED: potentially sensitive source line]"
 	}
+	value = strings.TrimSpace(value)
+	runes := []rune(value)
+	if len(runes) > 200 {
+		value = string(runes[:200]) + "…"
+	}
 	return value
+}
+
+func sensitiveRule(rule rules.Compiled) bool {
+	switch strings.ToLower(rule.Category) {
+	case "authorization", "credential", "credentials", "personal_data", "secret", "secret_leak":
+		return true
+	}
+	for _, tag := range rule.Tags {
+		switch strings.ToLower(tag) {
+		case "credential", "pii", "secret", "sensitive":
+			return true
+		}
+	}
+	return false
 }
 
 func appendMessage(current, addition string) string {
