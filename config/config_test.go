@@ -135,6 +135,7 @@ func TestConfigValidatesCommandScanner(t *testing.T) {
 			Command: []string{"quality-tool", "check"}, Workspace: "staged", OnMissing: "skip",
 			FindingExitCodes: []int{1}, Severity: finding.High,
 			Category: "lint", Description: "Quality tool reported findings",
+			OutputFormat: "json-lines", Environment: []string{"CI"},
 		},
 	}
 	if err := cfg.Validate(); err != nil {

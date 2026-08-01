@@ -77,6 +77,55 @@ func TestCommandScannerUsesStagedWorkspace(t *testing.T) {
 	}
 }
 
+func TestCommandScannerParsesJSONLines(t *testing.T) {
+	source := helperScanner(t, "json-lines", WorkspaceRoot)
+	source.spec.OutputFormat = OutputJSONLines
+	result := source.Scan(context.Background(), scanner.Request{Root: t.TempDir(), Mode: "full"})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 1 {
+		t.Fatalf("unexpected structured result: %+v", result)
+	}
+	item := result.Findings[0]
+	if item.RuleID != "external-rule" || item.Tool != "fixture" || item.Domain != finding.Quality || item.Location.File != "src/app.go" || item.Location.Line != 9 {
+		t.Fatalf("unexpected structured finding: %+v", item)
+	}
+}
+
+func TestCommandScannerRejectsEscapingStructuredPath(t *testing.T) {
+	source := helperScanner(t, "json-escape", WorkspaceRoot)
+	source.spec.OutputFormat = OutputJSONLines
+	result := source.Scan(context.Background(), scanner.Request{Root: t.TempDir(), Mode: "full"})
+	if result.State != finding.ScannerFailed {
+		t.Fatalf("expected invalid output path failure, got %+v", result)
+	}
+}
+
+func TestCommandScannerRejectsInvalidEnvironmentName(t *testing.T) {
+	_, err := New(Spec{
+		ID: "invalid-environment", Domain: finding.Quality, Command: []string{"tool"},
+		Severity: finding.High, Category: "fixture", Description: "fixture",
+		Environment: []string{"lowercase-secret"},
+	})
+	if err == nil {
+		t.Fatal("expected invalid environment name error")
+	}
+}
+
+func TestCommandScannerFiltersEnvironment(t *testing.T) {
+	t.Setenv("COMMAND_SCANNER_SECRET", "must-not-leak")
+	source := helperScanner(t, "environment-filtered", WorkspaceRoot)
+	result := source.Scan(context.Background(), scanner.Request{Root: t.TempDir(), Mode: "full"})
+	if result.State != finding.ScannerClean {
+		t.Fatalf("unexpected filtered environment result: %+v", result)
+	}
+
+	source = helperScanner(t, "environment-allowed", WorkspaceRoot)
+	source.spec.Environment = []string{"COMMAND_SCANNER_SECRET"}
+	result = source.Scan(context.Background(), scanner.Request{Root: t.TempDir(), Mode: "full"})
+	if result.State != finding.ScannerClean {
+		t.Fatalf("unexpected allowed environment result: %+v", result)
+	}
+}
+
 func helperScanner(t *testing.T, mode, workspaceMode string) *Scanner {
 	t.Helper()
 	source, err := New(Spec{
@@ -112,6 +161,22 @@ func TestCommandHelperProcess(t *testing.T) {
 	case "check-staged":
 		content, err := os.ReadFile("value.txt")
 		if err != nil || string(content) != "staged" {
+			os.Exit(12)
+		}
+		os.Exit(0)
+	case "json-lines":
+		_, _ = os.Stdout.WriteString(`{"rule_id":"external-rule","category":"lint","severity":"MEDIUM","description":"external finding","file":"src/app.go","line":9}` + "\n")
+		os.Exit(10)
+	case "json-escape":
+		_, _ = os.Stdout.WriteString(`{"rule_id":"escape","file":"../secret","line":1}` + "\n")
+		os.Exit(10)
+	case "environment-filtered":
+		if os.Getenv("COMMAND_SCANNER_SECRET") != "" {
+			os.Exit(12)
+		}
+		os.Exit(0)
+	case "environment-allowed":
+		if os.Getenv("COMMAND_SCANNER_SECRET") != "must-not-leak" {
 			os.Exit(12)
 		}
 		os.Exit(0)
