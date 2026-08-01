@@ -11,9 +11,11 @@ import (
 const DefaultTerminalFindingLimit = 50
 
 type TerminalOptions struct {
-	MaxFindings int
-	Verbose     bool
-	Color       bool
+	MaxFindings     int
+	Verbose         bool
+	Color           bool
+	Command         string
+	SuppressionFile string
 }
 
 func WriteTerminal(writer io.Writer, report *finding.Report) error {
@@ -26,6 +28,12 @@ func WriteTerminalWithOptions(writer io.Writer, report *finding.Report, options 
 	}
 	if options.MaxFindings < 0 {
 		return fmt.Errorf("max findings cannot be negative")
+	}
+	if options.Command == "" {
+		options.Command = "security-review"
+	}
+	if options.SuppressionFile == "" {
+		options.SuppressionFile = ".security-ignore"
 	}
 	if _, err := fmt.Fprintf(writer, "Code review: %s (%s)\n", report.Project, report.ScanMode); err != nil {
 		return err
@@ -110,6 +118,19 @@ func WriteTerminalWithOptions(writer io.Writer, report *finding.Report, options 
 		}
 		if item.Recommendation != "" {
 			if _, err := fmt.Fprintf(writer, "  Fix: %s\n", item.Recommendation); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprintf(writer, "  Explain: %s --explain %s\n", options.Command, item.RuleID); err != nil {
+			return err
+		}
+		if item.Fixable {
+			if _, err := fmt.Fprintf(writer, "  Fix: %s --fix\n", options.Command); err != nil {
+				return err
+			}
+		}
+		if item.Fingerprint != "" {
+			if _, err := fmt.Fprintf(writer, "  Suppress: add fingerprint %s with reason and expiry to %s\n", item.Fingerprint, options.SuppressionFile); err != nil {
 				return err
 			}
 		}

@@ -14,7 +14,7 @@ func TestTerminalReportIsActionableAndDoesNotPrintSnippets(t *testing.T) {
 		Findings: []finding.Finding{{
 			RuleID: "rule", Domain: finding.Security, Severity: finding.High,
 			BaselineState: finding.BaselineNew, Description: "unsafe behavior",
-			Recommendation: "use the safe API", Snippet: "TOP-SECRET-SNIPPET",
+			Recommendation: "use the safe API", Snippet: "TOP-SECRET-SNIPPET", Fixable: true, Fingerprint: "safe-fingerprint",
 			Location: finding.Location{File: "app.go", Line: 12},
 		}},
 	}
@@ -23,7 +23,11 @@ func TestTerminalReportIsActionableAndDoesNotPrintSnippets(t *testing.T) {
 		t.Fatal(err)
 	}
 	text := output.String()
-	for _, expected := range []string{"[HIGH] [new] security/rule", "app.go:12 unsafe behavior", "Fix: use the safe API"} {
+	for _, expected := range []string{
+		"[HIGH] [new] security/rule", "app.go:12 unsafe behavior", "Fix: use the safe API",
+		"Explain: security-review --explain rule", "Fix: security-review --fix",
+		"Suppress: add fingerprint safe-fingerprint with reason and expiry to .security-ignore",
+	} {
 		if !strings.Contains(text, expected) {
 			t.Fatalf("output does not contain %q:\n%s", expected, text)
 		}
