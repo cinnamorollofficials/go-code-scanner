@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const ProvenanceSchema = "go-code-scanner/provenance/v1"
+
 type ProvenanceOptions struct {
 	Version   string
 	Commit    string
@@ -63,7 +65,7 @@ func WriteProvenance(directory, output string, options ProvenanceOptions) error 
 		subjects = append(subjects, Subject{Name: entry.Name(), SHA256: hex.EncodeToString(digest.Sum(nil))})
 	}
 	sort.Slice(subjects, func(i, j int) bool { return subjects[i].Name < subjects[j].Name })
-	document := Provenance{Schema: "go-code-scanner/provenance/v1", Version: options.Version, Commit: options.Commit, BuildDate: options.BuildDate.UTC(), Builder: options.Builder, Subjects: subjects}
+	document := Provenance{Schema: ProvenanceSchema, Version: options.Version, Commit: options.Commit, BuildDate: options.BuildDate.UTC(), Builder: options.Builder, Subjects: subjects}
 	data, err := json.MarshalIndent(document, "", "  ")
 	if err != nil {
 		return err

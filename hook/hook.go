@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	PreCommit = "pre-commit"
-	CommitMsg = "commit-msg"
-	PrePush   = "pre-push"
-	marker    = "# Managed by go-code-scanner; DO NOT EDIT."
+	PreCommit     = "pre-commit"
+	CommitMsg     = "commit-msg"
+	PrePush       = "pre-push"
+	MarkerVersion = "1"
+	marker        = "# Managed by go-code-scanner; DO NOT EDIT."
 )
 
 func ValidEvent(event string) bool {

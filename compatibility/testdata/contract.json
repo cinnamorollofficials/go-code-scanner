@@ -1,0 +1,11 @@
+{
+  "config_schema": 1,
+  "report_schema": "1.0",
+  "rule_schema": 1,
+  "suppression_schema": 1,
+  "baseline_schema": 1,
+  "fingerprint_version": "3",
+  "hook_marker_version": "1",
+  "cache_key_version": "1",
+  "provenance_schema": "go-code-scanner/provenance/v1"
+}

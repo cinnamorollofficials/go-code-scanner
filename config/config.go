@@ -146,6 +146,7 @@ func (s Scanner) CommandSpec(id string) commandscanner.Spec {
 }
 
 const (
+	SchemaVersion   = 1
 	ProfileFast     = "fast"
 	ProfileStandard = "standard"
 	ProfileFull     = "full"
@@ -210,7 +211,7 @@ type Config struct {
 
 func Default() Config {
 	return Config{
-		Version:             1,
+		Version:             SchemaVersion,
 		Project:             "security-review",
 		Root:                ".",
 		Mode:                ModeFull,
@@ -248,7 +249,7 @@ func (c Config) Threshold(domain finding.Domain) finding.Severity {
 }
 
 func (c *Config) Validate() error {
-	if c.Version != 1 {
+	if c.Version != SchemaVersion {
 		return fmt.Errorf("unsupported config version %d", c.Version)
 	}
 	if c.Project == "" {

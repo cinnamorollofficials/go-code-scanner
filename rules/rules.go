@@ -10,6 +10,8 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
 
+const SchemaVersion = 1
+
 type Rule struct {
 	ID             string           `json:"id"`
 	Pattern        string           `json:"pattern"`
@@ -46,7 +48,7 @@ func Load(paths []string) ([]Compiled, error) {
 		if err := json.Unmarshal(data, &set); err != nil {
 			return nil, fmt.Errorf("decode rules %s: %w", path, err)
 		}
-		if set.Version != 1 {
+		if set.Version != SchemaVersion {
 			return nil, fmt.Errorf("rules %s: unsupported version %d", path, set.Version)
 		}
 		all = append(all, set.Rules...)

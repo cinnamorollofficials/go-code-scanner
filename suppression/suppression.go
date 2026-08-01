@@ -12,6 +12,8 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
 
+const SchemaVersion = 1
+
 type Rule struct {
 	RuleID      string `json:"rule_id,omitempty"`
 	Fingerprint string `json:"fingerprint,omitempty"`
@@ -24,7 +26,7 @@ type Rule struct {
 }
 
 type File struct {
-	Version      any    `json:"version"`
+	Version      int    `json:"version"`
 	Suppressions []Rule `json:"suppressions"`
 }
 
@@ -44,7 +46,7 @@ func Add(path string, rule Rule, dryRun bool) (*File, error) {
 	if err := validate(rule); err != nil {
 		return nil, err
 	}
-	file := &File{Version: 1}
+	file := &File{Version: SchemaVersion}
 	data, err := os.ReadFile(path)
 	if err == nil {
 		if err := json.Unmarshal(data, file); err != nil {
@@ -108,6 +110,9 @@ func LoadWithRequirements(path string, requirements []Requirement) ([]Rule, erro
 	var file File
 	if err := json.Unmarshal(data, &file); err != nil {
 		return nil, fmt.Errorf("decode suppressions: %w", err)
+	}
+	if file.Version != SchemaVersion {
+		return nil, fmt.Errorf("unsupported suppression version %d", file.Version)
 	}
 	for index, rule := range file.Suppressions {
 		if err := validate(rule); err != nil {
