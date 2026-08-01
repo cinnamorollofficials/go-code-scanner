@@ -20,5 +20,13 @@ func TestDefaultHardeningRuleExamples(t *testing.T) {
 			positive: `os.WriteFile(path, content, 0777)`,
 			negative: `os.WriteFile(path, content, 0600)`,
 		},
+		"debug-mode-enabled": {
+			positive: `debug_mode: true`,
+			negative: `debug_mode: false`,
+		},
+		"go-insecure-cookie-attribute": {
+			positive: `cookie := http.Cookie{Name: "session", HttpOnly: false}`,
+			negative: `cookie := http.Cookie{Name: "session", Secure: true, HttpOnly: true}`,
+		},
 	})
 }
