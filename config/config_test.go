@@ -75,6 +75,17 @@ func TestSupplyChainPolicyRejectsInvalidOrDuplicatePatterns(t *testing.T) {
 	}
 }
 
+func TestGovernanceRequiredFilesRejectUnsafeAndDuplicatePaths(t *testing.T) {
+	for _, files := range [][]string{{"../secret"}, {"/absolute"}, {"SECURITY.md", "security.md"}} {
+		cfg := Default()
+		cfg.Root = t.TempDir()
+		cfg.Governance.RequiredFiles = files
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("invalid required files accepted: %v", files)
+		}
+	}
+}
+
 func TestDefaultBaselinePath(t *testing.T) {
 	if got := Default().BaselineFile; got != ".security-baseline.json" {
 		t.Fatalf("unexpected default baseline path %q", got)

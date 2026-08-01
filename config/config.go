@@ -71,6 +71,10 @@ type SupplyChainPolicy struct {
 	LicenseDenylist     []string `json:"license_denylist,omitempty"`
 }
 
+type GovernancePolicy struct {
+	RequiredFiles []string `json:"required_files,omitempty"`
+}
+
 func (s Scanner) TimeoutDuration() (time.Duration, error) {
 	if s.Timeout == "" {
 		return 0, nil
@@ -153,6 +157,7 @@ type Config struct {
 	Policy               map[finding.Domain]finding.Severity `json:"policy,omitempty"`
 	Hooks                Hooks                               `json:"hooks,omitempty"`
 	SupplyChain          SupplyChainPolicy                   `json:"supply_chain,omitempty"`
+	Governance           GovernancePolicy                    `json:"governance,omitempty"`
 	SelectedProfile      string                              `json:"-"`
 }
 
@@ -235,6 +240,18 @@ func (c *Config) Validate() error {
 			}
 			seen[key] = struct{}{}
 		}
+	}
+	seenRequiredFiles := make(map[string]struct{}, len(c.Governance.RequiredFiles))
+	for _, required := range c.Governance.RequiredFiles {
+		required = filepath.ToSlash(filepath.Clean(required))
+		if required == "." || filepath.IsAbs(required) || required == ".." || strings.HasPrefix(required, "../") {
+			return fmt.Errorf("governance.required_files contains unsafe path %q", required)
+		}
+		key := strings.ToLower(required)
+		if _, ok := seenRequiredFiles[key]; ok {
+			return fmt.Errorf("governance.required_files contains duplicate path %q", required)
+		}
+		seenRequiredFiles[key] = struct{}{}
 	}
 	for domain, threshold := range c.Policy {
 		if !domain.Valid() {

@@ -97,6 +97,7 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 			QualityMaxFileBytes: cfg.QualityMaxFileBytes, QualityMaxLineLength: cfg.QualityMaxLineLength,
 			DependencyAllowlist: cfg.SupplyChain.DependencyAllowlist, DependencyDenylist: cfg.SupplyChain.DependencyDenylist,
 			LicenseAllowlist: cfg.SupplyChain.LicenseAllowlist, LicenseDenylist: cfg.SupplyChain.LicenseDenylist,
+			RequiredFiles: cfg.Governance.RequiredFiles,
 		}), required: true}},
 		now:         time.Now,
 		configHash:  configHash,
@@ -141,7 +142,11 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 	if err != nil {
 		return nil, err
 	}
-	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Sources: sources, Files: files}
+	repositoryFiles, err := discovery.RepositoryFiles(ctx, r.config)
+	if err != nil {
+		return nil, err
+	}
+	request := scanner.Request{Root: r.config.Root, Mode: string(r.config.Mode), Sources: sources, Files: files, RepositoryFiles: repositoryFiles}
 	var all []finding.Finding
 	statuses := make([]finding.ScannerStatus, 0, len(r.scanners))
 	var operationalErrors []error

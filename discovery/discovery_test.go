@@ -219,6 +219,27 @@ func TestChangedDiscoveryWorksWithoutHEAD(t *testing.T) {
 	}
 }
 
+func TestRepositoryFilesIncludesUnchangedIndexFiles(t *testing.T) {
+	root := t.TempDir()
+	runGit(t, root, "init")
+	writeContent(t, filepath.Join(root, "SECURITY.md"), "security policy\n")
+	writeContent(t, filepath.Join(root, "app.go"), "package app\n")
+	runGit(t, root, "add", "SECURITY.md", "app.go")
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Mode = config.ModeStaged
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	files, err := RepositoryFiles(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := sourceBasenames(files); len(got) != 2 || got[0] != "SECURITY.md" || got[1] != "app.go" {
+		t.Fatalf("unexpected repository inventory: %v", got)
+	}
+}
+
 func TestStagedSymlinkDoesNotReadOutsideRepository(t *testing.T) {
 	root := t.TempDir()
 	runGit(t, root, "init")

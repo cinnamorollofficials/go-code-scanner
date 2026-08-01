@@ -32,6 +32,7 @@ type Limits struct {
 	DependencyDenylist   []string
 	LicenseAllowlist     []string
 	LicenseDenylist      []string
+	RequiredFiles        []string
 }
 
 func New(compiled []rules.Compiled, workers int, configured ...Limits) *Scanner {
@@ -122,6 +123,20 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 		relative, err := filepath.Rel(request.Root, source.Path)
 		if err == nil {
 			knownFiles[strings.ToLower(filepath.ToSlash(relative))] = struct{}{}
+		}
+	}
+	repositoryFiles := make(map[string]struct{}, len(request.RepositoryFiles))
+	for _, source := range request.RepositoryFiles {
+		relative, err := filepath.Rel(request.Root, source.Path)
+		if err == nil {
+			repositoryFiles[strings.ToLower(filepath.ToSlash(relative))] = struct{}{}
+		}
+	}
+	for _, required := range s.limits.RequiredFiles {
+		required = filepath.ToSlash(filepath.Clean(required))
+		if _, ok := repositoryFiles[strings.ToLower(required)]; !ok {
+			findings = append(findings, fileFinding("required-file-missing", finding.Governance, "repository_policy", finding.High,
+				fmt.Sprintf("Required repository file %s is missing", required), "Add the required file or update governance policy through review", required, 1))
 		}
 	}
 	for _, source := range request.Files {

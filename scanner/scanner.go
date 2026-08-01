@@ -14,10 +14,11 @@ type Source struct {
 }
 
 type Request struct {
-	Root    string
-	Mode    string
-	Sources []Source
-	Files   []Source
+	Root            string
+	Mode            string
+	Sources         []Source
+	Files           []Source
+	RepositoryFiles []Source
 }
 
 type Result struct {

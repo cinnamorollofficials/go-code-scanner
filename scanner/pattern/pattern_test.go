@@ -233,6 +233,21 @@ func TestConfigurableDependencyAndLicensePolicies(t *testing.T) {
 	}
 }
 
+func TestRequiredRepositoryFilePolicyUsesCompleteInventory(t *testing.T) {
+	limits := Limits{MaxFileBytes: 1024, MaxLineBytes: 1024, RequiredFiles: []string{"SECURITY.md", "CODEOWNERS"}}
+	repositoryFiles := []scanner.Source{memorySource("/repo/SECURITY.md", "policy")}
+	result := New(nil, 1, limits).Scan(context.Background(), scanner.Request{
+		Root: "/repo", Mode: "staged", RepositoryFiles: repositoryFiles,
+	})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 1 {
+		t.Fatalf("unexpected required-file result: %+v", result)
+	}
+	item := result.Findings[0]
+	if item.RuleID != "required-file-missing" || item.Domain != finding.Governance || item.Location.File != "CODEOWNERS" {
+		t.Fatalf("unexpected governance finding: %+v", item)
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil

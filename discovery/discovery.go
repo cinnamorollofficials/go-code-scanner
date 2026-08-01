@@ -25,6 +25,15 @@ func Files(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
 	return discover(ctx, cfg, true)
 }
 
+// RepositoryFiles returns the complete repository/index inventory for
+// governance checks that must not mistake an unchanged file for a missing one.
+func RepositoryFiles(ctx context.Context, cfg config.Config) ([]scanner.Source, error) {
+	if cfg.Mode == config.ModeFull {
+		return Files(ctx, cfg)
+	}
+	return gitSources(ctx, cfg, true, true, "ls-files", "-z")
+}
+
 func discover(ctx context.Context, cfg config.Config, allFiles bool) ([]scanner.Source, error) {
 	switch cfg.Mode {
 	case config.ModeFull:
