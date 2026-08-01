@@ -324,6 +324,18 @@ func TestNormalizeDeduplicatesExactFinding(t *testing.T) {
 	}
 }
 
+func TestSummaryCountsFindingsByDomain(t *testing.T) {
+	items := []finding.Finding{
+		{Domain: finding.Security, Severity: finding.High},
+		{Domain: finding.Security, Severity: finding.Medium},
+		{Domain: finding.Quality, Severity: finding.Low},
+	}
+	summary := summarize(items, nil, nil)
+	if summary.ByDomain[finding.Security] != 2 || summary.ByDomain[finding.Quality] != 1 {
+		t.Fatalf("unexpected domain summary: %+v", summary.ByDomain)
+	}
+}
+
 func TestOptionalScannerFailureReturnsReportAndWarning(t *testing.T) {
 	cfg := config.Default()
 	cfg.Root = t.TempDir()

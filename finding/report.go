@@ -26,13 +26,17 @@ type Finding struct {
 }
 
 type Summary struct {
-	Total             int `json:"total"`
-	Critical          int `json:"critical"`
-	High              int `json:"high"`
-	Medium            int `json:"medium"`
-	Low               int `json:"low"`
-	Suppressed        int `json:"suppressed"`
-	StaleSuppressions int `json:"stale_suppressions"`
+	Total             int            `json:"total"`
+	Critical          int            `json:"critical"`
+	High              int            `json:"high"`
+	Medium            int            `json:"medium"`
+	Low               int            `json:"low"`
+	Suppressed        int            `json:"suppressed"`
+	StaleSuppressions int            `json:"stale_suppressions"`
+	New               int            `json:"new"`
+	Existing          int            `json:"existing"`
+	Resolved          int            `json:"resolved"`
+	ByDomain          map[Domain]int `json:"by_domain"`
 }
 
 type ScannerState string

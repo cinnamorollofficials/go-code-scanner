@@ -188,14 +188,19 @@ func Compare(report *finding.Report, file *File) (Comparison, error) {
 	}
 	current := make(map[string]struct{}, len(report.Findings))
 	comparison := Comparison{}
+	report.Summary.New = 0
+	report.Summary.Existing = 0
+	report.Summary.Resolved = 0
 	for index := range report.Findings {
 		item := &report.Findings[index]
 		current[item.Fingerprint] = struct{}{}
 		if _, ok := baselineEntries[item.Fingerprint]; ok {
 			item.BaselineState = finding.BaselineExisting
+			report.Summary.Existing++
 			comparison.Existing = append(comparison.Existing, *item)
 		} else {
 			item.BaselineState = finding.BaselineNew
+			report.Summary.New++
 			comparison.New = append(comparison.New, *item)
 		}
 	}
@@ -205,6 +210,7 @@ func Compare(report *finding.Report, file *File) (Comparison, error) {
 		}
 	}
 	sortEntries(comparison.Resolved)
+	report.Summary.Resolved = len(comparison.Resolved)
 	return comparison, nil
 }
 

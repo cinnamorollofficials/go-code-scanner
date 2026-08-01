@@ -40,6 +40,9 @@ func TestBaselineRoundTripAndComparison(t *testing.T) {
 	if current.Findings[0].BaselineState != finding.BaselineExisting || current.Findings[1].BaselineState != finding.BaselineNew {
 		t.Fatalf("report was not classified: %+v", current.Findings)
 	}
+	if current.Summary.New != 1 || current.Summary.Existing != 1 || current.Summary.Resolved != 0 {
+		t.Fatalf("summary was not classified: %+v", current.Summary)
+	}
 }
 
 func TestCompareReportsResolvedEntries(t *testing.T) {
@@ -47,12 +50,16 @@ func TestCompareReportsResolvedEntries(t *testing.T) {
 		Version: Version, FingerprintVersion: "v2",
 		Entries: []Entry{{Fingerprint: "resolved", RuleID: "rule", Domain: finding.Hardening, File: "app.go"}},
 	}
-	comparison, err := Compare(reportWith("v2"), file)
+	report := reportWith("v2")
+	comparison, err := Compare(report, file)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(comparison.Resolved) != 1 || comparison.Resolved[0].Fingerprint != "resolved" {
 		t.Fatalf("unexpected resolved entries: %+v", comparison.Resolved)
+	}
+	if report.Summary.Resolved != 1 {
+		t.Fatalf("resolved summary was not updated: %+v", report.Summary)
 	}
 }
 

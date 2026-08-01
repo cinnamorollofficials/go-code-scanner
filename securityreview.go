@@ -349,8 +349,12 @@ func normalizeFingerprintText(value string) string {
 }
 
 func summarize(active, suppressed []finding.Finding, stale []string) finding.Summary {
-	summary := finding.Summary{Total: len(active), Suppressed: len(suppressed), StaleSuppressions: len(stale)}
+	summary := finding.Summary{
+		Total: len(active), Suppressed: len(suppressed), StaleSuppressions: len(stale),
+		ByDomain: make(map[finding.Domain]int),
+	}
 	for _, item := range active {
+		summary.ByDomain[item.Domain]++
 		switch item.Severity {
 		case finding.Critical:
 			summary.Critical++
