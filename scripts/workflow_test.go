@@ -37,9 +37,17 @@ func TestReleaseWorkflowBuildsAndVerifiesTaggedArtifacts(t *testing.T) {
 	}
 	for _, command := range []string{
 		"release changelog validate",
+		"git show -s --format=%cI",
 		"./scripts/build-release.sh",
 		"./scripts/checksums.sh",
 		"sha256sum --check SHA256SUMS",
+		"release provenance generate",
+		`--directory dist`,
+		`--output dist/provenance.json`,
+		`--version "${GITHUB_REF_NAME}"`,
+		`--commit "${GITHUB_SHA}"`,
+		`--build-date "${BUILD_DATE}"`,
+		`--builder "github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"`,
 	} {
 		if !strings.Contains(contents, command) {
 			t.Fatalf("release workflow is missing %q", command)
