@@ -37,6 +37,29 @@ func TestDefaultProfilesUseBuiltInPatternScanner(t *testing.T) {
 	}
 }
 
+func TestDefaultPreCommitHookUsesFastStagedProfile(t *testing.T) {
+	hook := Default().Hooks.PreCommit
+	if !hook.Enabled || !hook.StagedOnly || hook.Profile != ProfileFast {
+		t.Fatalf("unexpected default pre-commit hook: %+v", hook)
+	}
+}
+
+func TestConfigRejectsUnknownHookProfile(t *testing.T) {
+	cfg := Default()
+	cfg.Hooks.PreCommit.Profile = "missing"
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected unknown hook profile error")
+	}
+}
+
+func TestConfigRejectsUnknownSelectedProfile(t *testing.T) {
+	cfg := Default()
+	cfg.SelectedProfile = "missing"
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected unknown selected profile error")
+	}
+}
+
 func TestThresholdUsesDomainOverrideAndGlobalFallback(t *testing.T) {
 	cfg := Default()
 	cfg.FailOn = finding.Critical

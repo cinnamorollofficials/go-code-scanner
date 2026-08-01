@@ -190,6 +190,23 @@ func TestScannerPanicBecomesOptionalFailure(t *testing.T) {
 	}
 }
 
+func TestSelectedProfileSkipsScannerOutsideProfile(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.SelectedProfile = config.ProfileFast
+	reviewer, err := New(cfg, WithRequiredScanner(panicScanner{id: "not-fast"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Scanners[1].State != finding.ScannerSkipped {
+		t.Fatalf("expected scanner outside profile to be skipped: %+v", report.Scanners)
+	}
+}
+
 func TestOptionalScannerFailureReturnsReportAndWarning(t *testing.T) {
 	cfg := config.Default()
 	cfg.Root = t.TempDir()

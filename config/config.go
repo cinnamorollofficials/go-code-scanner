@@ -27,6 +27,18 @@ type Scanner struct {
 	Options  map[string]any `json:"options,omitempty"`
 }
 
+type Hook struct {
+	Enabled    bool   `json:"enabled"`
+	Profile    string `json:"profile,omitempty"`
+	StagedOnly bool   `json:"staged_only,omitempty"`
+}
+
+type Hooks struct {
+	PreCommit Hook `json:"pre_commit"`
+	CommitMsg Hook `json:"commit_msg"`
+	PrePush   Hook `json:"pre_push"`
+}
+
 func (s Scanner) TimeoutDuration() (time.Duration, error) {
 	if s.Timeout == "" {
 		return 0, nil
@@ -83,6 +95,8 @@ type Config struct {
 	Scanners           map[string]Scanner                  `json:"scanners"`
 	Profiles           map[string][]string                 `json:"profiles,omitempty"`
 	Policy             map[finding.Domain]finding.Severity `json:"policy,omitempty"`
+	Hooks              Hooks                               `json:"hooks,omitempty"`
+	SelectedProfile    string                              `json:"-"`
 }
 
 func Default() Config {
@@ -103,6 +117,9 @@ func Default() Config {
 			ProfileStandard: {"pattern"},
 			ProfileFull:     {"pattern"},
 		},
+		Hooks: Hooks{PreCommit: Hook{
+			Enabled: true, Profile: ProfileFast, StagedOnly: true,
+		}},
 	}
 }
 
@@ -163,10 +180,37 @@ func (c *Config) Validate() error {
 			seen[scannerID] = struct{}{}
 		}
 	}
+	if err := c.validateHook("pre_commit", c.Hooks.PreCommit); err != nil {
+		return err
+	}
+	if err := c.validateHook("commit_msg", c.Hooks.CommitMsg); err != nil {
+		return err
+	}
+	if err := c.validateHook("pre_push", c.Hooks.PrePush); err != nil {
+		return err
+	}
+	if c.SelectedProfile != "" {
+		if _, ok := c.Profiles[c.SelectedProfile]; !ok {
+			return fmt.Errorf("unknown selected profile %q", c.SelectedProfile)
+		}
+	}
 	absRoot, err := filepath.Abs(c.Root)
 	if err != nil {
 		return fmt.Errorf("resolve root: %w", err)
 	}
 	c.Root = filepath.Clean(absRoot)
+	return nil
+}
+
+func (c Config) validateHook(name string, hook Hook) error {
+	if !hook.Enabled {
+		return nil
+	}
+	if strings.TrimSpace(hook.Profile) == "" {
+		return fmt.Errorf("hook %s: profile is required", name)
+	}
+	if _, ok := c.Profiles[hook.Profile]; !ok {
+		return fmt.Errorf("hook %s: unknown profile %q", name, hook.Profile)
+	}
 	return nil
 }

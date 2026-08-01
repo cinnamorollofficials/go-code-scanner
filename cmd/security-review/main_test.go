@@ -115,3 +115,22 @@ func TestPreCommitHookScansIndexInsteadOfWorkingTree(t *testing.T) {
 		t.Fatalf("hook did not write report: %v", err)
 	}
 }
+
+func TestPreCommitHookCanBeDisabledByConfig(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v: %s", err, output)
+	}
+	data := []byte(`{"project":"disabled-hook","hooks":{"pre_commit":{"enabled":false}}}`)
+	if err := os.WriteFile(filepath.Join(root, "security-review.json"), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	args := []string{"hook", "run", "pre-commit", "--root", root}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("disabled hook exit=%d stderr=%s", code, stderr.String())
+	}
+	if stdout.String() != "pre-commit: disabled\n" {
+		t.Fatalf("unexpected disabled hook output %q", stdout.String())
+	}
+}

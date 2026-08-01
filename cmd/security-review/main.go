@@ -58,6 +58,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	ci := flags.Bool("ci", false, "fail when findings meet the threshold")
 	failOn := flags.String("fail-on", "", "critical, high, medium, or low")
 	quiet := flags.Bool("quiet", false, "suppress terminal summary")
+	profile := flags.String("profile", "", "scanner profile to run")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -78,6 +79,9 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	if *output != "" {
 		cfg.Output = *output
+	}
+	if *profile != "" {
+		cfg.SelectedProfile = *profile
 	}
 	if *failOn != "" {
 		cfg.FailOn, err = finding.ParseSeverity(*failOn)
@@ -210,10 +214,28 @@ func runHookEvent(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
-	scanArgs := []string{"--root", repository.Root(), "--staged", "--ci"}
 	configPath := filepath.Join(repository.Root(), "security-review.json")
+	cfg, err := loadConfig("", repository.Root())
+	hasConfig := false
 	if info, statErr := os.Stat(configPath); statErr == nil && info.Mode().IsRegular() {
-		scanArgs = []string{"--config", configPath, "--staged", "--ci"}
+		hasConfig = true
+		cfg, err = loadConfig(configPath, repository.Root())
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	configuredHook := cfg.Hooks.PreCommit
+	if !configuredHook.Enabled {
+		fmt.Fprintln(stdout, "pre-commit: disabled")
+		return 0
+	}
+	scanArgs := []string{"--root", repository.Root(), "--ci", "--profile", configuredHook.Profile}
+	if hasConfig {
+		scanArgs = []string{"--config", configPath, "--ci", "--profile", configuredHook.Profile}
+	}
+	if configuredHook.StagedOnly {
+		scanArgs = append(scanArgs, "--staged")
 	}
 	return runScan(ctx, scanArgs, stdout, stderr)
 }

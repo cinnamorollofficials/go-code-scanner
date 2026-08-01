@@ -155,6 +155,12 @@ func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner,
 	if hasConfig {
 		required = configured.Required
 	}
+	if r.config.SelectedProfile != "" && !profileContains(r.config.Profiles[r.config.SelectedProfile], source.ID()) {
+		return scannerOutcome{status: finding.ScannerStatus{
+			ID: source.ID(), State: finding.ScannerSkipped, Required: required,
+			Message: fmt.Sprintf("not included in profile %s", r.config.SelectedProfile),
+		}}
+	}
 	if hasConfig && !configured.Enabled {
 		return scannerOutcome{status: finding.ScannerStatus{
 			ID: source.ID(), State: finding.ScannerSkipped, Required: required,
@@ -175,6 +181,15 @@ func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner,
 		outcome.failure = fmt.Errorf("scanner %s failed: %s", source.ID(), result.Message)
 	}
 	return outcome
+}
+
+func profileContains(scanners []string, id string) bool {
+	for _, candidate := range scanners {
+		if candidate == id {
+			return true
+		}
+	}
+	return false
 }
 
 func executeScanner(ctx context.Context, source scanner.Scanner, request scanner.Request, timeout time.Duration) (result scanner.Result) {
