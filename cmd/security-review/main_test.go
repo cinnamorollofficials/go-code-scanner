@@ -12,7 +12,9 @@ import (
 
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
+	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/scanner"
 )
 
 func TestScanExitCodes(t *testing.T) {
@@ -467,5 +469,30 @@ func TestSuppressAddDryRunAndWrite(t *testing.T) {
 	}
 	if _, err := os.Stat(path); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCacheStatsAndClean(t *testing.T) {
+	directory := t.TempDir()
+	store := cachepkg.Store{Directory: directory}
+	key, _ := cachepkg.Key(cachepkg.KeyInput{ScannerID: "pattern", ScannerVersion: "1"})
+	if err := store.Put(key, scanner.Result{}); err != nil {
+		t.Fatal(err)
+	}
+	foreign := filepath.Join(directory, "README")
+	if err := os.WriteFile(foreign, []byte("keep"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), []string{"cache", "stats", "--dir", directory}, &stdout, &stderr); code != 0 || !strings.Contains(stdout.String(), "entries=1") {
+		t.Fatalf("unexpected cache stats: code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), []string{"cache", "clean", "--dir", directory}, &stdout, &stderr); code != 0 || !strings.Contains(stdout.String(), "removed=1") {
+		t.Fatalf("unexpected cache clean: code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	if _, err := os.Stat(foreign); err != nil {
+		t.Fatal("cache clean removed foreign file")
 	}
 }

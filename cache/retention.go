@@ -32,6 +32,19 @@ func (s Store) Stats() (Stats, error) {
 	return stats, nil
 }
 
+func (s Store) Clean() (int, error) {
+	files, err := s.cacheFiles()
+	if err != nil {
+		return 0, err
+	}
+	for index, file := range files {
+		if err := os.Remove(file.path); err != nil {
+			return index, fmt.Errorf("remove cache entry: %w", err)
+		}
+	}
+	return len(files), nil
+}
+
 // Prune removes expired entries first, then the oldest entries until maxBytes
 // is satisfied. Non-cache files and active lock directories are untouched.
 func (s Store) Prune(maxAge time.Duration, maxBytes int64) (int, error) {

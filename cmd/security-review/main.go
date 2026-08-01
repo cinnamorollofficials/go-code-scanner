@@ -14,6 +14,7 @@ import (
 
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
 	"github.com/cinnamorollofficials/go-code-scanner/baseline"
+	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
 	"github.com/cinnamorollofficials/go-code-scanner/config"
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/fixer"
@@ -46,6 +47,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runBaseline(args[1:], stdout, stderr)
 	case "suppress":
 		return runSuppress(args[1:], stdout, stderr)
+	case "cache":
+		return runCache(args[1:], stdout, stderr)
 	case "version", "--version", "-version":
 		fmt.Fprintln(stdout, version)
 		return 0
@@ -410,6 +413,37 @@ func runSuppress(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func runCache(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || (args[0] != "stats" && args[0] != "clean") {
+		fmt.Fprintln(stderr, "usage: security-review cache <stats|clean> [--dir <path>]")
+		return 2
+	}
+	command := args[0]
+	flags := flag.NewFlagSet("cache "+command, flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	directory := flags.String("dir", ".go-code-scanner-cache", "cache directory")
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	store := cachepkg.Store{Directory: *directory}
+	if command == "clean" {
+		removed, err := store.Clean()
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 3
+		}
+		fmt.Fprintf(stdout, "Cache cleaned: removed=%d directory=%s\n", removed, *directory)
+		return 0
+	}
+	stats, err := store.Stats()
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 3
+	}
+	fmt.Fprintf(stdout, "Cache: entries=%d bytes=%d directory=%s\n", stats.Entries, stats.Bytes, *directory)
+	return 0
+}
+
 func loadReport(path string) (*finding.Report, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -587,5 +621,5 @@ func loadConfig(path, root string) (config.Config, error) {
 }
 
 func writeUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|version> [options]")
+	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|cache|version> [options]")
 }
