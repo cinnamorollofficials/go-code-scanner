@@ -9,12 +9,12 @@ import (
 
 func TestDefaultRulePacks(t *testing.T) {
 	all := Default()
-	if len(all) != 23 {
-		t.Fatalf("expected 23 default rules, got %d", len(all))
+	if len(all) != 26 {
+		t.Fatalf("expected 26 default rules, got %d", len(all))
 	}
 
 	wantCounts := map[finding.Domain]int{
-		finding.Quality:     2,
+		finding.Quality:     5,
 		finding.Security:    14,
 		finding.Hardening:   4,
 		finding.Reliability: 3,

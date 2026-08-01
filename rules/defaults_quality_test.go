@@ -12,5 +12,17 @@ func TestDefaultQualityRuleExamples(t *testing.T) {
 			positive: "  debugger;  ",
 			negative: "const debuggerEnabled = false;",
 		},
+		"trailing-whitespace": {
+			positive: "const clean = true;  ",
+			negative: "const clean = true;",
+		},
+		"mixed-indentation": {
+			positive: " \treturn value",
+			negative: "\treturn value",
+		},
+		"javascript-console-debug": {
+			positive: "console.debug(result)",
+			negative: "logger.DebugContext(ctx, result)",
+		},
 	})
 }

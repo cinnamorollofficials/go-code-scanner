@@ -18,5 +18,26 @@ func DefaultQuality() []Rule {
 			Recommendation: "Hapus debugger statement sebelum commit",
 			Extensions:     []string{".ts", ".tsx", ".js", ".jsx"},
 		},
+		{
+			ID: "trailing-whitespace", Pattern: `[ \t]+$`,
+			Severity: finding.Low, Domain: finding.Quality, Category: "formatting",
+			Description:    "Trailing whitespace ditemukan",
+			Recommendation: "Hapus whitespace pada akhir baris",
+			Tags:           []string{"formatting"}, Fixable: true,
+		},
+		{
+			ID: "mixed-indentation", Pattern: `^( +\t|\t+ )`,
+			Severity: finding.Low, Domain: finding.Quality, Category: "formatting",
+			Description:    "Tab dan spasi tercampur pada indentation baris yang sama",
+			Recommendation: "Gunakan satu gaya indentation yang konsisten",
+			Tags:           []string{"formatting"}, Fixable: true,
+		},
+		{
+			ID: "javascript-console-debug", Pattern: `^\s*console\.(log|debug)\s*\(`,
+			Severity: finding.Low, Domain: finding.Quality, Category: "debug_code",
+			Description:    "Console debug statement mungkin tertinggal",
+			Recommendation: "Hapus statement debug atau gunakan logger aplikasi dengan level yang sesuai",
+			Extensions:     []string{".ts", ".tsx", ".js", ".jsx"},
+		},
 	}
 }
