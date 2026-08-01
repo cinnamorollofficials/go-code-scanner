@@ -81,6 +81,32 @@ func TestHookInstallStatusAndUninstall(t *testing.T) {
 	}
 }
 
+func TestHookLifecycleSupportsEveryEvent(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v: %s", err, output)
+	}
+	for _, event := range []string{"pre-commit", "commit-msg", "pre-push"} {
+		var stdout, stderr bytes.Buffer
+		if code := run(context.Background(), []string{"hook", "install", event, "--root", root}, &stdout, &stderr); code != 0 {
+			t.Fatalf("install %s exit=%d stderr=%s", event, code, stderr.String())
+		}
+		stdout.Reset()
+		stderr.Reset()
+		if code := run(context.Background(), []string{"hook", "status", event, "--root", root}, &stdout, &stderr); code != 0 {
+			t.Fatalf("status %s exit=%d stderr=%s", event, code, stderr.String())
+		}
+		if stdout.String() != event+": installed\n" {
+			t.Fatalf("unexpected %s status output %q", event, stdout.String())
+		}
+		stdout.Reset()
+		stderr.Reset()
+		if code := run(context.Background(), []string{"hook", "uninstall", event, "--root", root}, &stdout, &stderr); code != 0 {
+			t.Fatalf("uninstall %s exit=%d stderr=%s", event, code, stderr.String())
+		}
+	}
+}
+
 func TestPreCommitHookScansIndexInsteadOfWorkingTree(t *testing.T) {
 	root := t.TempDir()
 	if output, err := exec.Command("git", "-C", root, "init").CombinedOutput(); err != nil {

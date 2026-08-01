@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
@@ -274,10 +275,20 @@ func runHook(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "unknown hook command %q\n", args[0])
 		return 2
 	}
+	event := hook.PreCommit
+	flagArgs := args[1:]
+	if len(flagArgs) > 0 && !strings.HasPrefix(flagArgs[0], "-") {
+		event = flagArgs[0]
+		flagArgs = flagArgs[1:]
+	}
+	if !hook.ValidEvent(event) {
+		fmt.Fprintf(stderr, "unsupported hook %q\n", event)
+		return 2
+	}
 	flags := flag.NewFlagSet("hook "+args[0], flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	root := flags.String("root", ".", "path inside the Git repository")
-	if err := flags.Parse(args[1:]); err != nil {
+	if err := flags.Parse(flagArgs); err != nil {
 		return 2
 	}
 	repository, err := gitrepo.Open(ctx, *root)
@@ -297,14 +308,14 @@ func runHook(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	switch args[0] {
 	case "install":
-		err = manager.Install(ctx, hook.PreCommit)
+		err = manager.Install(ctx, event)
 	case "uninstall":
-		err = manager.Uninstall(ctx, hook.PreCommit)
+		err = manager.Uninstall(ctx, event)
 	case "status":
 		var state hook.State
-		state, err = manager.Status(ctx, hook.PreCommit)
+		state, err = manager.Status(ctx, event)
 		if err == nil {
-			fmt.Fprintf(stdout, "%s: %s\n", hook.PreCommit, state)
+			fmt.Fprintf(stdout, "%s: %s\n", event, state)
 		}
 	}
 	if err != nil {

@@ -12,23 +12,31 @@ import (
 )
 
 func TestManagerLifecycle(t *testing.T) {
+	for _, event := range []string{PreCommit, CommitMsg, PrePush} {
+		t.Run(event, func(t *testing.T) {
+			testManagerLifecycle(t, event)
+		})
+	}
+}
+
+func testManagerLifecycle(t *testing.T, event string) {
 	manager, repository := newManager(t)
 	ctx := context.Background()
 
-	state, err := manager.Status(ctx, PreCommit)
+	state, err := manager.Status(ctx, event)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if state != Missing {
 		t.Fatalf("expected missing hook, got %s", state)
 	}
-	if err := manager.Install(ctx, PreCommit); err != nil {
+	if err := manager.Install(ctx, event); err != nil {
 		t.Fatal(err)
 	}
-	if err := manager.Install(ctx, PreCommit); err != nil {
+	if err := manager.Install(ctx, event); err != nil {
 		t.Fatalf("idempotent install failed: %v", err)
 	}
-	state, err = manager.Status(ctx, PreCommit)
+	state, err = manager.Status(ctx, event)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,18 +48,21 @@ func TestManagerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	content, err := os.ReadFile(filepath.Join(hooksDir, PreCommit))
+	content, err := os.ReadFile(filepath.Join(hooksDir, event))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(content), marker) || !strings.Contains(string(content), "hook run pre-commit") {
+	if !strings.Contains(string(content), marker) || !strings.Contains(string(content), "hook run "+event) {
 		t.Fatalf("unexpected hook content: %s", content)
 	}
+	if event == CommitMsg && !strings.Contains(string(content), `--file "$1"`) {
+		t.Fatalf("commit-msg hook does not forward the message file: %s", content)
+	}
 
-	if err := manager.Uninstall(ctx, PreCommit); err != nil {
+	if err := manager.Uninstall(ctx, event); err != nil {
 		t.Fatal(err)
 	}
-	if err := manager.Uninstall(ctx, PreCommit); err != nil {
+	if err := manager.Uninstall(ctx, event); err != nil {
 		t.Fatalf("idempotent uninstall failed: %v", err)
 	}
 }

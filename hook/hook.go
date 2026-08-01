@@ -13,8 +13,14 @@ import (
 
 const (
 	PreCommit = "pre-commit"
+	CommitMsg = "commit-msg"
+	PrePush   = "pre-push"
 	marker    = "# Managed by go-code-scanner; DO NOT EDIT."
 )
+
+func ValidEvent(event string) bool {
+	return event == PreCommit || event == CommitMsg || event == PrePush
+}
 
 type State string
 
@@ -111,7 +117,7 @@ func (m *Manager) Status(ctx context.Context, event string) (State, error) {
 }
 
 func (m *Manager) target(ctx context.Context, event string) (string, []byte, error) {
-	if event != PreCommit {
+	if !ValidEvent(event) {
 		return "", nil, fmt.Errorf("unsupported hook %q", event)
 	}
 	hooksDir, err := m.repository.HooksDir(ctx)
@@ -119,8 +125,12 @@ func (m *Manager) target(ctx context.Context, event string) (string, []byte, err
 		return "", nil, err
 	}
 	target := filepath.Join(hooksDir, event)
-	content := []byte(fmt.Sprintf("#!/bin/sh\n%s\nexec %s hook run pre-commit --root %s\n",
-		marker, shellQuote(m.binary), shellQuote(m.repository.Root())))
+	arguments := fmt.Sprintf("hook run %s --root %s", event, shellQuote(m.repository.Root()))
+	if event == CommitMsg {
+		arguments += ` --file "$1"`
+	}
+	content := []byte(fmt.Sprintf("#!/bin/sh\n%s\nexec %s %s\n",
+		marker, shellQuote(m.binary), arguments))
 	return target, content, nil
 }
 
