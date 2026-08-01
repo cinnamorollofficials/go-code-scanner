@@ -95,7 +95,9 @@ func gitSources(ctx context.Context, cfg config.Config, staged, allFiles bool, a
 			sources = append(sources, stagedSource(cfg.Root, relative))
 			continue
 		}
-		if info, statErr := os.Stat(path); statErr == nil && info.Mode().IsRegular() {
+		// Lstat deliberately rejects working-tree symlinks. Staged sources are
+		// read from the Git object and therefore never follow the link target.
+		if info, statErr := os.Lstat(path); statErr == nil && info.Mode().IsRegular() {
 			sources = append(sources, fileSource(path))
 		}
 	}

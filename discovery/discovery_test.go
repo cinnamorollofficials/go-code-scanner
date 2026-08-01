@@ -268,6 +268,32 @@ func TestStagedSymlinkDoesNotReadOutsideRepository(t *testing.T) {
 	}
 }
 
+func TestChangedWorkingTreeSymlinkIsNotScanned(t *testing.T) {
+	root := t.TempDir()
+	runGit(t, root, "init")
+	writeContent(t, filepath.Join(root, "tracked.ts"), "safe\n")
+	runGit(t, root, "add", "tracked.ts")
+	runGit(t, root, "commit", "-m", "initial")
+	outside := filepath.Join(t.TempDir(), "secret.ts")
+	writeContent(t, outside, "google-mock-jwt-token\n")
+	if err := os.Remove(filepath.Join(root, "tracked.ts")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(root, "tracked.ts")); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Mode = config.ModeChanged
+	sources, err := Sources(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sources) != 0 {
+		t.Fatalf("changed symlink was exposed as source: %+v", sources)
+	}
+}
+
 func stagedSources(t *testing.T, root string) []scanner.Source {
 	t.Helper()
 	cfg := config.Default()
