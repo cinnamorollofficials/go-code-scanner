@@ -48,6 +48,12 @@ func TestReleaseWorkflowBuildsAndVerifiesTaggedArtifacts(t *testing.T) {
 		`--commit "${GITHUB_SHA}"`,
 		`--build-date "${BUILD_DATE}"`,
 		`--builder "github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"`,
+		"RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}",
+		"RELEASE_SIGNING_PUBLIC_KEY: ${{ secrets.RELEASE_SIGNING_PUBLIC_KEY }}",
+		"umask 077",
+		"release provenance sign",
+		"release verify",
+		"--directory dist",
 	} {
 		if !strings.Contains(contents, command) {
 			t.Fatalf("release workflow is missing %q", command)
@@ -55,5 +61,8 @@ func TestReleaseWorkflowBuildsAndVerifiesTaggedArtifacts(t *testing.T) {
 	}
 	if !strings.Contains(contents, "contents: read") || !strings.Contains(contents, "persist-credentials: false") {
 		t.Fatal("release verification must use read-only permissions without persisted credentials")
+	}
+	if strings.Contains(contents, "pull_request:") {
+		t.Fatal("release signing credentials must not be available to pull-request workflows")
 	}
 }

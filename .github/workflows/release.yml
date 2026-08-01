@@ -51,3 +51,25 @@ jobs:
             --commit "${GITHUB_SHA}" \
             --build-date "${BUILD_DATE}" \
             --builder "github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+      # Configure RELEASE_SIGNING_KEY (PKCS#8 PEM) and RELEASE_SIGNING_PUBLIC_KEY
+      # (PKIX PEM) as repository or environment secrets used only by tagged releases.
+      - name: Sign and verify provenance
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+          RELEASE_SIGNING_PUBLIC_KEY: ${{ secrets.RELEASE_SIGNING_PUBLIC_KEY }}
+        run: |
+          umask 077
+          private_key="${RUNNER_TEMP}/release-signing-key.pem"
+          public_key="${RUNNER_TEMP}/release-signing-public-key.pem"
+          trap 'rm -f -- "${private_key}" "${public_key}"' EXIT
+          printf '%s\n' "${RELEASE_SIGNING_KEY}" > "${private_key}"
+          printf '%s\n' "${RELEASE_SIGNING_PUBLIC_KEY}" > "${public_key}"
+          go run ./cmd/security-review release provenance sign \
+            --provenance dist/provenance.json \
+            --private-key "${private_key}" \
+            --output dist/provenance.sig
+          go run ./cmd/security-review release verify \
+            --provenance dist/provenance.json \
+            --signature dist/provenance.sig \
+            --public-key "${public_key}" \
+            --directory dist
