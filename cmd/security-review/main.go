@@ -81,6 +81,8 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stderr, err)
 			return 2
 		}
+		// An explicit CLI threshold is a global override for this invocation.
+		cfg.Policy = nil
 	}
 	if err := cfg.Validate(); err != nil {
 		fmt.Fprintln(stderr, err)
@@ -116,7 +118,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, operationalErr)
 		return 3
 	}
-	if *ci && len(policy.Violations(report, cfg.FailOn)) > 0 {
+	if *ci && len(policy.ViolationsByDomain(report, cfg.FailOn, cfg.Policy)) > 0 {
 		return 1
 	}
 	return 0

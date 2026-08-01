@@ -5,8 +5,18 @@ import (
 )
 
 func Violations(report *finding.Report, threshold finding.Severity) []finding.Finding {
+	return ViolationsByDomain(report, threshold, nil)
+}
+
+// ViolationsByDomain returns active findings that meet their domain-specific
+// threshold. Domains without an override use fallback.
+func ViolationsByDomain(report *finding.Report, fallback finding.Severity, overrides map[finding.Domain]finding.Severity) []finding.Finding {
 	var result []finding.Finding
 	for _, item := range report.Findings {
+		threshold := fallback
+		if configured, ok := overrides[item.Domain]; ok {
+			threshold = configured
+		}
 		if item.Severity.AtLeast(threshold) {
 			result = append(result, item)
 		}
