@@ -80,3 +80,38 @@ func TestHookInstallStatusAndUninstall(t *testing.T) {
 		t.Fatalf("uninstall exit=%d stderr=%s", code, stderr.String())
 	}
 }
+
+func TestPreCommitHookScansIndexInsteadOfWorkingTree(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v: %s", err, output)
+	}
+	path := filepath.Join(root, "app.ts")
+	if err := os.WriteFile(path, []byte("google-mock-jwt-token\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if output, err := exec.Command("git", "-C", root, "add", "app.ts").CombinedOutput(); err != nil {
+		t.Fatalf("git add: %v: %s", err, output)
+	}
+	if err := os.WriteFile(path, []byte("const safe = true\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	args := []string{"hook", "run", "pre-commit", "--root", root}
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
+		t.Fatalf("staged finding did not block hook: exit=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+
+	if output, err := exec.Command("git", "-C", root, "add", "app.ts").CombinedOutput(); err != nil {
+		t.Fatalf("git add safe content: %v: %s", err, output)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("safe staged content blocked hook: exit=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+	if _, err := os.Stat(filepath.Join(root, "security_findings.json")); err != nil {
+		t.Fatalf("hook did not write report: %v", err)
+	}
+}
