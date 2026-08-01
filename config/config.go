@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 )
@@ -24,6 +25,12 @@ type Scanner struct {
 	Timeout  string         `json:"timeout,omitempty"`
 	Options  map[string]any `json:"options,omitempty"`
 }
+
+const (
+	ProfileFast     = "fast"
+	ProfileStandard = "standard"
+	ProfileFull     = "full"
+)
 
 func Load(path string) (Config, error) {
 	cfg := Default()
@@ -46,19 +53,21 @@ func Load(path string) (Config, error) {
 }
 
 type Config struct {
-	Version            int                `json:"version"`
-	Project            string             `json:"project"`
-	Root               string             `json:"root"`
-	Mode               Mode               `json:"mode"`
-	Output             string             `json:"output"`
-	FailOn             finding.Severity   `json:"fail_on"`
-	IncludeExtensions  []string           `json:"include_extensions"`
-	ExcludeDirectories []string           `json:"exclude_directories"`
-	ExcludeFiles       []string           `json:"exclude_files"`
-	RuleFiles          []string           `json:"rule_files"`
-	SuppressionFile    string             `json:"suppression_file"`
-	Workers            int                `json:"workers"`
-	Scanners           map[string]Scanner `json:"scanners"`
+	Version            int                                 `json:"version"`
+	Project            string                              `json:"project"`
+	Root               string                              `json:"root"`
+	Mode               Mode                                `json:"mode"`
+	Output             string                              `json:"output"`
+	FailOn             finding.Severity                    `json:"fail_on"`
+	IncludeExtensions  []string                            `json:"include_extensions"`
+	ExcludeDirectories []string                            `json:"exclude_directories"`
+	ExcludeFiles       []string                            `json:"exclude_files"`
+	RuleFiles          []string                            `json:"rule_files"`
+	SuppressionFile    string                              `json:"suppression_file"`
+	Workers            int                                 `json:"workers"`
+	Scanners           map[string]Scanner                  `json:"scanners"`
+	Profiles           map[string][]string                 `json:"profiles,omitempty"`
+	Policy             map[finding.Domain]finding.Severity `json:"policy,omitempty"`
 }
 
 func Default() Config {
@@ -74,7 +83,21 @@ func Default() Config {
 		ExcludeFiles:       []string{"security_findings.json", "package-lock.json"},
 		SuppressionFile:    ".security-ignore",
 		Workers:            runtime.GOMAXPROCS(0),
+		Profiles: map[string][]string{
+			ProfileFast:     {"pattern"},
+			ProfileStandard: {"pattern"},
+			ProfileFull:     {"pattern"},
+		},
 	}
+}
+
+// Threshold returns the domain-specific policy threshold when configured and
+// otherwise falls back to the legacy global fail_on value.
+func (c Config) Threshold(domain finding.Domain) finding.Severity {
+	if threshold, ok := c.Policy[domain]; ok {
+		return threshold
+	}
+	return c.FailOn
 }
 
 func (c *Config) Validate() error {
@@ -92,6 +115,30 @@ func (c *Config) Validate() error {
 	}
 	if c.Workers < 1 {
 		return fmt.Errorf("workers must be at least 1")
+	}
+	for domain, threshold := range c.Policy {
+		if !domain.Valid() {
+			return fmt.Errorf("invalid policy domain %q", domain)
+		}
+		if !threshold.Valid() {
+			return fmt.Errorf("invalid policy threshold %q for domain %s", threshold, domain)
+		}
+	}
+	for name, scanners := range c.Profiles {
+		if strings.TrimSpace(name) == "" {
+			return fmt.Errorf("profile name is required")
+		}
+		seen := make(map[string]struct{}, len(scanners))
+		for _, scannerID := range scanners {
+			scannerID = strings.TrimSpace(scannerID)
+			if scannerID == "" {
+				return fmt.Errorf("profile %s: scanner id is required", name)
+			}
+			if _, ok := seen[scannerID]; ok {
+				return fmt.Errorf("profile %s: duplicate scanner %q", name, scannerID)
+			}
+			seen[scannerID] = struct{}{}
+		}
 	}
 	absRoot, err := filepath.Abs(c.Root)
 	if err != nil {
