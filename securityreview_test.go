@@ -117,6 +117,25 @@ func TestDisabledScannerIsSkipped(t *testing.T) {
 	}
 }
 
+func TestOfflineProfileSkipsNetworkScanner(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.SelectedProfile = config.ProfileFast
+	cfg.Profiles[config.ProfileFast] = []string{"pattern", "network"}
+	source := &describedScanner{id: "network", descriptor: scanner.Descriptor{Domain: finding.SupplyChain, RequiresNetwork: true}, result: scanner.Result{State: finding.ScannerClean}}
+	reviewer, err := New(cfg, WithScanner(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if source.called || report.Scanners[1].State != finding.ScannerSkipped || !strings.Contains(report.Scanners[1].Message, "network access") {
+		t.Fatalf("network scanner was not safely skipped: called=%t status=%+v", source.called, report.Scanners[1])
+	}
+}
+
 type slowScanner struct{ id string }
 
 func (s slowScanner) ID() string { return s.id }

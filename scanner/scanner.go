@@ -46,10 +46,11 @@ func (k FailureKind) Valid() bool {
 }
 
 type Descriptor struct {
-	Domain         finding.Domain
-	Version        string
-	Capabilities   []string
-	SupportedModes []string
+	Domain          finding.Domain
+	Version         string
+	Capabilities    []string
+	SupportedModes  []string
+	RequiresNetwork bool
 }
 
 type Described interface {

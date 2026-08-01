@@ -48,6 +48,7 @@ type Scanner struct {
 	OutputFormat     string           `json:"output_format,omitempty"`
 	Environment      []string         `json:"environment,omitempty"`
 	Options          map[string]any   `json:"options,omitempty"`
+	RequiresNetwork  bool             `json:"requires_network,omitempty"`
 }
 
 type Hook struct {
@@ -140,6 +141,7 @@ func (s Scanner) CommandSpec(id string) commandscanner.Spec {
 		Version: s.Version, MaxOutputBytes: s.MaxOutputBytes,
 		SnapshotMaxFiles: s.SnapshotMaxFiles, SnapshotMaxBytes: s.SnapshotMaxBytes,
 		OutputFormat: s.OutputFormat, Environment: s.Environment,
+		RequiresNetwork: s.RequiresNetwork,
 	}
 }
 
@@ -197,6 +199,7 @@ type Config struct {
 	QualityMaxLineLength int                                 `json:"quality_max_line_length,omitempty"`
 	Scanners             map[string]Scanner                  `json:"scanners"`
 	Profiles             map[string][]string                 `json:"profiles,omitempty"`
+	OfflineProfiles      []string                            `json:"offline_profiles,omitempty"`
 	Policy               map[finding.Domain]finding.Severity `json:"policy,omitempty"`
 	Hooks                Hooks                               `json:"hooks,omitempty"`
 	SupplyChain          SupplyChainPolicy                   `json:"supply_chain,omitempty"`
@@ -226,6 +229,7 @@ func Default() Config {
 			ProfileStandard: {"pattern"},
 			ProfileFull:     {"pattern"},
 		},
+		OfflineProfiles: []string{ProfileFast},
 		Hooks: Hooks{
 			PreCommit: Hook{Enabled: true, Profile: ProfileFast, StagedOnly: true, NewOnly: true},
 			CommitMsg: Hook{MaxSubjectLength: 72},
@@ -465,6 +469,16 @@ func (c *Config) Validate() error {
 			}
 			seen[scannerID] = struct{}{}
 		}
+	}
+	seenOfflineProfiles := make(map[string]struct{}, len(c.OfflineProfiles))
+	for _, name := range c.OfflineProfiles {
+		if _, exists := c.Profiles[name]; !exists {
+			return fmt.Errorf("offline profile %q is not defined", name)
+		}
+		if _, duplicate := seenOfflineProfiles[name]; duplicate {
+			return fmt.Errorf("duplicate offline profile %q", name)
+		}
+		seenOfflineProfiles[name] = struct{}{}
 	}
 	if err := c.validateHook("pre_commit", c.Hooks.PreCommit); err != nil {
 		return err

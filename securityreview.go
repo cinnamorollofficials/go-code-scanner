@@ -272,6 +272,13 @@ func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner,
 			Domain:  descriptor.Domain, Capabilities: descriptor.Capabilities, SupportedModes: descriptor.SupportedModes,
 		}}
 	}
+	if descriptor.RequiresNetwork && profileContains(r.config.OfflineProfiles, r.config.SelectedProfile) {
+		return scannerOutcome{status: finding.ScannerStatus{
+			ID: source.ID(), State: finding.ScannerSkipped, Required: required,
+			Message: "network access is disabled for the selected profile",
+			Domain:  descriptor.Domain, Capabilities: descriptor.Capabilities, SupportedModes: descriptor.SupportedModes,
+		}}
+	}
 	if len(descriptor.SupportedModes) > 0 && !profileContains(descriptor.SupportedModes, request.Mode) {
 		return scannerOutcome{status: finding.ScannerStatus{
 			ID: source.ID(), State: finding.ScannerSkipped, Required: required,

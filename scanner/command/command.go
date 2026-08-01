@@ -52,6 +52,7 @@ type Spec struct {
 	Parser           func([]byte) ([]ParsedFinding, error)
 	ParserOnSuccess  bool
 	OutputFile       bool
+	RequiresNetwork  bool
 }
 
 type Scanner struct {
@@ -151,7 +152,7 @@ func (s *Scanner) Describe() scanner.Descriptor {
 	}
 	return scanner.Descriptor{
 		Domain: s.spec.Domain, Version: s.spec.Version,
-		Capabilities: []string{"external-command", s.spec.OutputFormat}, SupportedModes: modes,
+		Capabilities: []string{"external-command", s.spec.OutputFormat}, SupportedModes: modes, RequiresNetwork: s.spec.RequiresNetwork,
 	}
 }
 
