@@ -24,3 +24,28 @@ func TestCIWorkflowUsesPinnedActionsAndVerificationScript(t *testing.T) {
 		t.Fatal("checkout credentials must not persist after checkout")
 	}
 }
+
+func TestReleaseWorkflowBuildsAndVerifiesTaggedArtifacts(t *testing.T) {
+	workflow, err := os.ReadFile("../.github/workflows/release.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	contents := string(workflow)
+	actions := regexp.MustCompile(`(?m)^\s*uses:\s+[^@\s]+@([0-9a-f]{40})(?:\s|$)`).FindAllStringSubmatch(contents, -1)
+	if len(actions) != 2 {
+		t.Fatalf("expected 2 actions pinned to full commit SHAs, found %d", len(actions))
+	}
+	for _, command := range []string{
+		"release changelog validate",
+		"./scripts/build-release.sh",
+		"./scripts/checksums.sh",
+		"sha256sum --check SHA256SUMS",
+	} {
+		if !strings.Contains(contents, command) {
+			t.Fatalf("release workflow is missing %q", command)
+		}
+	}
+	if !strings.Contains(contents, "contents: read") || !strings.Contains(contents, "persist-credentials: false") {
+		t.Fatal("release verification must use read-only permissions without persisted credentials")
+	}
+}
