@@ -454,11 +454,14 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 	if len(args) >= 1 && args[0] == "archive" {
 		return runReleaseArchive(args[1:], stdout, stderr)
 	}
+	if len(args) >= 2 && args[0] == "checksums" && args[1] == "verify" {
+		return runReleaseChecksumsVerify(args[2:], stdout, stderr)
+	}
 	if len(args) >= 2 && args[0] == "changelog" && args[1] == "validate" {
 		return runChangelogValidate(args[2:], stdout, stderr)
 	}
 	if len(args) == 0 || args[0] != "verify" {
-		fmt.Fprintln(stderr, "usage: security-review release <archive|verify|changelog validate> [options]")
+		fmt.Fprintln(stderr, "usage: security-review release <archive|checksums verify|verify|changelog validate> [options]")
 		return 2
 	}
 	flags := flag.NewFlagSet("release verify", flag.ContinueOnError)
@@ -488,6 +491,33 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintln(stdout, "Provenance signature verified")
+	return 0
+}
+
+func runReleaseChecksumsVerify(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("release checksums verify", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	manifestPath := flags.String("manifest", "", "SHA256SUMS manifest path")
+	directory := flags.String("directory", "", "directory containing release artifacts")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "release checksums verify does not accept positional arguments")
+		return 2
+	}
+	if *manifestPath == "" || *directory == "" {
+		fmt.Fprintln(stderr, "--manifest and --directory are required")
+		return 2
+	}
+	if err := releasepkg.VerifyChecksums(*manifestPath, *directory); err != nil {
+		fmt.Fprintln(stderr, err)
+		if errors.Is(err, releasepkg.ErrChecksumMismatch) {
+			return 1
+		}
+		return 2
+	}
+	fmt.Fprintln(stdout, "Release checksums verified")
 	return 0
 }
 

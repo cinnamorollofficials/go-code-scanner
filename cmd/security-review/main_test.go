@@ -5,9 +5,11 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -582,6 +584,47 @@ func TestReleaseArchiveCommandRejectsInvalidInputs(t *testing.T) {
 		var stdout, stderr bytes.Buffer
 		if code := run(context.Background(), args, &stdout, &stderr); code != 2 {
 			t.Fatalf("expected invalid arguments for %v, got %d", args, code)
+		}
+	}
+}
+
+func TestReleaseChecksumsVerifyCommand(t *testing.T) {
+	directory := t.TempDir()
+	artifact := filepath.Join(directory, "release.tar.gz")
+	content := []byte("artifact")
+	if err := os.WriteFile(artifact, content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(content)
+	manifest := filepath.Join(directory, "SHA256SUMS")
+	if err := os.WriteFile(manifest, []byte(fmt.Sprintf("%x  release.tar.gz\n", digest)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	args := []string{"release", "checksums", "verify", "--manifest", manifest, "--directory", directory}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("checksum verification failed with %d: %s", code, stderr.String())
+	}
+	if err := os.WriteFile(artifact, []byte("tampered"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), args, &stdout, &stderr); code != 1 {
+		t.Fatalf("expected mismatch exit 1, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestReleaseChecksumsVerifyCommandRejectsInvalidInput(t *testing.T) {
+	cases := [][]string{
+		{"release", "checksums", "verify"},
+		{"release", "checksums", "verify", "--manifest", "missing", "--directory", "."},
+		{"release", "checksums", "verify", "--manifest", "missing", "--directory", ".", "extra"},
+	}
+	for _, args := range cases {
+		var stdout, stderr bytes.Buffer
+		if code := run(context.Background(), args, &stdout, &stderr); code != 2 {
+			t.Fatalf("expected invalid input exit 2 for %v, got %d", args, code)
 		}
 	}
 }

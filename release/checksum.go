@@ -4,12 +4,15 @@ import (
 	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+var ErrChecksumMismatch = errors.New("checksum mismatch")
 
 func VerifyChecksums(manifestPath, directory string) error {
 	manifest, err := os.Open(manifestPath)
@@ -72,7 +75,7 @@ func verifyChecksumFile(path, expected string) error {
 	}
 	actual := hex.EncodeToString(hash.Sum(nil))
 	if actual != strings.ToLower(expected) {
-		return fmt.Errorf("checksum mismatch")
+		return ErrChecksumMismatch
 	}
 	return nil
 }
