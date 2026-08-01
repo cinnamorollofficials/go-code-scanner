@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -189,6 +190,27 @@ func TestLoadLegacyConfigWithoutProfilesOrPolicy(t *testing.T) {
 	}
 	if len(cfg.Profiles[ProfileFast]) != 1 {
 		t.Fatalf("expected default profiles to survive legacy load: %v", cfg.Profiles)
+	}
+}
+
+func TestLoadRejectsUnknownField(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "security-review.json")
+	if err := os.WriteFile(path, []byte(`{"project":"fixture","fail_onn":"HIGH"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Load(path)
+	if err == nil || !strings.Contains(err.Error(), "fail_onn") {
+		t.Fatalf("expected unknown field error, got %v", err)
+	}
+}
+
+func TestLoadRejectsMultipleJSONDocuments(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "security-review.json")
+	if err := os.WriteFile(path, []byte(`{"project":"first"} {"project":"second"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(path); err == nil {
+		t.Fatal("expected multiple document error")
 	}
 }
 
