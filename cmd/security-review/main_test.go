@@ -365,3 +365,22 @@ func TestScanWritesSelectedReportFormat(t *testing.T) {
 		})
 	}
 }
+
+func TestScanExplainRuleAndVerboseStatus(t *testing.T) {
+	root := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), []string{"scan", "--root", root, "--explain", "merge-conflict-marker"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("explain exit=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Rule: merge-conflict-marker") || !strings.Contains(stdout.String(), "Domain: quality") {
+		t.Fatalf("unexpected rule explanation: %q", stdout.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), []string{"scan", "--root", root, "--verbose"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("verbose scan exit=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "required=true") || !strings.Contains(stdout.String(), "capabilities=") {
+		t.Fatalf("verbose scanner metadata missing: %q", stdout.String())
+	}
+}

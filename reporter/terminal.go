@@ -12,6 +12,7 @@ const DefaultTerminalFindingLimit = 50
 
 type TerminalOptions struct {
 	MaxFindings int
+	Verbose     bool
 }
 
 func WriteTerminal(writer io.Writer, report *finding.Report) error {
@@ -39,6 +40,26 @@ func WriteTerminalWithOptions(writer io.Writer, report *finding.Report, options 
 		}
 		if _, err := fmt.Fprintln(writer); err != nil {
 			return err
+		}
+		if options.Verbose {
+			if _, err := fmt.Fprintf(writer, "    required=%t duration=%s", status.Required, status.Duration); err != nil {
+				return err
+			}
+			if status.Version != "" {
+				_, _ = fmt.Fprintf(writer, " version=%s", status.Version)
+			}
+			if status.Domain != "" {
+				_, _ = fmt.Fprintf(writer, " domain=%s", status.Domain)
+			}
+			if status.FailureKind != "" {
+				_, _ = fmt.Fprintf(writer, " failure=%s", status.FailureKind)
+			}
+			if len(status.Capabilities) > 0 {
+				_, _ = fmt.Fprintf(writer, " capabilities=%v", status.Capabilities)
+			}
+			if _, err := fmt.Fprintln(writer); err != nil {
+				return err
+			}
 		}
 	}
 	if _, err := fmt.Fprintf(writer,

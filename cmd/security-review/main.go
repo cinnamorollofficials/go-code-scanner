@@ -20,6 +20,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/hook"
 	"github.com/cinnamorollofficials/go-code-scanner/policy"
 	"github.com/cinnamorollofficials/go-code-scanner/reporter"
+	"github.com/cinnamorollofficials/go-code-scanner/rules"
 )
 
 const version = "0.1.0-dev"
@@ -65,6 +66,8 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	ci := flags.Bool("ci", false, "fail when findings meet the threshold")
 	failOn := flags.String("fail-on", "", "critical, high, medium, or low")
 	quiet := flags.Bool("quiet", false, "suppress terminal summary")
+	verbose := flags.Bool("verbose", false, "show scanner metadata and timing")
+	explain := flags.String("explain", "", "explain a configured rule ID and exit")
 	profile := flags.String("profile", "", "scanner profile to run")
 	baselinePath := flags.String("baseline", "", "finding baseline path")
 	newOnly := flags.Bool("new-only", false, "apply CI policy only to findings absent from the baseline")
@@ -109,6 +112,9 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
+	if *explain != "" {
+		return explainRule(cfg, *explain, stdout, stderr)
+	}
 	if *format != "json" && *format != "sarif" && *format != "junit" {
 		fmt.Fprintf(stderr, "invalid report format %q\n", *format)
 		return 2
@@ -138,7 +144,9 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 3
 	}
 	if !*quiet {
-		if err := reporter.WriteTerminal(stdout, report); err != nil {
+		if err := reporter.WriteTerminalWithOptions(stdout, report, reporter.TerminalOptions{
+			MaxFindings: reporter.DefaultTerminalFindingLimit, Verbose: *verbose,
+		}); err != nil {
 			fmt.Fprintln(stderr, err)
 			return 3
 		}
@@ -153,6 +161,40 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+func explainRule(cfg config.Config, id string, stdout, stderr io.Writer) int {
+	paths := make([]string, len(cfg.RuleFiles))
+	for index, path := range cfg.RuleFiles {
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(cfg.Root, path)
+		}
+		paths[index] = path
+	}
+	compiled, err := rules.Load(paths)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	for _, item := range compiled {
+		if item.ID != id {
+			continue
+		}
+		fmt.Fprintf(stdout, "Rule: %s\nDomain: %s\nCategory: %s\nSeverity: %s\nDescription: %s\n", item.ID, item.Domain, item.Category, item.Severity, item.Description)
+		if item.Recommendation != "" {
+			fmt.Fprintf(stdout, "Recommendation: %s\n", item.Recommendation)
+		}
+		if item.Documentation != "" {
+			fmt.Fprintf(stdout, "Documentation: %s\n", item.Documentation)
+		}
+		if len(item.Tags) > 0 {
+			fmt.Fprintf(stdout, "Tags: %s\n", strings.Join(item.Tags, ", "))
+		}
+		fmt.Fprintf(stdout, "Fixable: %t\n", item.Fixable)
+		return 0
+	}
+	fmt.Fprintf(stderr, "unknown rule %q\n", id)
+	return 2
 }
 
 func writeReport(format, path string, report *finding.Report) error {
