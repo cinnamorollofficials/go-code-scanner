@@ -36,7 +36,7 @@ This document is the handoff checklist for continuing the project in a new sessi
 - [x] **12. Add vulnerability scanning.** Run `govulncheck ./...` when available, pin installation/version behavior, and distinguish tool unavailability from discovered vulnerabilities. Commit suggestion: `ci(security): scan Go vulnerabilities`.
 - [x] **13. Add cross-platform CI.** Verify build and platform-sensitive tests on Linux, macOS, and Windows. Keep expensive race tests on supported runners only and ensure path/permission expectations are portable. Commit suggestion: `ci: verify supported platforms`.
 - [x] **14. Add artifact and report redaction tests.** Assert secrets cannot appear in terminal, JSON, SARIF, JUnit, cache entries, provenance errors, or external scanner diagnostics. Commit suggestion: `test(security): verify output redaction`.
-- [ ] **15. Add resource-boundary integration tests.** Cover oversized files, excessive file counts, command output limits, timeouts, cancellation, snapshot cleanup, and cache retention under boundary conditions. Commit suggestion: `test(hardening): cover resource boundaries`.
+- [x] **15. Add resource-boundary integration tests.** Cover oversized files, excessive file counts, command output limits, timeouts, cancellation, snapshot cleanup, and cache retention under boundary conditions. Commit suggestion: `test(hardening): cover resource boundaries`.
 
 ## Phase 4 — Product acceptance
 
