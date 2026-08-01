@@ -36,6 +36,25 @@ func TestLoadRejectsInvalidSuppression(t *testing.T) {
 	}
 }
 
+func TestLoadAndAddRejectUnknownFieldsAndTrailingDocuments(t *testing.T) {
+	for _, content := range []string{
+		`{"version":1,"suppressions":[],"unexpected":true}`,
+		`{"version":1,"suppressions":[]} {"version":1,"suppressions":[]}`,
+	} {
+		path := filepath.Join(t.TempDir(), "suppressions.json")
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Load(path); err == nil {
+			t.Fatalf("invalid suppression file accepted by load: %s", content)
+		}
+		rule := Rule{File: "a.go", Line: 1, Reason: "reviewed", Expires: "2030-01-01"}
+		if _, err := Add(path, rule, false); err == nil {
+			t.Fatalf("invalid suppression file accepted by add: %s", content)
+		}
+	}
+}
+
 func TestMatchesRequiresExactPath(t *testing.T) {
 	item := finding.Finding{RuleID: "one", Location: finding.Location{File: "service/src/a.go", Line: 4}}
 	rule := Rule{RuleID: "one", File: "src/a.go", Line: 4, Reason: "accepted", Expires: "2030-01-01"}

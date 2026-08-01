@@ -1,8 +1,10 @@
 package suppression
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	pathpkg "path"
 	"path/filepath"
@@ -49,9 +51,11 @@ func Add(path string, rule Rule, dryRun bool) (*File, error) {
 	file := &File{Version: SchemaVersion}
 	data, err := os.ReadFile(path)
 	if err == nil {
-		if err := json.Unmarshal(data, file); err != nil {
-			return nil, fmt.Errorf("decode suppressions: %w", err)
+		decoded, decodeErr := decodeFile(data)
+		if decodeErr != nil {
+			return nil, decodeErr
 		}
+		file = decoded
 	} else if !os.IsNotExist(err) {
 		return nil, err
 	}
@@ -107,12 +111,9 @@ func LoadWithRequirements(path string, requirements []Requirement) ([]Rule, erro
 	if err != nil {
 		return nil, err
 	}
-	var file File
-	if err := json.Unmarshal(data, &file); err != nil {
-		return nil, fmt.Errorf("decode suppressions: %w", err)
-	}
-	if file.Version != SchemaVersion {
-		return nil, fmt.Errorf("unsupported suppression version %d", file.Version)
+	file, err := decodeFile(data)
+	if err != nil {
+		return nil, err
 	}
 	for index, rule := range file.Suppressions {
 		if err := validate(rule); err != nil {
@@ -123,6 +124,25 @@ func LoadWithRequirements(path string, requirements []Requirement) ([]Rule, erro
 		}
 	}
 	return file.Suppressions, nil
+}
+
+func decodeFile(data []byte) (*File, error) {
+	var file File
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&file); err != nil {
+		return nil, fmt.Errorf("decode suppressions: %w", err)
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("decode suppressions: multiple JSON documents are not allowed")
+		}
+		return nil, fmt.Errorf("decode suppressions: trailing data: %w", err)
+	}
+	if file.Version != SchemaVersion {
+		return nil, fmt.Errorf("unsupported suppression version %d", file.Version)
+	}
+	return &file, nil
 }
 
 func validateRequirements(rule Rule, requirements []Requirement) error {
