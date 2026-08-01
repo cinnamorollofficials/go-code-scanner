@@ -60,5 +60,17 @@ func TestDefaultSecurityRuleExamples(t *testing.T) {
 			positive: `digest := sha1.Sum(content)`,
 			negative: `digest := sha256.Sum256(content)`,
 		},
+		"go-tainted-file-path": {
+			positive: `content, err := os.ReadFile(c.Param("path"))`,
+			negative: `content, err := os.ReadFile(filepath.Join(base, validatedName))`,
+		},
+		"go-weak-random-secret": {
+			positive: `sessionToken := rand.Intn(999999)`,
+			negative: `simulationValue := rand.Intn(999999)`,
+		},
+		"javascript-dynamic-eval": {
+			positive: `const result = eval(payload)`,
+			negative: `const result = JSON.parse(payload)`,
+		},
 	})
 }

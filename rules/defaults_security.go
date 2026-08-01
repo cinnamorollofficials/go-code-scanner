@@ -31,5 +31,26 @@ func DefaultSecurity() []Rule {
 			Recommendation: "Gunakan SHA-256 atau algoritma yang sesuai; gunakan password KDF untuk password",
 			Extensions:     []string{".go"},
 		},
+		{
+			ID: "go-tainted-file-path", Pattern: `os\.(Open|OpenFile|ReadFile|WriteFile|Remove)\([^)]*(r\.URL\.Query|r\.FormValue|c\.Param)\(`,
+			Severity: finding.High, Domain: finding.Security, Category: "path_traversal",
+			Description:    "Input request mungkin digunakan langsung sebagai path file",
+			Recommendation: "Normalisasi path, enforce base directory, dan gunakan allowlist identifier",
+			Extensions:     []string{".go"},
+		},
+		{
+			ID: "go-weak-random-secret", Pattern: `(?i)(token|secret|nonce|session).{0,40}\brand\.(Int|Intn|Read|Uint32|Uint64)\(`,
+			Severity: finding.High, Domain: finding.Security, Category: "insecure_randomness",
+			Description:    "Nilai keamanan mungkin dibuat menggunakan math/rand",
+			Recommendation: "Gunakan crypto/rand untuk token, nonce, session identifier, dan secret",
+			Extensions:     []string{".go"},
+		},
+		{
+			ID: "javascript-dynamic-eval", Pattern: `\beval\s*\([^)]*[A-Za-z_$]`,
+			Severity: finding.High, Domain: finding.Security, Category: "unsafe_deserialization",
+			Description:    "Dynamic eval mungkin mengeksekusi data sebagai kode",
+			Recommendation: "Gunakan parser data terstruktur dan validasi schema tanpa evaluasi kode",
+			Extensions:     []string{".ts", ".tsx", ".js", ".jsx"},
+		},
 	}
 }
