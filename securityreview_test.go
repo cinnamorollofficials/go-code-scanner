@@ -372,6 +372,25 @@ func TestReviewerRegistersConfiguredCommandScannersInIDOrder(t *testing.T) {
 	}
 }
 
+func TestReviewerRegistersConfiguredAdapter(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.Scanners = map[string]config.Scanner{
+		"format": {Enabled: false, Type: "adapter", Adapter: "gofmt"},
+	}
+	reviewer, err := New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Scanners) != 2 || report.Scanners[1].ID != "format" || report.Scanners[1].State != finding.ScannerSkipped {
+		t.Fatalf("configured adapter was not registered: %+v", report.Scanners)
+	}
+}
+
 func configuredCommandScanner(mode string) config.Scanner {
 	return config.Scanner{
 		Enabled: true, Type: "command", Domain: finding.Quality,

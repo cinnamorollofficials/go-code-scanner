@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/scanner/adapters"
 	commandscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/command"
 )
 
@@ -29,6 +30,8 @@ type Scanner struct {
 	Required         bool             `json:"required"`
 	Timeout          string           `json:"timeout,omitempty"`
 	Type             string           `json:"type,omitempty"`
+	Adapter          string           `json:"adapter,omitempty"`
+	Args             []string         `json:"args,omitempty"`
 	Domain           finding.Domain   `json:"domain,omitempty"`
 	Command          []string         `json:"command,omitempty"`
 	Workspace        string           `json:"workspace,omitempty"`
@@ -231,6 +234,13 @@ func (c *Config) Validate() error {
 			if _, err := commandscanner.New(configured.CommandSpec(id)); err != nil {
 				return err
 			}
+		case "adapter":
+			if id == "pattern" {
+				return fmt.Errorf("scanner %s: adapter cannot replace built-in pattern scanner", id)
+			}
+			if _, err := adapters.New(id, configured.Adapter, configured.AdapterOptions()); err != nil {
+				return err
+			}
 		default:
 			return fmt.Errorf("scanner %s: unsupported type %q", id, configured.Type)
 		}
@@ -271,6 +281,13 @@ func (c *Config) Validate() error {
 	}
 	c.Root = filepath.Clean(absRoot)
 	return nil
+}
+
+func (s Scanner) AdapterOptions() adapters.Options {
+	return adapters.Options{
+		Args: s.Args, Workspace: s.Workspace, OnMissing: s.OnMissing, Environment: s.Environment,
+		MaxOutputBytes: s.MaxOutputBytes, SnapshotMaxFiles: s.SnapshotMaxFiles, SnapshotMaxBytes: s.SnapshotMaxBytes,
+	}
 }
 
 func (c Config) validateHook(name string, hook Hook) error {

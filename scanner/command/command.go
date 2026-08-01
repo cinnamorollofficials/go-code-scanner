@@ -27,6 +27,7 @@ const (
 	DefaultMaxOutput = 64 * 1024
 	OutputExitCode   = "exit-code"
 	OutputJSONLines  = "json-lines"
+	OutputPaths      = "paths"
 )
 
 var defaultEnvironment = []string{"PATH", "HOME", "TMPDIR", "TMP", "TEMP", "SYSTEMROOT", "USERPROFILE", "LANG", "LC_ALL"}
@@ -47,6 +48,7 @@ type Spec struct {
 	SnapshotMaxBytes int64
 	OutputFormat     string
 	Environment      []string
+	FindingsOnOutput bool
 }
 
 type Scanner struct {
@@ -115,8 +117,11 @@ func New(spec Spec) (*Scanner, error) {
 	if spec.OutputFormat == "" {
 		spec.OutputFormat = OutputExitCode
 	}
-	if spec.OutputFormat != OutputExitCode && spec.OutputFormat != OutputJSONLines {
+	if spec.OutputFormat != OutputExitCode && spec.OutputFormat != OutputJSONLines && spec.OutputFormat != OutputPaths {
 		return nil, fmt.Errorf("command scanner %s: invalid output format %q", spec.ID, spec.OutputFormat)
+	}
+	if spec.FindingsOnOutput && spec.OutputFormat != OutputPaths {
+		return nil, fmt.Errorf("command scanner %s: findings_on_output requires paths output format", spec.ID)
 	}
 	environmentNames := make(map[string]struct{}, len(spec.Environment))
 	for _, name := range spec.Environment {
@@ -206,6 +211,21 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	command.Stderr = stderr
 	err = command.Run()
 	if err == nil {
+		if s.spec.FindingsOnOutput && stdout.buffer.Len() > 0 {
+			if stdout.truncated {
+				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, "path command output exceeded configured limit"
+				return finish()
+			}
+			result.Findings, err = parsePathLines(stdout.buffer.Bytes(), root, s.spec)
+			if err != nil {
+				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, err.Error()
+				return finish()
+			}
+			if len(result.Findings) > 0 {
+				result.State = finding.ScannerFindings
+				result.Message = "command output reported findings"
+			}
+		}
 		return finish()
 	}
 	if ctxErr := ctx.Err(); ctxErr != nil {
@@ -257,6 +277,31 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 		result.Message += " (output truncated)"
 	}
 	return finish()
+}
+
+func parsePathLines(data []byte, root string, spec Spec) ([]finding.Finding, error) {
+	var findings []finding.Finding
+	seen := make(map[string]struct{})
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		path, err := normalizeOutputPath(root, line)
+		if err != nil {
+			return nil, fmt.Errorf("decode path output: %w", err)
+		}
+		if _, ok := seen[path]; ok {
+			continue
+		}
+		seen[path] = struct{}{}
+		findings = append(findings, finding.Finding{
+			RuleID: spec.ID, Tool: spec.ID, Domain: spec.Domain, Category: spec.Category,
+			Severity: spec.Severity, Description: spec.Description,
+			Location: finding.Location{File: path, Line: 1}, Fixable: spec.ID == "gofmt",
+		})
+	}
+	return findings, nil
 }
 
 type outputFinding struct {

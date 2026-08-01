@@ -16,6 +16,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/rules"
 	"github.com/cinnamorollofficials/go-code-scanner/scanner"
+	"github.com/cinnamorollofficials/go-code-scanner/scanner/adapters"
 	commandscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/command"
 	patternscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/pattern"
 	"github.com/cinnamorollofficials/go-code-scanner/suppression"
@@ -101,14 +102,20 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 	}
 	configuredIDs := make([]string, 0, len(cfg.Scanners))
 	for id, configured := range cfg.Scanners {
-		if configured.Type == "command" {
+		if configured.Type == "command" || configured.Type == "adapter" {
 			configuredIDs = append(configuredIDs, id)
 		}
 	}
 	sort.Strings(configuredIDs)
 	for _, id := range configuredIDs {
 		configured := cfg.Scanners[id]
-		source, err := commandscanner.New(configured.CommandSpec(id))
+		var source scanner.Scanner
+		var err error
+		if configured.Type == "adapter" {
+			source, err = adapters.New(id, configured.Adapter, configured.AdapterOptions())
+		} else {
+			source, err = commandscanner.New(configured.CommandSpec(id))
+		}
 		if err != nil {
 			return nil, err
 		}

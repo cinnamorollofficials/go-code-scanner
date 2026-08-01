@@ -118,6 +118,19 @@ func TestCommandScannerParsesJSONLines(t *testing.T) {
 	}
 }
 
+func TestCommandScannerParsesSuccessfulPathOutput(t *testing.T) {
+	source := helperScanner(t, "path-output", WorkspaceRoot)
+	source.spec.OutputFormat = OutputPaths
+	source.spec.FindingsOnOutput = true
+	result := source.Scan(context.Background(), scanner.Request{Root: t.TempDir(), Mode: "full"})
+	if result.State != finding.ScannerFindings || len(result.Findings) != 2 {
+		t.Fatalf("unexpected path output result: %+v", result)
+	}
+	if result.Findings[0].Location.File != "a.go" || result.Findings[1].Location.File != "nested/b.go" {
+		t.Fatalf("unexpected path findings: %+v", result.Findings)
+	}
+}
+
 func TestCommandScannerRejectsEscapingStructuredPath(t *testing.T) {
 	source := helperScanner(t, "json-escape", WorkspaceRoot)
 	source.spec.OutputFormat = OutputJSONLines
@@ -198,6 +211,9 @@ func TestCommandHelperProcess(t *testing.T) {
 	case "json-escape":
 		_, _ = os.Stdout.WriteString(`{"rule_id":"escape","file":"../secret","line":1}` + "\n")
 		os.Exit(10)
+	case "path-output":
+		_, _ = os.Stdout.WriteString("a.go\nnested/b.go\na.go\n")
+		os.Exit(0)
 	case "environment-filtered":
 		if os.Getenv("COMMAND_SCANNER_SECRET") != "" {
 			os.Exit(12)

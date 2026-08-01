@@ -45,6 +45,21 @@ func TestDefaultPreCommitHookUsesFastStagedProfile(t *testing.T) {
 	}
 }
 
+func TestAdapterConfigurationValidatesKnownNames(t *testing.T) {
+	cfg := Default()
+	cfg.Root = t.TempDir()
+	cfg.Scanners = map[string]Scanner{
+		"format": {Enabled: true, Type: "adapter", Adapter: "gofmt", Workspace: "staged"},
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("known adapter was rejected: %v", err)
+	}
+	cfg.Scanners["format"] = Scanner{Enabled: true, Type: "adapter", Adapter: "unknown"}
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("unknown adapter was accepted")
+	}
+}
+
 func TestDefaultBaselinePath(t *testing.T) {
 	if got := Default().BaselineFile; got != ".security-baseline.json" {
 		t.Fatalf("unexpected default baseline path %q", got)
