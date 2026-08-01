@@ -40,7 +40,7 @@ This document is the handoff checklist for continuing the project in a new sessi
 
 ## Phase 4 — Product acceptance
 
-- [ ] **16. Verify hook installation using a release binary.** Build a real binary, install each supported hook into a temporary Git repository, execute it, inspect status, uninstall it, and confirm existing hooks remain intact. Commit suggestion: `test(hook): verify release binary lifecycle`.
+- [x] **16. Verify hook installation using a release binary.** Build a real binary, install each supported hook into a temporary Git repository, execute it, inspect status, uninstall it, and confirm existing hooks remain intact. Commit suggestion: `test(hook): verify release binary lifecycle`.
 - [ ] **17. Verify staged-content isolation end to end.** For every scanner claiming staged support, prove that staged safe content is not replaced by an unsafe unstaged working-tree version and vice versa. Commit suggestion: `test(scanner): verify staged isolation`.
 - [ ] **18. Validate all public output contracts.** Add or complete golden/schema checks for JSON, SARIF 2.1.0, JUnit XML, compatibility manifests, checksum manifests, and provenance. Commit suggestion: `test(contract): validate public formats`.
 - [ ] **19. Benchmark performance budgets.** Measure discovery, pattern scanning, baseline comparison, cache hits, and the fast pre-commit profile. Record enforceable thresholds carefully enough to avoid flaky CI. Commit suggestion: `test(performance): enforce commit gate budgets`.
