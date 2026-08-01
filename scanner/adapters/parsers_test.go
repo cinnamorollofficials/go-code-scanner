@@ -1,6 +1,10 @@
 package adapters
 
-import "testing"
+import (
+	"fmt"
+	"strings"
+	"testing"
+)
 
 func TestStructuredAdapterParsers(t *testing.T) {
 	t.Run("gosec", func(t *testing.T) {
@@ -8,6 +12,17 @@ func TestStructuredAdapterParsers(t *testing.T) {
 		items, err := parseGosec(data)
 		if err != nil || len(items) != 1 || items[0].RuleID != "G204" || items[0].Line != 12 {
 			t.Fatalf("unexpected gosec parse: items=%+v err=%v", items, err)
+		}
+	})
+	t.Run("gitleaks redacts secret fields", func(t *testing.T) {
+		data := []byte(`[{"RuleID":"generic-api-key","Description":"Generic API Key","File":"config.go","StartLine":4,"Fingerprint":"abc:config.go:generic-api-key:4","Commit":"abc","Secret":"must-not-leak","Match":"token=must-not-leak"}]`)
+		items, err := parseGitleaks(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "generic-api-key" || items[0].Line != 4 {
+			t.Fatalf("unexpected Gitleaks parse: items=%+v err=%v", items, err)
+		}
+		encoded := fmt.Sprintf("%+v", items[0])
+		if strings.Contains(encoded, "must-not-leak") {
+			t.Fatalf("Gitleaks secret leaked into parsed finding: %s", encoded)
 		}
 	})
 	t.Run("trivy", func(t *testing.T) {

@@ -37,6 +37,31 @@ func parseGosec(data []byte) ([]command.ParsedFinding, error) {
 	return result, nil
 }
 
+func parseGitleaks(data []byte) ([]command.ParsedFinding, error) {
+	var leaks []struct {
+		RuleID      string `json:"RuleID"`
+		Description string `json:"Description"`
+		File        string `json:"File"`
+		StartLine   int    `json:"StartLine"`
+		Fingerprint string `json:"Fingerprint"`
+		Commit      string `json:"Commit"`
+	}
+	if err := json.Unmarshal(data, &leaks); err != nil {
+		return nil, err
+	}
+	result := make([]command.ParsedFinding, 0, len(leaks))
+	for _, leak := range leaks {
+		metadata := map[string]string{"fingerprint": leak.Fingerprint}
+		if leak.Commit != "" {
+			metadata["commit"] = leak.Commit
+		}
+		result = append(result, command.ParsedFinding{
+			RuleID: leak.RuleID, Description: leak.Description, File: leak.File, Line: leak.StartLine, Metadata: metadata,
+		})
+	}
+	return result, nil
+}
+
 func parseTrivy(data []byte) ([]command.ParsedFinding, error) {
 	var report struct {
 		Results []struct {

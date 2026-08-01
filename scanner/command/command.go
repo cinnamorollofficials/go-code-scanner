@@ -51,6 +51,7 @@ type Spec struct {
 	FindingsOnOutput bool
 	Parser           func([]byte) ([]ParsedFinding, error)
 	ParserOnSuccess  bool
+	OutputFile       bool
 }
 
 type Scanner struct {
@@ -124,6 +125,9 @@ func New(spec Spec) (*Scanner, error) {
 	}
 	if spec.FindingsOnOutput && spec.OutputFormat != OutputPaths {
 		return nil, fmt.Errorf("command scanner %s: findings_on_output requires paths output format", spec.ID)
+	}
+	if spec.OutputFile && !containsArgument(spec.Command, "{output}") {
+		return nil, fmt.Errorf("command scanner %s: output_file requires an {output} argument", spec.ID)
 	}
 	environmentNames := make(map[string]struct{}, len(spec.Environment))
 	for _, name := range spec.Environment {
@@ -201,7 +205,28 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 		root = snapshot.Root()
 	}
 
-	command := exec.CommandContext(ctx, executable, s.spec.Command[1:]...)
+	arguments := append([]string(nil), s.spec.Command[1:]...)
+	outputPath := ""
+	if s.spec.OutputFile {
+		output, createErr := os.CreateTemp("", "security-review-output-*.json")
+		if createErr != nil {
+			result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("create adapter output: %v", createErr)
+			return finish()
+		}
+		outputPath = output.Name()
+		if closeErr := output.Close(); closeErr != nil {
+			_ = os.Remove(outputPath)
+			result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("close adapter output: %v", closeErr)
+			return finish()
+		}
+		defer os.Remove(outputPath)
+		for index := range arguments {
+			if arguments[index] == "{output}" {
+				arguments[index] = outputPath
+			}
+		}
+	}
+	command := exec.CommandContext(ctx, executable, arguments...)
 	configureProcessGroup(command)
 	command.Cancel = func() error { return terminateProcessGroup(command.Process) }
 	command.WaitDelay = 2 * time.Second
@@ -282,11 +307,18 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 				return finish()
 			}
 		} else if s.spec.Parser != nil {
-			if stdout.truncated {
+			data := stdout.buffer.Bytes()
+			if s.spec.OutputFile {
+				data, err = readLimitedOutputFile(outputPath, s.spec.MaxOutputBytes)
+				if err != nil {
+					result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("read adapter output: %v", err)
+					return finish()
+				}
+			} else if stdout.truncated {
 				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, "structured command output exceeded configured limit"
 				return finish()
 			}
-			parsed, parseErr := s.spec.Parser(stdout.buffer.Bytes())
+			parsed, parseErr := s.spec.Parser(data)
 			if parseErr != nil {
 				result.State, result.Failure, result.Message = finding.ScannerFailed, scanner.FailureExecution, fmt.Sprintf("decode adapter output: %v", parseErr)
 				return finish()
@@ -314,6 +346,31 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 		result.Message += " (output truncated)"
 	}
 	return finish()
+}
+
+func readLimitedOutputFile(path string, limit int) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	data, err := io.ReadAll(io.LimitReader(file, int64(limit)+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > limit {
+		return nil, fmt.Errorf("structured output exceeded configured limit")
+	}
+	return data, nil
+}
+
+func containsArgument(arguments []string, target string) bool {
+	for _, argument := range arguments {
+		if argument == target {
+			return true
+		}
+	}
+	return false
 }
 
 func parsePathLines(data []byte, root string, spec Spec) ([]finding.Finding, error) {
