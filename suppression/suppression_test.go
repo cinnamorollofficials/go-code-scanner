@@ -3,6 +3,7 @@ package suppression
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -41,5 +42,28 @@ func TestMatchesRequiresExactPath(t *testing.T) {
 	active, suppressed, _ := Apply([]finding.Finding{item}, []Rule{rule}, time.Now())
 	if len(active) != 1 || len(suppressed) != 0 {
 		t.Fatal("suffix-only path must not suppress a finding")
+	}
+}
+
+func TestLoadEnforcesTargetedGovernanceRequirements(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "suppressions.json")
+	requirements := []Requirement{{RuleIDs: []string{"security/*"}, RequireTicket: true, RequireApprover: true}}
+	write := func(content string) {
+		t.Helper()
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write(`{"version":1,"suppressions":[{"rule_id":"security/hardcoded-secret","file":"src/a.go","line":1,"reason":"migration","expires":"2030-01-01"}]}`)
+	if _, err := LoadWithRequirements(path, requirements); err == nil || !strings.Contains(err.Error(), "ticket is required") {
+		t.Fatalf("missing ticket was not rejected: %v", err)
+	}
+	write(`{"version":1,"suppressions":[{"rule_id":"security/hardcoded-secret","file":"src/a.go","line":1,"reason":"migration","ticket":"SEC-123","expires":"2030-01-01"}]}`)
+	if _, err := LoadWithRequirements(path, requirements); err == nil || !strings.Contains(err.Error(), "approved_by is required") {
+		t.Fatalf("missing approver was not rejected: %v", err)
+	}
+	write(`{"version":1,"suppressions":[{"rule_id":"security/hardcoded-secret","file":"src/a.go","line":1,"reason":"migration","ticket":"SEC-123","approved_by":"security-team","expires":"2030-01-01"}]}`)
+	if _, err := LoadWithRequirements(path, requirements); err != nil {
+		t.Fatalf("complete governed suppression rejected: %v", err)
 	}
 }

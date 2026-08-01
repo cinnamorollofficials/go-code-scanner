@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	pathpkg "path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -27,7 +28,17 @@ type File struct {
 	Suppressions []Rule `json:"suppressions"`
 }
 
+type Requirement struct {
+	RuleIDs         []string
+	RequireTicket   bool
+	RequireApprover bool
+}
+
 func Load(path string) ([]Rule, error) {
+	return LoadWithRequirements(path, nil)
+}
+
+func LoadWithRequirements(path string, requirements []Requirement) ([]Rule, error) {
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -43,8 +54,33 @@ func Load(path string) ([]Rule, error) {
 		if err := validate(rule); err != nil {
 			return nil, fmt.Errorf("suppression %d: %w", index+1, err)
 		}
+		if err := validateRequirements(rule, requirements); err != nil {
+			return nil, fmt.Errorf("suppression %d: %w", index+1, err)
+		}
 	}
 	return file.Suppressions, nil
+}
+
+func validateRequirements(rule Rule, requirements []Requirement) error {
+	for _, requirement := range requirements {
+		matched := false
+		for _, pattern := range requirement.RuleIDs {
+			if ok, _ := pathpkg.Match(pattern, rule.RuleID); ok {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			continue
+		}
+		if requirement.RequireTicket && strings.TrimSpace(rule.Ticket) == "" {
+			return fmt.Errorf("ticket is required for rule %q", rule.RuleID)
+		}
+		if requirement.RequireApprover && strings.TrimSpace(rule.ApprovedBy) == "" {
+			return fmt.Errorf("approved_by is required for rule %q", rule.RuleID)
+		}
+	}
+	return nil
 }
 
 func Apply(findings []finding.Finding, rules []Rule, now time.Time) (active, suppressed []finding.Finding, stale []string) {

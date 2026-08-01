@@ -73,10 +73,17 @@ type SupplyChainPolicy struct {
 }
 
 type GovernancePolicy struct {
-	RequiredFiles   []string         `json:"required_files,omitempty"`
-	RequiredHeaders []RequiredHeader `json:"required_headers,omitempty"`
-	OwnershipFile   string           `json:"ownership_file,omitempty"`
-	OwnershipRules  []OwnershipRule  `json:"ownership_rules,omitempty"`
+	RequiredFiles           []string                 `json:"required_files,omitempty"`
+	RequiredHeaders         []RequiredHeader         `json:"required_headers,omitempty"`
+	OwnershipFile           string                   `json:"ownership_file,omitempty"`
+	OwnershipRules          []OwnershipRule          `json:"ownership_rules,omitempty"`
+	SuppressionRequirements []SuppressionRequirement `json:"suppression_requirements,omitempty"`
+}
+
+type SuppressionRequirement struct {
+	RuleIDs         []string `json:"rule_ids"`
+	RequireTicket   bool     `json:"require_ticket,omitempty"`
+	RequireApprover bool     `json:"require_approver,omitempty"`
 }
 
 type OwnershipRule struct {
@@ -353,6 +360,27 @@ func (c *Config) Validate() error {
 		}
 		if rule.Severity != "" && !rule.Severity.Valid() {
 			return fmt.Errorf("governance.ownership_rules[%d]: invalid severity %q", index, rule.Severity)
+		}
+	}
+	for index, requirement := range c.Governance.SuppressionRequirements {
+		if len(requirement.RuleIDs) == 0 {
+			return fmt.Errorf("governance.suppression_requirements[%d]: rule_ids are required", index)
+		}
+		if !requirement.RequireTicket && !requirement.RequireApprover {
+			return fmt.Errorf("governance.suppression_requirements[%d]: at least one requirement must be enabled", index)
+		}
+		seenPatterns := make(map[string]struct{}, len(requirement.RuleIDs))
+		for patternIndex, pattern := range requirement.RuleIDs {
+			if strings.TrimSpace(pattern) == "" {
+				return fmt.Errorf("governance.suppression_requirements[%d].rule_ids[%d]: pattern is required", index, patternIndex)
+			}
+			if _, err := pathpkg.Match(pattern, "rule-id"); err != nil {
+				return fmt.Errorf("governance.suppression_requirements[%d].rule_ids[%d]: invalid pattern %q", index, patternIndex, pattern)
+			}
+			if _, duplicate := seenPatterns[pattern]; duplicate {
+				return fmt.Errorf("governance.suppression_requirements[%d]: duplicate rule pattern %q", index, pattern)
+			}
+			seenPatterns[pattern] = struct{}{}
 		}
 	}
 	layers := make(map[string]struct{}, len(c.Architecture.Layers))

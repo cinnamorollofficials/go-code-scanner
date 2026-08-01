@@ -139,6 +139,29 @@ func TestGovernanceOwnershipPolicyValidation(t *testing.T) {
 	}
 }
 
+func TestGovernanceSuppressionRequirementValidation(t *testing.T) {
+	valid := Default()
+	valid.Root = t.TempDir()
+	valid.Governance.SuppressionRequirements = []SuppressionRequirement{{RuleIDs: []string{"security/*"}, RequireTicket: true, RequireApprover: true}}
+	if err := valid.Validate(); err != nil {
+		t.Fatalf("valid suppression requirement rejected: %v", err)
+	}
+	invalid := [][]SuppressionRequirement{
+		{{RequireTicket: true}},
+		{{RuleIDs: []string{"security/*"}}},
+		{{RuleIDs: []string{"[invalid"}, RequireTicket: true}},
+		{{RuleIDs: []string{"security/*", "security/*"}, RequireApprover: true}},
+	}
+	for _, requirements := range invalid {
+		cfg := Default()
+		cfg.Root = t.TempDir()
+		cfg.Governance.SuppressionRequirements = requirements
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("invalid suppression requirements accepted: %+v", requirements)
+		}
+	}
+}
+
 func TestArchitecturePolicyValidation(t *testing.T) {
 	cfg := Default()
 	cfg.Root = t.TempDir()

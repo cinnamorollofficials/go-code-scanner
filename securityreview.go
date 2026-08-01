@@ -192,7 +192,13 @@ func (r *reviewer) Run(ctx context.Context) (*finding.Report, error) {
 		}
 	}
 	all = normalize(all)
-	suppressions, err := suppression.Load(resolvePath(r.config.Root, r.config.SuppressionFile))
+	requirements := make([]suppression.Requirement, len(r.config.Governance.SuppressionRequirements))
+	for index, requirement := range r.config.Governance.SuppressionRequirements {
+		requirements[index] = suppression.Requirement{
+			RuleIDs: append([]string(nil), requirement.RuleIDs...), RequireTicket: requirement.RequireTicket, RequireApprover: requirement.RequireApprover,
+		}
+	}
+	suppressions, err := suppression.LoadWithRequirements(resolvePath(r.config.Root, r.config.SuppressionFile), requirements)
 	if err != nil {
 		return nil, err
 	}
