@@ -67,3 +67,27 @@ func TestLoadEnforcesTargetedGovernanceRequirements(t *testing.T) {
 		t.Fatalf("complete governed suppression rejected: %v", err)
 	}
 }
+
+func TestAddSupportsDryRunAndAtomicWrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), ".security-ignore")
+	rule := Rule{RuleID: "security/example", File: "app.go", Line: 7, Reason: "reviewed exception", Expires: "2030-01-01"}
+	if result, err := Add(path, rule, true); err != nil || len(result.Suppressions) != 1 {
+		t.Fatalf("dry-run failed: result=%+v err=%v", result, err)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatal("dry-run wrote suppression file")
+	}
+	if _, err := Add(path, rule, false); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("unexpected suppression permissions: %o", info.Mode().Perm())
+	}
+	if _, err := Add(path, rule, false); err == nil {
+		t.Fatal("duplicate suppression was accepted")
+	}
+}

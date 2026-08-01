@@ -446,3 +446,26 @@ func TestScanColorModes(t *testing.T) {
 		}
 	}
 }
+
+func TestSuppressAddDryRunAndWrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), ".security-ignore")
+	args := []string{"suppress", "add", "--suppression-file", path, "--file", "app.go", "--line", "7", "--rule", "security/example", "--reason", "reviewed", "--expires", "2030-01-01"}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), append(args, "--dry-run"), &stdout, &stderr); code != 0 {
+		t.Fatalf("dry-run exit=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Would add") {
+		t.Fatalf("missing dry-run preview: %q", stdout.String())
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatal("dry-run wrote suppression file")
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("write exit=%d stderr=%s", code, stderr.String())
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Fatal(err)
+	}
+}

@@ -22,6 +22,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/policy"
 	"github.com/cinnamorollofficials/go-code-scanner/reporter"
 	"github.com/cinnamorollofficials/go-code-scanner/rules"
+	"github.com/cinnamorollofficials/go-code-scanner/suppression"
 )
 
 const version = "0.1.0-dev"
@@ -43,6 +44,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runHook(ctx, args[1:], stdout, stderr)
 	case "baseline":
 		return runBaseline(args[1:], stdout, stderr)
+	case "suppress":
+		return runSuppress(args[1:], stdout, stderr)
 	case "version", "--version", "-version":
 		fmt.Fprintln(stdout, version)
 		return 0
@@ -369,6 +372,44 @@ func runBaseline(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func runSuppress(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "add" {
+		fmt.Fprintln(stderr, "usage: security-review suppress add --file <path> --reason <text> --expires <YYYY-MM-DD> [options]")
+		return 2
+	}
+	flags := flag.NewFlagSet("suppress add", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	suppressionFile := flags.String("suppression-file", ".security-ignore", "suppression JSON path")
+	file := flags.String("file", "", "finding file path")
+	line := flags.Int("line", -1, "finding line, or -1 for any line")
+	ruleID := flags.String("rule", "", "finding rule ID")
+	fingerprint := flags.String("fingerprint", "", "finding fingerprint")
+	reason := flags.String("reason", "", "reviewed suppression reason")
+	expires := flags.String("expires", "", "expiry date in YYYY-MM-DD")
+	ticket := flags.String("ticket", "", "approval ticket")
+	approvedBy := flags.String("approved-by", "", "approver identity")
+	dryRun := flags.Bool("dry-run", false, "preview without writing")
+	if err := flags.Parse(args[1:]); err != nil {
+		return 2
+	}
+	if *file == "" {
+		fmt.Fprintln(stderr, "--file is required")
+		return 2
+	}
+	rule := suppression.Rule{RuleID: *ruleID, Fingerprint: *fingerprint, File: *file, Line: *line, Reason: *reason, Expires: *expires, Ticket: *ticket, ApprovedBy: *approvedBy}
+	result, err := suppression.Add(*suppressionFile, rule, *dryRun)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	action := "Added"
+	if *dryRun {
+		action = "Would add"
+	}
+	fmt.Fprintf(stdout, "%s suppression for %s (%d total) in %s\n", action, *file, len(result.Suppressions), *suppressionFile)
+	return 0
+}
+
 func loadReport(path string) (*finding.Report, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -546,5 +587,5 @@ func loadConfig(path, root string) (config.Config, error) {
 }
 
 func writeUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|version> [options]")
+	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|version> [options]")
 }
