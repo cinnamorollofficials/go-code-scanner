@@ -12,7 +12,7 @@ go test -race ./...
 go vet ./...
 ./scripts/fuzz-smoke.sh
 ./scripts/vulnerability-scan.sh --if-available
-go test -run '^$' -bench . ./cache
+./scripts/performance-budget.sh
 go run ./cmd/security-review scan --root . --quiet --output "$report_path"
 
 echo "verification and self-scan completed"
