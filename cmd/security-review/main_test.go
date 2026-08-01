@@ -690,6 +690,83 @@ func TestReleaseChecksumsVerifyCommandRejectsInvalidInput(t *testing.T) {
 	}
 }
 
+func TestReleaseProvenanceGenerateAndSignCommands(t *testing.T) {
+	root := t.TempDir()
+	artifacts := filepath.Join(root, "artifacts")
+	keys := filepath.Join(root, "keys")
+	if err := os.MkdirAll(artifacts, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(keys, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(artifacts, "release.tar.gz"), []byte("artifact"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	privatePath, publicPath := writeReleaseKeys(t, keys, privateKey, publicKey)
+	provenance := filepath.Join(artifacts, "provenance.json")
+	signature := filepath.Join(artifacts, "provenance.sig")
+	args := []string{"release", "provenance", "generate", "--directory", artifacts, "--output", provenance, "--version", "v1.2.3", "--commit", "abc123", "--build-date", "2026-01-02T03:04:05Z", "--builder", "test/builder", "--private-key", privatePath, "--signature", signature}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), args, &stdout, &stderr); code != 0 {
+		t.Fatalf("generate and sign failed with %d: %s", code, stderr.String())
+	}
+	signatureData, err := os.ReadFile(signature)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loadedPublicKey, err := releasepkg.LoadPublicKey(publicPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := releasepkg.VerifyFile(provenance, string(signatureData), loadedPublicKey); err != nil {
+		t.Fatal(err)
+	}
+	separateSignature := filepath.Join(root, "separate.sig")
+	stdout.Reset()
+	stderr.Reset()
+	signArgs := []string{"release", "provenance", "sign", "--provenance", provenance, "--private-key", privatePath, "--output", separateSignature}
+	if code := run(context.Background(), signArgs, &stdout, &stderr); code != 0 {
+		t.Fatalf("separate signing failed with %d: %s", code, stderr.String())
+	}
+	separateData, err := os.ReadFile(separateSignature)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(separateData) != string(signatureData) {
+		t.Fatalf("detached signatures are not deterministic")
+	}
+}
+
+func TestReleaseProvenanceSigningPreservesKeyPermissionChecks(t *testing.T) {
+	directory := t.TempDir()
+	provenance := filepath.Join(directory, "provenance.json")
+	if err := os.WriteFile(provenance, []byte("provenance"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	privateDER, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	privatePath := filepath.Join(directory, "private.pem")
+	if err := os.WriteFile(privatePath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateDER}), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	args := []string{"release", "provenance", "sign", "--provenance", provenance, "--private-key", privatePath, "--output", filepath.Join(directory, "provenance.sig")}
+	var stdout, stderr bytes.Buffer
+	if code := run(context.Background(), args, &stdout, &stderr); code != 2 || !strings.Contains(stderr.String(), "permissions") {
+		t.Fatalf("expected permission rejection, code=%d stderr=%q", code, stderr.String())
+	}
+}
+
 func TestReleaseChangelogValidateCommand(t *testing.T) {
 	directory := t.TempDir()
 	path := filepath.Join(directory, "CHANGELOG.md")

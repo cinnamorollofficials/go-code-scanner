@@ -457,11 +457,17 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 	if len(args) >= 2 && args[0] == "checksums" && args[1] == "verify" {
 		return runReleaseChecksumsVerify(args[2:], stdout, stderr)
 	}
+	if len(args) >= 2 && args[0] == "provenance" && args[1] == "generate" {
+		return runReleaseProvenanceGenerate(args[2:], stdout, stderr)
+	}
+	if len(args) >= 2 && args[0] == "provenance" && args[1] == "sign" {
+		return runReleaseProvenanceSign(args[2:], stdout, stderr)
+	}
 	if len(args) >= 2 && args[0] == "changelog" && args[1] == "validate" {
 		return runChangelogValidate(args[2:], stdout, stderr)
 	}
 	if len(args) == 0 || args[0] != "verify" {
-		fmt.Fprintln(stderr, "usage: security-review release <archive|checksums verify|verify|changelog validate> [options]")
+		fmt.Fprintln(stderr, "usage: security-review release <archive|checksums verify|provenance generate|provenance sign|verify|changelog validate> [options]")
 		return 2
 	}
 	flags := flag.NewFlagSet("release verify", flag.ContinueOnError)
@@ -503,6 +509,105 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, "Provenance subjects verified")
 	}
 	fmt.Fprintln(stdout, "Provenance signature verified")
+	return 0
+}
+
+func runReleaseProvenanceGenerate(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("release provenance generate", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	directory := flags.String("directory", "", "directory containing release artifacts")
+	outputPath := flags.String("output", "", "output provenance JSON path")
+	version := flags.String("version", "", "release version")
+	commit := flags.String("commit", "", "source commit")
+	buildDate := flags.String("build-date", "", "build timestamp in RFC3339 format")
+	builder := flags.String("builder", "", "builder identity")
+	privateKeyPath := flags.String("private-key", "", "optional PEM Ed25519 private key path")
+	signaturePath := flags.String("signature", "", "optional detached signature output path")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "release provenance generate does not accept positional arguments")
+		return 2
+	}
+	if *directory == "" || *outputPath == "" || *version == "" || *commit == "" || *buildDate == "" || *builder == "" {
+		fmt.Fprintln(stderr, "--directory, --output, --version, --commit, --build-date, and --builder are required")
+		return 2
+	}
+	if (*privateKeyPath == "") != (*signaturePath == "") {
+		fmt.Fprintln(stderr, "--private-key and --signature must be provided together")
+		return 2
+	}
+	stamp, err := time.Parse(time.RFC3339, *buildDate)
+	if err != nil {
+		fmt.Fprintln(stderr, "--build-date must be an RFC3339 timestamp")
+		return 2
+	}
+	options := releasepkg.ProvenanceOptions{Version: *version, Commit: *commit, BuildDate: stamp, Builder: *builder}
+	if err := releasepkg.WriteProvenance(*directory, *outputPath, options); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	if err := releasepkg.VerifyProvenance(*outputPath, *directory); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "Provenance generated: %s\n", *outputPath)
+	if *privateKeyPath != "" {
+		if code := signProvenance(*outputPath, *privateKeyPath, *signaturePath, stdout, stderr); code != 0 {
+			return code
+		}
+	}
+	return 0
+}
+
+func runReleaseProvenanceSign(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("release provenance sign", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	provenancePath := flags.String("provenance", "", "provenance JSON path")
+	privateKeyPath := flags.String("private-key", "", "PEM Ed25519 private key path")
+	outputPath := flags.String("output", "", "detached base64 signature output path")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "release provenance sign does not accept positional arguments")
+		return 2
+	}
+	if *provenancePath == "" || *privateKeyPath == "" || *outputPath == "" {
+		fmt.Fprintln(stderr, "--provenance, --private-key, and --output are required")
+		return 2
+	}
+	return signProvenance(*provenancePath, *privateKeyPath, *outputPath, stdout, stderr)
+}
+
+func signProvenance(provenancePath, privateKeyPath, outputPath string, stdout, stderr io.Writer) int {
+	signature, err := releasepkg.SignFile(provenancePath, privateKeyPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	temporary, err := os.CreateTemp(filepath.Dir(outputPath), ".provenance-signature-*")
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	temporaryPath := temporary.Name()
+	defer os.Remove(temporaryPath)
+	if err := temporary.Chmod(0o644); err == nil {
+		_, err = fmt.Fprintln(temporary, signature)
+	}
+	if closeErr := temporary.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(temporaryPath, outputPath)
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	fmt.Fprintf(stdout, "Provenance signature created: %s\n", outputPath)
 	return 0
 }
 

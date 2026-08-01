@@ -16,11 +16,11 @@ This document is the handoff checklist for continuing the project in a new sessi
 
 ## Phase 1 — Complete the release pipeline
 
-- [ ] **1. Integrate deterministic archives into the release build.** Update the release build flow to package Unix binaries as `.tar.gz` and Windows binaries as `.zip` using `release.ArchiveBinary`. Ensure raw binaries are not accidentally included in the final distribution set. Commit suggestion: `feat(release): package distribution archives`.
-- [ ] **2. Add a release archive CLI command.** Provide a stable command for creating an archive from a binary with an explicit timestamp. Reject symlinks, unsupported extensions, missing timestamps, and unexpected positional arguments. Commit suggestion: `feat(cli): create release archives`.
-- [ ] **3. Add a checksum verification CLI command.** Expose `release.VerifyChecksums` through `security-review release checksums verify`. Use exit code `0` for success, `1` for verification mismatch, and `2` for invalid arguments or unreadable inputs. Commit suggestion: `feat(cli): verify release checksums`.
-- [ ] **4. Extend provenance verification to validate subjects.** Update the existing release verification command so signature validation and local subject digest validation can be requested together. Preserve signature-only compatibility. Commit suggestion: `feat(cli): verify provenance artifacts`.
-- [ ] **5. Add provenance generation and signing commands.** Expose deterministic provenance generation and optional Ed25519 detached signing without weakening private-key permission checks. Commit suggestion: `feat(cli): generate signed provenance`.
+- [x] **1. Integrate deterministic archives into the release build.** Update the release build flow to package Unix binaries as `.tar.gz` and Windows binaries as `.zip` using `release.ArchiveBinary`. Ensure raw binaries are not accidentally included in the final distribution set. Commit suggestion: `feat(release): package distribution archives`.
+- [x] **2. Add a release archive CLI command.** Provide a stable command for creating an archive from a binary with an explicit timestamp. Reject symlinks, unsupported extensions, missing timestamps, and unexpected positional arguments. Commit suggestion: `feat(cli): create release archives`.
+- [x] **3. Add a checksum verification CLI command.** Expose `release.VerifyChecksums` through `security-review release checksums verify`. Use exit code `0` for success, `1` for verification mismatch, and `2` for invalid arguments or unreadable inputs. Commit suggestion: `feat(cli): verify release checksums`.
+- [x] **4. Extend provenance verification to validate subjects.** Update the existing release verification command so signature validation and local subject digest validation can be requested together. Preserve signature-only compatibility. Commit suggestion: `feat(cli): verify provenance artifacts`.
+- [x] **5. Add provenance generation and signing commands.** Expose deterministic provenance generation and optional Ed25519 detached signing without weakening private-key permission checks. Commit suggestion: `feat(cli): generate signed provenance`.
 
 ## Phase 2 — Publishable and reproducible releases
 
