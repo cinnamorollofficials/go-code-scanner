@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cinnamorollofficials/go-code-scanner/finding"
+	commandscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/command"
 )
 
 type Mode string
@@ -21,10 +22,21 @@ const (
 )
 
 type Scanner struct {
-	Enabled  bool           `json:"enabled"`
-	Required bool           `json:"required"`
-	Timeout  string         `json:"timeout,omitempty"`
-	Options  map[string]any `json:"options,omitempty"`
+	Enabled          bool             `json:"enabled"`
+	Required         bool             `json:"required"`
+	Timeout          string           `json:"timeout,omitempty"`
+	Type             string           `json:"type,omitempty"`
+	Domain           finding.Domain   `json:"domain,omitempty"`
+	Command          []string         `json:"command,omitempty"`
+	Workspace        string           `json:"workspace,omitempty"`
+	OnMissing        string           `json:"on_missing,omitempty"`
+	FindingExitCodes []int            `json:"finding_exit_codes,omitempty"`
+	Severity         finding.Severity `json:"severity,omitempty"`
+	Category         string           `json:"category,omitempty"`
+	Description      string           `json:"description,omitempty"`
+	Version          string           `json:"version,omitempty"`
+	MaxOutputBytes   int              `json:"max_output_bytes,omitempty"`
+	Options          map[string]any   `json:"options,omitempty"`
 }
 
 type Hook struct {
@@ -51,6 +63,15 @@ func (s Scanner) TimeoutDuration() (time.Duration, error) {
 		return 0, fmt.Errorf("timeout must be greater than zero")
 	}
 	return duration, nil
+}
+
+func (s Scanner) CommandSpec(id string) commandscanner.Spec {
+	return commandscanner.Spec{
+		ID: id, Domain: s.Domain, Command: s.Command, Workspace: s.Workspace,
+		OnMissing: s.OnMissing, FindingExitCodes: s.FindingExitCodes,
+		Severity: s.Severity, Category: s.Category, Description: s.Description,
+		Version: s.Version, MaxOutputBytes: s.MaxOutputBytes,
+	}
 }
 
 const (
@@ -162,6 +183,21 @@ func (c *Config) Validate() error {
 		}
 		if _, err := configured.TimeoutDuration(); err != nil {
 			return fmt.Errorf("scanner %s: %w", id, err)
+		}
+		switch configured.Type {
+		case "", "pattern":
+			if configured.Type == "pattern" && id != "pattern" {
+				return fmt.Errorf("scanner %s: pattern type is reserved for scanner %q", id, "pattern")
+			}
+		case "command":
+			if id == "pattern" {
+				return fmt.Errorf("scanner %s: command cannot replace built-in pattern scanner", id)
+			}
+			if _, err := commandscanner.New(configured.CommandSpec(id)); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("scanner %s: unsupported type %q", id, configured.Type)
 		}
 	}
 	for name, scanners := range c.Profiles {

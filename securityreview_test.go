@@ -207,6 +207,55 @@ func TestSelectedProfileSkipsScannerOutsideProfile(t *testing.T) {
 	}
 }
 
+func TestReviewerRegistersConfiguredCommandScannersInIDOrder(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.Scanners = map[string]config.Scanner{
+		"z-command": configuredCommandScanner("clean"),
+		"a-command": configuredCommandScanner("findings"),
+	}
+	reviewer, err := New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := reviewer.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Scanners) != 3 || report.Scanners[1].ID != "a-command" || report.Scanners[2].ID != "z-command" {
+		t.Fatalf("configured scanner order is not deterministic: %+v", report.Scanners)
+	}
+	if len(report.Findings) != 1 || report.Findings[0].Tool != "a-command" {
+		t.Fatalf("expected normalized command finding, got %+v", report.Findings)
+	}
+}
+
+func configuredCommandScanner(mode string) config.Scanner {
+	return config.Scanner{
+		Enabled: true, Type: "command", Domain: finding.Quality,
+		Command:          []string{os.Args[0], "-test.run=TestConfiguredCommandHelperProcess", "--", mode},
+		FindingExitCodes: []int{10}, Severity: finding.High,
+		Category: "fixture", Description: "configured command finding",
+	}
+}
+
+func TestConfiguredCommandHelperProcess(t *testing.T) {
+	separator := -1
+	for index, argument := range os.Args {
+		if argument == "--" {
+			separator = index
+			break
+		}
+	}
+	if separator == -1 || separator+1 >= len(os.Args) {
+		return
+	}
+	if os.Args[separator+1] == "findings" {
+		os.Exit(10)
+	}
+	os.Exit(0)
+}
+
 func TestOptionalScannerFailureReturnsReportAndWarning(t *testing.T) {
 	cfg := config.Default()
 	cfg.Root = t.TempDir()

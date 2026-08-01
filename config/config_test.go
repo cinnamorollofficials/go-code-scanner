@@ -127,6 +127,31 @@ func TestScannerTimeoutDuration(t *testing.T) {
 	}
 }
 
+func TestConfigValidatesCommandScanner(t *testing.T) {
+	cfg := Default()
+	cfg.Scanners = map[string]Scanner{
+		"quality-tool": {
+			Enabled: true, Type: "command", Domain: finding.Quality,
+			Command: []string{"quality-tool", "check"}, Workspace: "staged", OnMissing: "skip",
+			FindingExitCodes: []int{1}, Severity: finding.High,
+			Category: "lint", Description: "Quality tool reported findings",
+		},
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestConfigRejectsInvalidCommandScanner(t *testing.T) {
+	cfg := Default()
+	cfg.Scanners = map[string]Scanner{
+		"invalid": {Enabled: true, Type: "command", Domain: finding.Quality},
+	}
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected invalid command scanner error")
+	}
+}
+
 func TestLoadLegacyConfigWithoutProfilesOrPolicy(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "security-review.json")
 	data := []byte(`{
