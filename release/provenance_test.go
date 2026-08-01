@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -31,5 +32,39 @@ func TestWriteProvenanceHashesSortedArtifacts(t *testing.T) {
 	info, _ := os.Stat(output)
 	if info.Mode().Perm() != 0o600 {
 		t.Fatalf("unexpected provenance permissions: %o", info.Mode().Perm())
+	}
+}
+
+func TestVerifyProvenanceSubjects(t *testing.T) {
+	directory := t.TempDir()
+	artifact := filepath.Join(directory, "security-review.tar.gz")
+	if err := os.WriteFile(artifact, []byte("artifact"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(directory, "provenance.json")
+	options := ProvenanceOptions{Version: "v1.2.3", Commit: "abc123", BuildDate: time.Unix(1, 0), Builder: "ci/example"}
+	if err := WriteProvenance(directory, path, options); err != nil {
+		t.Fatal(err)
+	}
+	if err := VerifyProvenance(path, directory); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(artifact, []byte("tampered"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := VerifyProvenance(path, directory); err == nil || !strings.Contains(err.Error(), "mismatch") {
+		t.Fatalf("expected provenance mismatch, got %v", err)
+	}
+}
+
+func TestVerifyProvenanceRejectsUnknownFields(t *testing.T) {
+	directory := t.TempDir()
+	path := filepath.Join(directory, "provenance.json")
+	data := `{"schema":"go-code-scanner/provenance/v1","unknown":true}`
+	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := VerifyProvenance(path, directory); err == nil || !strings.Contains(err.Error(), "unknown") {
+		t.Fatalf("expected strict decode error, got %v", err)
 	}
 }

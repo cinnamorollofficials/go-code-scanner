@@ -1,6 +1,7 @@
 package release
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -88,4 +89,43 @@ func WriteProvenance(directory, output string, options ProvenanceOptions) error 
 		return err
 	}
 	return os.Rename(name, output)
+}
+
+func VerifyProvenance(path, directory string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read provenance: %w", err)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	var document Provenance
+	if err := decoder.Decode(&document); err != nil {
+		return fmt.Errorf("decode provenance: %w", err)
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		return fmt.Errorf("decode provenance: trailing JSON value")
+	}
+	if document.Schema != ProvenanceSchema {
+		return fmt.Errorf("unsupported provenance schema %q", document.Schema)
+	}
+	if strings.TrimSpace(document.Version) == "" || strings.TrimSpace(document.Commit) == "" || document.BuildDate.IsZero() || strings.TrimSpace(document.Builder) == "" {
+		return fmt.Errorf("provenance metadata is incomplete")
+	}
+	if len(document.Subjects) == 0 {
+		return fmt.Errorf("provenance contains no subjects")
+	}
+	previous := ""
+	for index, subject := range document.Subjects {
+		if filepath.Base(subject.Name) != subject.Name || subject.Name == "." || subject.Name == ".." {
+			return fmt.Errorf("subject %d has unsafe name %q", index, subject.Name)
+		}
+		if subject.Name <= previous {
+			return fmt.Errorf("provenance subjects must be unique and sorted")
+		}
+		previous = subject.Name
+		if err := verifyChecksumFile(filepath.Join(directory, subject.Name), subject.SHA256); err != nil {
+			return fmt.Errorf("verify provenance subject %s: %w", subject.Name, err)
+		}
+	}
+	return nil
 }
