@@ -122,6 +122,17 @@ func New(spec Spec) (*Scanner, error) {
 
 func (s *Scanner) ID() string { return s.spec.ID }
 
+func (s *Scanner) Describe() scanner.Descriptor {
+	modes := []string{"full", "changed", "staged"}
+	if s.spec.Workspace == WorkspaceStaged {
+		modes = []string{"staged"}
+	}
+	return scanner.Descriptor{
+		Domain: s.spec.Domain, Version: s.spec.Version,
+		Capabilities: []string{"external-command", s.spec.OutputFormat}, SupportedModes: modes,
+	}
+}
+
 func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Result {
 	started := time.Now()
 	result := scanner.Result{State: finding.ScannerClean, Version: s.spec.Version}
@@ -137,6 +148,7 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 			result.State = finding.ScannerSkipped
 		} else {
 			result.State = finding.ScannerFailed
+			result.Failure = scanner.FailureMissing
 		}
 		return finish()
 	}
@@ -146,18 +158,21 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	if s.spec.Workspace == WorkspaceStaged {
 		if request.Mode != "staged" {
 			result.State = finding.ScannerFailed
+			result.Failure = scanner.FailureExecution
 			result.Message = "staged workspace requires staged scan mode"
 			return finish()
 		}
 		repository, openErr := gitrepo.Open(ctx, request.Root)
 		if openErr != nil {
 			result.State = finding.ScannerFailed
+			result.Failure = scanner.FailureExecution
 			result.Message = openErr.Error()
 			return finish()
 		}
 		snapshot, err = workspace.MaterializeIndex(ctx, repository, workspace.DefaultLimits())
 		if err != nil {
 			result.State = finding.ScannerFailed
+			result.Failure = scanner.FailureExecution
 			result.Message = err.Error()
 			return finish()
 		}
@@ -178,12 +193,14 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 	}
 	if ctxErr := ctx.Err(); ctxErr != nil {
 		result.State = finding.ScannerFailed
+		result.Failure = scanner.FailureCanceled
 		result.Message = ctxErr.Error()
 		return finish()
 	}
 	var exitErr *exec.ExitError
 	if !errors.As(err, &exitErr) {
 		result.State = finding.ScannerFailed
+		result.Failure = scanner.FailureExecution
 		result.Message = fmt.Sprintf("execute command: %v", err)
 		return finish()
 	}
@@ -194,12 +211,14 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 		if s.spec.OutputFormat == OutputJSONLines {
 			if stdout.truncated {
 				result.State = finding.ScannerFailed
+				result.Failure = scanner.FailureExecution
 				result.Message = "structured command output exceeded configured limit"
 				return finish()
 			}
 			result.Findings, err = parseJSONLines(stdout.buffer.Bytes(), root, s.spec)
 			if err != nil {
 				result.State = finding.ScannerFailed
+				result.Failure = scanner.FailureExecution
 				result.Message = fmt.Sprintf("decode structured command output: %v", err)
 				return finish()
 			}
@@ -215,6 +234,7 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 		return finish()
 	}
 	result.State = finding.ScannerFailed
+	result.Failure = scanner.FailureExecution
 	result.Message = fmt.Sprintf("command failed with exit code %d", exitCode)
 	if stdout.truncated || stderr.truncated {
 		result.Message += " (output truncated)"

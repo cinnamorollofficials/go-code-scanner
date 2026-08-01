@@ -36,6 +36,14 @@ func TestCommandScannerStates(t *testing.T) {
 	}
 }
 
+func TestCommandScannerDescriptor(t *testing.T) {
+	source := helperScanner(t, "clean", WorkspaceStaged)
+	descriptor := source.Describe()
+	if descriptor.Domain != finding.Quality || len(descriptor.SupportedModes) != 1 || descriptor.SupportedModes[0] != "staged" {
+		t.Fatalf("unexpected descriptor: %+v", descriptor)
+	}
+}
+
 func TestMissingCommandCanSkipOrFail(t *testing.T) {
 	for _, test := range []struct {
 		behavior string

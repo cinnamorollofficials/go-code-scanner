@@ -35,6 +35,13 @@ func New(compiled []rules.Compiled, workers int) *Scanner {
 
 func (s *Scanner) ID() string { return "pattern" }
 
+func (s *Scanner) Describe() scanner.Descriptor {
+	return scanner.Descriptor{
+		Capabilities:   []string{"built-in-rules", "line-patterns", "redaction"},
+		SupportedModes: []string{"full", "changed", "staged"},
+	}
+}
+
 func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Result {
 	started := time.Now()
 	result := scanner.Result{State: finding.ScannerClean}
@@ -62,7 +69,7 @@ func (s *Scanner) Scan(ctx context.Context, request scanner.Request) scanner.Res
 				result.Message = appendMessage(result.Message, item.err.Error())
 			}
 		case <-ctx.Done():
-			result.State, result.Message = finding.ScannerFailed, ctx.Err().Error()
+			result.State, result.Message, result.Failure = finding.ScannerFailed, ctx.Err().Error(), scanner.FailureCanceled
 			result.Duration = time.Since(started)
 			return result
 		}

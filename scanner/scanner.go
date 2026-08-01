@@ -25,6 +25,33 @@ type Result struct {
 	Message  string
 	Version  string
 	Duration time.Duration
+	Failure  FailureKind
+}
+
+type FailureKind string
+
+const (
+	FailureCanceled  FailureKind = "canceled"
+	FailureExecution FailureKind = "execution"
+	FailureMissing   FailureKind = "missing_dependency"
+	FailurePanic     FailureKind = "panic"
+	FailurePartial   FailureKind = "partial"
+	FailureTimeout   FailureKind = "timeout"
+)
+
+func (k FailureKind) Valid() bool {
+	return k == FailureCanceled || k == FailureExecution || k == FailureMissing || k == FailurePanic || k == FailurePartial || k == FailureTimeout
+}
+
+type Descriptor struct {
+	Domain         finding.Domain
+	Version        string
+	Capabilities   []string
+	SupportedModes []string
+}
+
+type Described interface {
+	Describe() Descriptor
 }
 
 type Scanner interface {

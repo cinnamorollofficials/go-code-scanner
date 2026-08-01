@@ -205,6 +205,7 @@ func (r *reviewer) runScanners(ctx context.Context, request scanner.Request) []s
 func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner, request scanner.Request) scannerOutcome {
 	source := registered.scanner
 	required := registered.required
+	descriptor := describeScanner(source)
 	configured, hasConfig := r.config.Scanners[source.ID()]
 	if hasConfig {
 		required = configured.Required
@@ -213,28 +214,58 @@ func (r *reviewer) runScanner(ctx context.Context, registered registeredScanner,
 		return scannerOutcome{status: finding.ScannerStatus{
 			ID: source.ID(), State: finding.ScannerSkipped, Required: required,
 			Message: fmt.Sprintf("not included in profile %s", r.config.SelectedProfile),
+			Domain:  descriptor.Domain, Capabilities: descriptor.Capabilities, SupportedModes: descriptor.SupportedModes,
+		}}
+	}
+	if len(descriptor.SupportedModes) > 0 && !profileContains(descriptor.SupportedModes, request.Mode) {
+		return scannerOutcome{status: finding.ScannerStatus{
+			ID: source.ID(), State: finding.ScannerSkipped, Required: required,
+			Message: fmt.Sprintf("scan mode %s is not supported", request.Mode),
+			Domain:  descriptor.Domain, Capabilities: descriptor.Capabilities, SupportedModes: descriptor.SupportedModes,
 		}}
 	}
 	if hasConfig && !configured.Enabled {
 		return scannerOutcome{status: finding.ScannerStatus{
 			ID: source.ID(), State: finding.ScannerSkipped, Required: required,
 			Message: "disabled by configuration",
+			Domain:  descriptor.Domain, Capabilities: descriptor.Capabilities, SupportedModes: descriptor.SupportedModes,
 		}}
 	}
 
 	timeout, _ := configured.TimeoutDuration()
 	result := executeScanner(ctx, source, request, timeout)
+	if result.Version == "" {
+		result.Version = descriptor.Version
+	}
+	if result.State == finding.ScannerPartial && result.Failure == "" {
+		result.Failure = scanner.FailurePartial
+	}
+	if result.State == finding.ScannerFailed && result.Failure == "" {
+		result.Failure = scanner.FailureExecution
+	}
 	outcome := scannerOutcome{
 		findings: result.Findings,
 		status: finding.ScannerStatus{
 			ID: source.ID(), State: result.State, Duration: result.Duration,
 			Message: result.Message, Version: result.Version, Required: required,
+			Domain: descriptor.Domain, Capabilities: descriptor.Capabilities,
+			SupportedModes: descriptor.SupportedModes, FailureKind: string(result.Failure),
 		},
 	}
 	if result.State == finding.ScannerFailed || result.State == finding.ScannerPartial {
 		outcome.failure = fmt.Errorf("scanner %s failed: %s", source.ID(), result.Message)
 	}
 	return outcome
+}
+
+func describeScanner(source scanner.Scanner) scanner.Descriptor {
+	if described, ok := source.(scanner.Described); ok {
+		descriptor := described.Describe()
+		descriptor.Capabilities = append([]string(nil), descriptor.Capabilities...)
+		descriptor.SupportedModes = append([]string(nil), descriptor.SupportedModes...)
+		return descriptor
+	}
+	return scanner.Descriptor{Domain: finding.Security}
 }
 
 func profileContains(scanners []string, id string) bool {
@@ -268,7 +299,7 @@ func executeScanner(ctx context.Context, source scanner.Scanner, request scanner
 			message = fmt.Sprintf("timeout after %s", timeout)
 		}
 		return scanner.Result{
-			State: finding.ScannerFailed, Message: message, Duration: time.Since(started),
+			State: finding.ScannerFailed, Message: message, Duration: time.Since(started), Failure: scanner.FailureTimeout,
 		}
 	}
 }
@@ -281,6 +312,7 @@ func scanSafely(ctx context.Context, source scanner.Scanner, request scanner.Req
 				State:    finding.ScannerFailed,
 				Message:  fmt.Sprintf("panic: %v", recovered),
 				Duration: time.Since(started),
+				Failure:  scanner.FailurePanic,
 			}
 		}
 	}()

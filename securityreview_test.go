@@ -130,6 +130,9 @@ func TestScannerTimeoutReturnsPartialReport(t *testing.T) {
 	if report.Scanners[1].State != finding.ScannerFailed || len(report.Warnings) != 1 {
 		t.Fatalf("expected timeout failure and warning, got %+v", report)
 	}
+	if report.Scanners[1].FailureKind != string(scanner.FailureTimeout) {
+		t.Fatalf("expected timeout failure kind, got %+v", report.Scanners[1])
+	}
 }
 
 type barrierScanner struct {
@@ -214,6 +217,9 @@ func TestScannerPanicBecomesOptionalFailure(t *testing.T) {
 	}
 	if !strings.Contains(report.Scanners[1].Message, "panic") {
 		t.Fatalf("expected panic message, got %q", report.Scanners[1].Message)
+	}
+	if report.Scanners[1].FailureKind != string(scanner.FailurePanic) {
+		t.Fatalf("expected panic failure kind, got %+v", report.Scanners[1])
 	}
 }
 

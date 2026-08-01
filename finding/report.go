@@ -52,13 +52,21 @@ const (
 	ScannerFailed   ScannerState = "failed"
 )
 
+func (s ScannerState) Valid() bool {
+	return s == ScannerClean || s == ScannerFindings || s == ScannerPartial || s == ScannerSkipped || s == ScannerFailed
+}
+
 type ScannerStatus struct {
-	ID       string        `json:"id"`
-	State    ScannerState  `json:"state"`
-	Required bool          `json:"required"`
-	Duration time.Duration `json:"duration_ns"`
-	Message  string        `json:"message,omitempty"`
-	Version  string        `json:"version,omitempty"`
+	ID             string        `json:"id"`
+	State          ScannerState  `json:"state"`
+	Required       bool          `json:"required"`
+	Duration       time.Duration `json:"duration_ns"`
+	Message        string        `json:"message,omitempty"`
+	Version        string        `json:"version,omitempty"`
+	Domain         Domain        `json:"domain,omitempty"`
+	Capabilities   []string      `json:"capabilities,omitempty"`
+	SupportedModes []string      `json:"supported_modes,omitempty"`
+	FailureKind    string        `json:"failure_kind,omitempty"`
 }
 
 type Report struct {
