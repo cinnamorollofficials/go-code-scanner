@@ -234,7 +234,7 @@ inspect them.
   `go test ./scanner/frontend -run 'Resolve|Alias|Workspace'`. Depends on task
   20. Commit: `feat(frontend): resolve TypeScript project imports` (cb1bda1).
 
-- [ ] **22. Enforce client/server dependency boundaries.** Report client paths
+- [x] **22. Enforce client/server dependency boundaries.** Report client paths
   that transitively reach configured server roots, Node built-ins, private
   environment modules, or known server-only framework modules. Include a safe
   dependency path in metadata without source text. Allow reviewed shared
@@ -242,7 +242,7 @@ inspect them.
   Context: frontend governance scanner. Verification:
   `go test ./scanner/frontend -run 'Boundary|ServerOnly'`. Depends on tasks 4
   and 20–21. Commit:
-  `feat(frontend): enforce client server boundaries`.
+  `feat(frontend): enforce client server boundaries` (5bc049c).
 
 - [ ] **23. Detect frontend import cycles.** Add deterministic cycle detection
   for local client/shared modules, deduplicate equivalent cycles, respect the

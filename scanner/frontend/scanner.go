@@ -185,6 +185,14 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 					}
 					findings = append(findings, svelteFindings...)
 
+					boundaryChecker := NewBoundaryChecker(s.cfg)
+					boundaryFindings, err := boundaryChecker.Check(ctx, src)
+					if err != nil {
+						results <- workerResult{err: err}
+						return
+					}
+					findings = append(findings, boundaryFindings...)
+
 					if len(findings) > 0 {
 						results <- workerResult{findings: findings}
 					}

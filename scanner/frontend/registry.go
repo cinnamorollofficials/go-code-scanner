@@ -272,6 +272,20 @@ var Registry = map[string]RuleDefinition{
 		Source:         "server-module",
 		Tags:           []string{"frontend", "svelte", "architecture", "server-only"},
 	},
+	"frontend/client-server-boundary-violation": {
+		ID:             "frontend/client-server-boundary-violation",
+		Domain:         finding.Governance,
+		Category:       "boundary",
+		Severity:       finding.High,
+		Description:    "Client code transitively imports server-only module or server root",
+		Recommendation: "Do not import server modules or server roots in client components",
+		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/frontend-scanning-contract.md",
+		Framework:      "vanilla",
+		Confidence:     "HIGH",
+		Sink:           "import",
+		Source:         "dependency-chain",
+		Tags:           []string{"frontend", "governance", "boundary", "architecture"},
+	},
 }
 
 func LookupRule(id string) (RuleDefinition, bool) {

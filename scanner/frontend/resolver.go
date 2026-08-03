@@ -129,13 +129,18 @@ func (r *Resolver) Resolve(fromFile, specifier string) (string, bool) {
 func (r *Resolver) resolveFileOrIndex(base string, exts []string) (string, bool) {
 	cleanBase := filepath.Clean(base)
 
-	rel, err := filepath.Rel(r.rootDir, cleanBase)
+	absBase := cleanBase
+	if !filepath.IsAbs(cleanBase) {
+		absBase = filepath.Join(r.rootDir, cleanBase)
+	}
+
+	rel, err := filepath.Rel(r.rootDir, absBase)
 	if err != nil || strings.HasPrefix(rel, "..") {
 		return "", false
 	}
 
 	for _, ext := range exts {
-		candidate := cleanBase + ext
+		candidate := absBase + ext
 		if fi, err := os.Stat(candidate); err == nil && !fi.IsDir() {
 			if rRel, err := filepath.Rel(r.rootDir, candidate); err == nil {
 				return filepath.ToSlash(filepath.Clean(rRel)), true
@@ -144,7 +149,7 @@ func (r *Resolver) resolveFileOrIndex(base string, exts []string) (string, bool)
 	}
 
 	for _, ext := range []string{".ts", ".tsx", ".js", ".jsx"} {
-		candidate := filepath.Join(cleanBase, "index"+ext)
+		candidate := filepath.Join(absBase, "index"+ext)
 		if fi, err := os.Stat(candidate); err == nil && !fi.IsDir() {
 			if rRel, err := filepath.Rel(r.rootDir, candidate); err == nil {
 				return filepath.ToSlash(filepath.Clean(rRel)), true
