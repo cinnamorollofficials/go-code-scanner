@@ -215,7 +215,37 @@ const (
 	ProfileFast     = "fast"
 	ProfileStandard = "standard"
 	ProfileFull     = "full"
+	// ProfileFrontend runs native frontend checks offline with no Go-only tools required.
+	ProfileFrontend = "frontend"
 )
+
+// ApplicableScanners returns the scanners from a profile that are applicable
+// for the given project context. It filters out Go-only tools (govulncheck,
+// staticcheck) when the project has no Go source (go.mod absent), and filters
+// out frontend scanners when frontend is disabled.
+func (c Config) ApplicableScanners(profile string) []string {
+	scanners, ok := c.Profiles[profile]
+	if !ok {
+		return nil
+	}
+	var out []string
+	for _, name := range scanners {
+		switch name {
+		case "govulncheck", "staticcheck":
+			// Go-only tools: skip if project root has no go.mod
+			if _, err := os.Stat(filepath.Join(c.Root, "go.mod")); os.IsNotExist(err) {
+				continue
+			}
+		case "eslint", "tsc", "biome", "semgrep":
+			// Frontend ecosystem tools: skip if frontend is disabled
+			if !c.Frontend.Enabled {
+				continue
+			}
+		}
+		out = append(out, name)
+	}
+	return out
+}
 
 func Load(path string) (Config, error) {
 	cfg := Default()
@@ -298,8 +328,9 @@ func Default() Config {
 			ProfileFast:     {"pattern"},
 			ProfileStandard: {"pattern", "govulncheck"},
 			ProfileFull:     {"pattern", "govulncheck"},
+			ProfileFrontend: {"pattern", "frontend", "tsc", "biome", "eslint", "semgrep"},
 		},
-		OfflineProfiles: []string{ProfileFast},
+		OfflineProfiles: []string{ProfileFast, ProfileFrontend},
 		Hooks: Hooks{
 			PreCommit: Hook{Enabled: true, Profile: ProfileFast, StagedOnly: true, NewOnly: true},
 			CommitMsg: Hook{MaxSubjectLength: 72},

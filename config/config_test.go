@@ -443,6 +443,76 @@ func TestFrontendPolicyStrictDecode(t *testing.T) {
 	}
 }
 
+func TestProfileFrontendIsOfflineAndIncludesNativeFrontendChecks(t *testing.T) {
+	cfg := Default()
+	// frontend profile should be listed as offline
+	isOffline := false
+	for _, p := range cfg.OfflineProfiles {
+		if p == ProfileFrontend {
+			isOffline = true
+			break
+		}
+	}
+	if !isOffline {
+		t.Errorf("expected %q to be listed in OfflineProfiles", ProfileFrontend)
+	}
+	// frontend profile should include "pattern" and frontend-specific scanners
+	scanners := cfg.Profiles[ProfileFrontend]
+	if len(scanners) == 0 {
+		t.Fatalf("expected non-empty frontend profile, got empty")
+	}
+	hasPattern := false
+	for _, s := range scanners {
+		if s == "pattern" {
+			hasPattern = true
+		}
+	}
+	if !hasPattern {
+		t.Errorf("expected frontend profile to include 'pattern', got %v", scanners)
+	}
+}
+
+func TestApplicableScannersFiltersGoOnlyToolsForFrontendOnlyProject(t *testing.T) {
+	root := t.TempDir() // no go.mod → frontend-only project
+	cfg := Default()
+	cfg.Root = root
+	cfg.Frontend.Enabled = true
+	cfg.Profiles["standard-plus-govuln"] = []string{"pattern", "govulncheck", "tsc"}
+
+	scanners := cfg.ApplicableScanners("standard-plus-govuln")
+	for _, s := range scanners {
+		if s == "govulncheck" {
+			t.Errorf("govulncheck should be filtered when go.mod is absent")
+		}
+	}
+	// pattern and tsc should remain (frontend is enabled)
+	found := map[string]bool{}
+	for _, s := range scanners {
+		found[s] = true
+	}
+	if !found["pattern"] {
+		t.Error("expected 'pattern' to remain in applicable scanners")
+	}
+	if !found["tsc"] {
+		t.Error("expected 'tsc' to remain in applicable scanners when frontend is enabled")
+	}
+}
+
+func TestApplicableScannersFiltersFrontendToolsWhenFrontendDisabled(t *testing.T) {
+	root := t.TempDir()
+	cfg := Default()
+	cfg.Root = root
+	cfg.Frontend.Enabled = false
+	cfg.Profiles["test"] = []string{"pattern", "tsc", "biome", "eslint"}
+
+	scanners := cfg.ApplicableScanners("test")
+	for _, s := range scanners {
+		if s == "tsc" || s == "biome" || s == "eslint" {
+			t.Errorf("frontend tool %q should be filtered when Frontend.Enabled=false", s)
+		}
+	}
+}
+
 func filepathIsAbsolute(path string) bool {
 	if len(path) >= 3 && path[1] == ':' {
 		return true

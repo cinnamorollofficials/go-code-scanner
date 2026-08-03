@@ -261,7 +261,7 @@ inspect them.
   `go test ./scanner/pattern -run 'Manifest|Lockfile'`. Depends on task 3.
   Commit: `feat(supply-chain): support JavaScript lockfiles` (bcad013).
 
-- [ ] **25. Harden JavaScript dependency policies.** Detect wildcard/latest
+- [x] **25. Harden JavaScript dependency policies.** Detect wildcard/latest
   versions, mutable Git references, unpinned URL dependencies, and suspicious
   lifecycle scripts with reviewed severity and confidence. Support dependencies,
   devDependencies, optionalDependencies, peerDependencies, and workspace
@@ -269,27 +269,27 @@ inspect them.
   pattern file policy. Verification:
   `go test ./scanner/pattern -run 'Package|Dependency|Lifecycle'`. Depends on
   task 24. Commit:
-  `feat(supply-chain): audit JavaScript dependency policy`.
+  `feat(supply-chain): audit JavaScript dependency policy` (138eaf2).
 
-- [ ] **26. Check remote browser resources.** Detect unversioned remote scripts,
+- [x] **26. Check remote browser resources.** Detect unversioned remote scripts,
   missing Subresource Integrity for cross-origin scripts and styles, dynamic
   remote imports, and insecure resource URLs. Avoid requiring SRI where the
   browser contract does not support it. Context: HTML/template frontend rules.
   Verification: `go test ./scanner/frontend -run 'Remote|Integrity|Resource'`.
   Depends on tasks 6 and 14–15. Commit:
-  `feat(frontend): check remote resource integrity`.
+  `feat(frontend): check remote resource integrity` (0d076ab).
 
 ## Phase 8 — CLI, profiles, and compatibility
 
-- [ ] **27. Add client scope selection to the CLI.** Add
+- [x] **27. Add client scope selection to the CLI.** Add
   `--scope client|server|all` with `all` preserving current behavior. Define
   interactions with config, changed/staged modes, hooks, and invalid arguments;
   update help and CLI tests without changing existing exit codes. Context:
   `cmd/security-review`, config override handling, help tests. Verification:
   `go test ./cmd/security-review ./config -run 'Scope|Help|Arguments'`. Depends
-  on tasks 2 and 4–5. Commit: `feat(cli): add client scan scope`.
+  on tasks 2 and 4–5. Commit: `feat(cli): add client scan scope` (ef79719).
 
-- [ ] **28. Add ecosystem-aware frontend profiles.** Update fast, standard, and
+- [x] **28. Add ecosystem-aware frontend profiles.** Update fast, standard, and
   full profile behavior so native frontend checks run offline, while ESLint,
   TypeScript, Biome, Semgrep, and vulnerability tools are selected only when
   configured and applicable. A frontend-only repository must not fail because
@@ -297,7 +297,7 @@ inspect them.
   orchestration, hooks, and profile tests. Verification:
   `go test ./config ./hook ./... -run 'Profile|Applicable|Frontend'`. Depends on
   tasks 5 and 16–19. Commit:
-  `feat(profiles): select applicable frontend scanners`.
+  `feat(profiles): select applicable frontend scanners` (c2fffc9).
 
 - [ ] **29. Preserve frontend findings across cache and lifecycle features.**
   Verify cache keys include frontend config, framework detection, sanitizer
