@@ -181,14 +181,14 @@ inspect them.
 
 ## Phase 5 — External frontend analyzers
 
-- [ ] **16. Add an ESLint JSON adapter.** Add an adapter preset that runs an
+- [x] **16. Add an ESLint JSON adapter.** Add an adapter preset that runs an
   argument-array command, consumes bounded JSON output, maps rule IDs and
   severities deterministically, normalizes paths, and never includes source or
   message excerpts. Support root and staged workspaces with captured fixtures,
   malformed-output tests, cancellation, missing executable behavior, and fuzz
   coverage. Context: `scanner/adapters` and command-scanner integration tests.
   Verification: `go test ./scanner/adapters ./scanner/command`. Depends on task
-  5. Commit: `feat(adapters): add ESLint scanner`.
+  5. Commit: `feat(adapters): add ESLint scanner` (e2cbf0c).
 
 - [ ] **17. Add a TypeScript type-check adapter.** Add a preset for
   `tsc --noEmit --pretty false` with bounded deterministic parsing and safe

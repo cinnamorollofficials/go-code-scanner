@@ -19,6 +19,7 @@ const (
 	Trivy       = "trivy"
 	OSVScanner  = "osv-scanner"
 	Semgrep     = "semgrep"
+	ESLint      = "eslint"
 )
 
 type Options struct {
@@ -76,6 +77,9 @@ func Spec(id, name string, options Options) (command.Spec, error) {
 	case Semgrep:
 		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"semgrep", "scan", "--error", "--quiet", "--json", "."},
 			FindingExitCodes: []int{1}, Severity: finding.High, Category: "static_analysis", Description: "Semgrep reported a security finding", Parser: parseSemgrep}
+	case ESLint:
+		spec = command.Spec{ID: id, Domain: finding.Quality, Command: []string{"eslint", "-f", "json", "."},
+			FindingExitCodes: []int{1}, Severity: finding.Medium, Category: "lint", Description: "ESLint reported a lint finding", Parser: parseESLint}
 	default:
 		return command.Spec{}, fmt.Errorf("unknown adapter %q", name)
 	}

@@ -229,3 +229,41 @@ func adapterSeverity(value string) finding.Severity {
 		return finding.Medium
 	}
 }
+
+func parseESLint(data []byte) ([]command.ParsedFinding, error) {
+	var files []struct {
+		FilePath string `json:"filePath"`
+		Messages []struct {
+			RuleID   string `json:"ruleId"`
+			Severity int    `json:"severity"`
+			Line     int    `json:"line"`
+			Column   int    `json:"column"`
+		} `json:"messages"`
+	}
+	if err := json.Unmarshal(data, &files); err != nil {
+		return nil, err
+	}
+	var result []command.ParsedFinding
+	for _, file := range files {
+		for _, msg := range file.Messages {
+			ruleID := msg.RuleID
+			if ruleID == "" {
+				ruleID = "eslint/unknown"
+			}
+			sev := finding.Medium
+			if msg.Severity == 1 {
+				sev = finding.Low
+			} else if msg.Severity == 2 {
+				sev = finding.High
+			}
+			result = append(result, command.ParsedFinding{
+				RuleID:      ruleID,
+				Severity:    sev,
+				Description: fmt.Sprintf("ESLint violation for rule %s", ruleID),
+				File:        file.FilePath,
+				Line:        msg.Line,
+			})
+		}
+	}
+	return result, nil
+}

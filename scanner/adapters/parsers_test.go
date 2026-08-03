@@ -54,4 +54,11 @@ func TestStructuredAdapterParsers(t *testing.T) {
 			t.Fatalf("unexpected OSV-Scanner parse: items=%+v err=%v", items, err)
 		}
 	})
+	t.Run("eslint", func(t *testing.T) {
+		data := []byte(`[{"filePath":"src/app.js","messages":[{"ruleId":"no-unused-vars","severity":2,"line":10,"column":5}]}]`)
+		items, err := parseESLint(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "no-unused-vars" || items[0].Line != 10 {
+			t.Fatalf("unexpected eslint parse: items=%+v err=%v", items, err)
+		}
+	})
 }
