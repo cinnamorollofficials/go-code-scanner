@@ -218,13 +218,13 @@ inspect them.
 
 ## Phase 6 — Frontend architecture analysis
 
-- [ ] **20. Extract JavaScript and TypeScript import edges.** Parse static
+- [x] **20. Extract JavaScript and TypeScript import edges.** Parse static
   imports, exports, CommonJS requires, and literal dynamic imports using bounded
   lexical context. Preserve file and line location, ignore external packages
   when building the local graph, and sort edges deterministically. Context:
   frontend import graph. Verification:
   `go test ./scanner/frontend -run 'Import|Graph'`. Depends on task 6. Commit:
-  `feat(frontend): extract client import graph`.
+  `feat(frontend): extract client import graph` (c11df51).
 
 - [ ] **21. Resolve local aliases and workspace packages.** Resolve relative
   modules, supported extensions, `index` files, `tsconfig`/`jsconfig` base URL
