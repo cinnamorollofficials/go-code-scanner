@@ -345,3 +345,44 @@ func writeContent(t *testing.T, path, content string) {
 		t.Fatal(err)
 	}
 }
+
+func TestFrontendFileDiscoveryIncludesClientExtensionsAndExcludesGeneratedDirs(t *testing.T) {
+	root := t.TempDir()
+	files := []string{
+		"index.html",
+		"app.mjs",
+		"legacy.cjs",
+		"utils.mts",
+		"config.cts",
+		"Component.vue",
+		"Page.svelte",
+		".nuxt/generated.js",
+		".svelte-kit/generated.ts",
+		".output/bundle.js",
+		"dist/bundle.js",
+		"node_modules/dep.js",
+	}
+	for _, f := range files {
+		write(t, filepath.Join(root, f))
+	}
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Frontend.Enabled = true
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	sources, err := Sources(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := sourceBasenames(sources)
+	want := []string{"Component.vue", "Page.svelte", "app.mjs", "config.cts", "index.html", "legacy.cjs", "utils.mts"}
+	if len(got) != len(want) {
+		t.Fatalf("discovered sources = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("discovered sources[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}

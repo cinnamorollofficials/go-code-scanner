@@ -128,7 +128,13 @@ func allowed(path string, cfg config.Config) bool {
 		return false
 	}
 	ext := strings.ToLower(filepath.Ext(path))
-	return contains(cfg.IncludeExtensions, ext)
+	if contains(cfg.IncludeExtensions, ext) {
+		return true
+	}
+	if cfg.Frontend.Enabled && contains(cfg.Frontend.IncludeExtensions, ext) {
+		return true
+	}
+	return false
 }
 
 func pathAllowed(path string, cfg config.Config, includeExcludedFiles bool) bool {

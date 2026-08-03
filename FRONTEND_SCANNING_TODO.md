@@ -54,14 +54,13 @@ inspect them.
   Context: `config`, configuration docs, compatibility tests. Verification:
   `go test ./config ./compatibility`. Depends on task 1. Commit: `feat(config): add frontend scanning policy` (e17d298).
 
-- [ ] **3. Expand frontend file discovery safely.** Support `.mjs`, `.cjs`,
+- [x] **3. Expand frontend file discovery safely.** Support `.mjs`, `.cjs`,
   `.mts`, `.cts`, `.html`, `.vue`, and `.svelte` without scanning generated
   output or dependency directories. Preserve NUL-safe Git discovery, symlink
   rejection, sorted results, full/changed/staged semantics, file-count limits,
   and the current handling of manifests excluded from line scanning. Context:
   `config`, `discovery`, and discovery tests. Verification:
-  `go test ./config ./discovery`. Depends on task 2. Commit:
-  `feat(discovery): include frontend client sources`.
+  `go test ./config ./discovery`. Depends on task 2. Commit: `feat(discovery): include frontend client sources` (283b847).
 
 - [ ] **4. Implement deterministic client-scope classification.** Detect
   client, server, shared, and unknown files using configured roots, framework
