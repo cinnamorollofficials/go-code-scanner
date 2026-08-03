@@ -226,13 +226,13 @@ inspect them.
   `go test ./scanner/frontend -run 'Import|Graph'`. Depends on task 6. Commit:
   `feat(frontend): extract client import graph` (c11df51).
 
-- [ ] **21. Resolve local aliases and workspace packages.** Resolve relative
+- [x] **21. Resolve local aliases and workspace packages.** Resolve relative
   modules, supported extensions, `index` files, `tsconfig`/`jsconfig` base URL
   and path aliases, and local npm workspace package mappings. Reject unsafe
   paths and ambiguous aliases rather than guessing. Context: frontend resolver
   and manifest parsing. Verification:
   `go test ./scanner/frontend -run 'Resolve|Alias|Workspace'`. Depends on task
-  20. Commit: `feat(frontend): resolve TypeScript project imports`.
+  20. Commit: `feat(frontend): resolve TypeScript project imports` (cb1bda1).
 
 - [ ] **22. Enforce client/server dependency boundaries.** Report client paths
   that transitively reach configured server roots, Node built-ins, private
