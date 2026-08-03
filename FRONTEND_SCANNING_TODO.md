@@ -163,13 +163,13 @@ inspect them.
   `go test ./scanner/frontend -run 'React|Next'`. Depends on tasks 4 and 8–11.
   Commit: `feat(frontend): scan React and Next client code` (f1c4272).
 
-- [ ] **14. Add Vue and Nuxt client rules.** Detect unsafe `v-html`, sensitive
+- [x] **14. Add Vue and Nuxt client rules.** Detect unsafe `v-html`, sensitive
   private runtime config used by client code, unsafe dynamic URL bindings, and
   imports that cross Nuxt client/server boundaries. Cover single-file component
   script and template regions without treating generated output as source.
   Context: frontend framework rules and fixtures. Verification:
   `go test ./scanner/frontend -run 'Vue|Nuxt'`. Depends on tasks 4, 6, and 8–11.
-  Commit: `feat(frontend): scan Vue and Nuxt client code`.
+  Commit: `feat(frontend): scan Vue and Nuxt client code` (d0467f3).
 
 - [ ] **15. Add Svelte and SvelteKit client rules.** Detect unsafe `{@html}` use,
   imports from private environment modules in client code, and violations

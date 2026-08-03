@@ -169,6 +169,14 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 					}
 					findings = append(findings, reactNextFindings...)
 
+					vueNuxtChecker := NewVueNuxtChecker(s.cfg)
+					vueNuxtFindings, err := vueNuxtChecker.Check(ctx, src)
+					if err != nil {
+						results <- workerResult{err: err}
+						return
+					}
+					findings = append(findings, vueNuxtFindings...)
+
 					if len(findings) > 0 {
 						results <- workerResult{findings: findings}
 					}
