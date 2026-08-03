@@ -153,6 +153,14 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 					}
 					findings = append(findings, navFindings...)
 
+					privacyChecker := NewTelemetryPrivacyChecker(s.cfg)
+					privacyFindings, err := privacyChecker.Check(ctx, src)
+					if err != nil {
+						results <- workerResult{err: err}
+						return
+					}
+					findings = append(findings, privacyFindings...)
+
 					if len(findings) > 0 {
 						results <- workerResult{findings: findings}
 					}

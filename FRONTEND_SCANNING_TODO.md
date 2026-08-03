@@ -142,7 +142,7 @@ inspect them.
   tasks 6–7. Commit:
   `feat(frontend): detect unsafe navigation and transport` (e12a100).
 
-- [ ] **12. Detect privacy leakage in logs and telemetry.** Extend PII checks to
+- [x] **12. Detect privacy leakage in logs and telemetry.** Extend PII checks to
   browser logs, analytics calls, error-reporting context, and telemetry events.
   Report only field names and safe metadata, never literal values. Allow
   reviewed organization-specific PII names through rule configuration rather
@@ -150,7 +150,7 @@ inspect them.
   configuration tests. Verification:
   `go test ./scanner/frontend ./config -run 'Privacy|Telemetry|PII'`. Depends on
   tasks 2 and 6–7. Commit:
-  `feat(frontend): detect client telemetry privacy leaks`.
+  `feat(frontend): detect client telemetry privacy leaks` (7674eb8).
 
 ## Phase 4 — Framework-aware checks
 
