@@ -43,7 +43,7 @@ inspect them.
   public behavior only; no runtime change. Verification: `git diff --check`.
   Commit: `docs(frontend): define client scanning contract` (8759768).
 
-- [ ] **2. Add strict frontend configuration.** Add an optional nested
+- [x] **2. Add strict frontend configuration.** Add an optional nested
   `frontend` configuration with `enabled`, `frameworks`, `client_roots`,
   `server_roots`, `shared_roots`, `include_extensions`,
   `recognize_sanitizers`, `detect_import_cycles`, and
@@ -52,8 +52,7 @@ inspect them.
   update strict-decode tests and `CONFIGURATION.md`, and review the
   compatibility manifest. An omitted block must preserve existing behavior.
   Context: `config`, configuration docs, compatibility tests. Verification:
-  `go test ./config ./compatibility`. Depends on task 1. Commit:
-  `feat(config): add frontend scanning policy`.
+  `go test ./config ./compatibility`. Depends on task 1. Commit: `feat(config): add frontend scanning policy` (e17d298).
 
 - [ ] **3. Expand frontend file discovery safely.** Support `.mjs`, `.cjs`,
   `.mts`, `.cts`, `.html`, `.vue`, and `.svelte` without scanning generated

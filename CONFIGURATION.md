@@ -78,6 +78,7 @@ default values before the JSON overlay is validated.
 | `governance` | object | Required files/headers, ownership, and suppression requirements. |
 | `architecture` | object | Go layer boundaries and cycle detection. |
 | `cache` | object | Content-addressed scanner cache policy. |
+| `frontend` | object | Optional frontend scanning policy. |
 
 Severities are `CRITICAL`, `HIGH`, `MEDIUM`, and `LOW`. Domains are `quality`,
 `reliability`, `hardening`, `security`, `supply_chain`, and `governance`.
@@ -357,6 +358,28 @@ When enabled, `directory` must be a safe non-symlink project path, `max_age`
 must be a positive Go duration, and `max_bytes` must be at least `1`. Defaults
 are seven days and 256 MiB. Cache entries use mode `0600` where supported and do
 not retain finding snippets.
+
+## Frontend policy
+
+Frontend policy configures browser-client scanning scope, framework detection, and security rules.
+
+```json
+{
+  "frontend": {
+    "enabled": true,
+    "frameworks": ["vanilla", "react", "next", "vue", "nuxt", "svelte", "sveltekit"],
+    "client_roots": ["src/client", "components"],
+    "server_roots": ["src/server", "api"],
+    "shared_roots": ["src/shared", "lib"],
+    "include_extensions": [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".html", ".vue", ".svelte"],
+    "recognize_sanitizers": ["DOMPurify.sanitize", "sanitizeHtml"],
+    "detect_import_cycles": true,
+    "detect_client_server_boundaries": true
+  }
+}
+```
+
+`client_roots`, `server_roots`, and `shared_roots` must be safe project-relative paths. `frameworks` accepts `vanilla`, `react`, `next`, `vue`, `nuxt`, `svelte`, and `sveltekit`. `detect_import_cycles` and `detect_client_server_boundaries` default to `true` when frontend scanning is enabled. An omitted `frontend` block preserves default non-frontend behavior.
 
 ## Full example
 

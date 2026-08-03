@@ -390,6 +390,59 @@ func TestLoadRejectsMultipleJSONDocuments(t *testing.T) {
 	}
 }
 
+func TestFrontendPolicyDefaultsAndValidation(t *testing.T) {
+	cfg := Default()
+	cfg.Root = t.TempDir()
+	cfg.Frontend = FrontendPolicy{Enabled: true}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("valid default frontend policy rejected: %v", err)
+	}
+	if len(cfg.Frontend.Frameworks) == 0 || len(cfg.Frontend.IncludeExtensions) == 0 || len(cfg.Frontend.RecognizeSanitizers) == 0 {
+		t.Fatalf("expected non-empty defaults for frontend policy: %+v", cfg.Frontend)
+	}
+}
+
+func TestFrontendPolicyRejectsInvalidPathsAndDuplicates(t *testing.T) {
+	invalidCases := []FrontendPolicy{
+		{Frameworks: []string{"unsupported"}},
+		{Frameworks: []string{"react", "REACT"}},
+		{IncludeExtensions: []string{"js"}},
+		{IncludeExtensions: []string{".js", ".JS"}},
+		{RecognizeSanitizers: []string{""}},
+		{RecognizeSanitizers: []string{"DOMPurify.sanitize", "dompurify.sanitize"}},
+		{ClientRoots: []string{"../outside"}},
+		{ClientRoots: []string{"/absolute"}},
+		{ClientRoots: []string{"src", "src"}},
+		{ServerRoots: []string{".."}},
+		{SharedRoots: []string{"../shared"}},
+	}
+	for _, fp := range invalidCases {
+		cfg := Default()
+		cfg.Root = t.TempDir()
+		cfg.Frontend = fp
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("invalid frontend policy accepted: %+v", fp)
+		}
+	}
+}
+
+func TestFrontendPolicyStrictDecode(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "security-review.json")
+	content := []byte(`{
+		"project": "test",
+		"frontend": {
+			"enabled": true,
+			"unknown_field": true
+		}
+	}`)
+	if err := os.WriteFile(path, content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(path); err == nil || !strings.Contains(err.Error(), "unknown_field") {
+		t.Fatalf("expected strict decode error for unknown frontend field, got: %v", err)
+	}
+}
+
 func filepathIsAbsolute(path string) bool {
 	if len(path) >= 3 && path[1] == ':' {
 		return true

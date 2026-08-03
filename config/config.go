@@ -127,6 +127,33 @@ type ArchitecturePolicy struct {
 	DetectCycles          bool                  `json:"detect_cycles,omitempty"`
 }
 
+type FrontendPolicy struct {
+	Enabled                      bool     `json:"enabled,omitempty"`
+	Frameworks                   []string `json:"frameworks,omitempty"`
+	ClientRoots                  []string `json:"client_roots,omitempty"`
+	ServerRoots                  []string `json:"server_roots,omitempty"`
+	SharedRoots                  []string `json:"shared_roots,omitempty"`
+	IncludeExtensions            []string `json:"include_extensions,omitempty"`
+	RecognizeSanitizers          []string `json:"recognize_sanitizers,omitempty"`
+	DetectImportCycles           bool     `json:"detect_import_cycles,omitempty"`
+	DetectClientServerBoundaries bool     `json:"detect_client_server_boundaries,omitempty"`
+}
+
+func (fp *FrontendPolicy) UnmarshalJSON(data []byte) error {
+	type Alias FrontendPolicy
+	aux := &Alias{
+		DetectImportCycles:           true,
+		DetectClientServerBoundaries: true,
+	}
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(aux); err != nil {
+		return err
+	}
+	*fp = FrontendPolicy(*aux)
+	return nil
+}
+
 type ArchitectureLayer struct {
 	Name  string   `json:"name"`
 	Paths []string `json:"paths"`
@@ -225,6 +252,7 @@ type Config struct {
 	Governance           GovernancePolicy                    `json:"governance,omitempty"`
 	Architecture         ArchitecturePolicy                  `json:"architecture,omitempty"`
 	Cache                CachePolicy                         `json:"cache,omitempty"`
+	Frontend             FrontendPolicy                      `json:"frontend,omitempty"`
 	SelectedProfile      string                              `json:"-"`
 }
 
@@ -542,6 +570,9 @@ func (c *Config) Validate() error {
 	if err := c.validateHook("pre_push", c.Hooks.PrePush); err != nil {
 		return err
 	}
+	if err := c.validateFrontend(); err != nil {
+		return err
+	}
 	if c.SelectedProfile != "" {
 		if _, ok := c.Profiles[c.SelectedProfile]; !ok {
 			return fmt.Errorf("unknown selected profile %q", c.SelectedProfile)
@@ -552,6 +583,111 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("resolve root: %w", err)
 	}
 	c.Root = filepath.Clean(absRoot)
+	return nil
+}
+
+func (c *Config) validateFrontend() error {
+	supportedFW := map[string]bool{
+		"vanilla":   true,
+		"react":     true,
+		"next":      true,
+		"vue":       true,
+		"nuxt":      true,
+		"svelte":    true,
+		"sveltekit": true,
+	}
+
+	if c.Frontend.Enabled {
+		if len(c.Frontend.Frameworks) == 0 {
+			c.Frontend.Frameworks = []string{"vanilla", "react", "next", "vue", "nuxt", "svelte", "sveltekit"}
+		}
+		if len(c.Frontend.IncludeExtensions) == 0 {
+			c.Frontend.IncludeExtensions = []string{".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".html", ".vue", ".svelte"}
+		}
+		if len(c.Frontend.RecognizeSanitizers) == 0 {
+			c.Frontend.RecognizeSanitizers = []string{"DOMPurify.sanitize", "sanitizeHtml", "sanitize"}
+		}
+	}
+
+	if len(c.Frontend.Frameworks) > 0 {
+		seenFW := make(map[string]struct{}, len(c.Frontend.Frameworks))
+		for i, fw := range c.Frontend.Frameworks {
+			fwLower := strings.ToLower(strings.TrimSpace(fw))
+			if !supportedFW[fwLower] {
+				return fmt.Errorf("frontend.frameworks[%d]: unsupported framework %q", i, fw)
+			}
+			if _, ok := seenFW[fwLower]; ok {
+				return fmt.Errorf("frontend.frameworks[%d]: duplicate framework %q", i, fw)
+			}
+			seenFW[fwLower] = struct{}{}
+			c.Frontend.Frameworks[i] = fwLower
+		}
+	}
+
+	if len(c.Frontend.IncludeExtensions) > 0 {
+		seenExt := make(map[string]struct{}, len(c.Frontend.IncludeExtensions))
+		for i, ext := range c.Frontend.IncludeExtensions {
+			extClean := strings.ToLower(strings.TrimSpace(ext))
+			if extClean == "" || !strings.HasPrefix(extClean, ".") {
+				return fmt.Errorf("frontend.include_extensions[%d]: invalid extension %q", i, ext)
+			}
+			if _, ok := seenExt[extClean]; ok {
+				return fmt.Errorf("frontend.include_extensions[%d]: duplicate extension %q", i, ext)
+			}
+			seenExt[extClean] = struct{}{}
+			c.Frontend.IncludeExtensions[i] = extClean
+		}
+	}
+
+	if len(c.Frontend.RecognizeSanitizers) > 0 {
+		seenSan := make(map[string]struct{}, len(c.Frontend.RecognizeSanitizers))
+		for i, san := range c.Frontend.RecognizeSanitizers {
+			sanTrim := strings.TrimSpace(san)
+			if sanTrim == "" {
+				return fmt.Errorf("frontend.recognize_sanitizers[%d]: empty sanitizer name", i)
+			}
+			key := strings.ToLower(sanTrim)
+			if _, ok := seenSan[key]; ok {
+				return fmt.Errorf("frontend.recognize_sanitizers[%d]: duplicate sanitizer %q", i, san)
+			}
+			seenSan[key] = struct{}{}
+			c.Frontend.RecognizeSanitizers[i] = sanTrim
+		}
+	}
+
+	validateRoots := func(name string, roots []string) ([]string, error) {
+		seen := make(map[string]struct{}, len(roots))
+		cleaned := make([]string, len(roots))
+		for i, r := range roots {
+			rTrim := strings.TrimSpace(r)
+			if rTrim == "" {
+				return nil, fmt.Errorf("frontend.%s[%d]: empty root path", name, i)
+			}
+			cleanPath := filepath.ToSlash(filepath.Clean(rTrim))
+			if cleanPath == "." || filepath.IsAbs(rTrim) || cleanPath == ".." || strings.HasPrefix(cleanPath, "../") {
+				return nil, fmt.Errorf("frontend.%s[%d]: unsafe root path %q", name, i, r)
+			}
+			key := strings.ToLower(cleanPath)
+			if _, ok := seen[key]; ok {
+				return nil, fmt.Errorf("frontend.%s[%d]: duplicate root path %q", name, i, r)
+			}
+			seen[key] = struct{}{}
+			cleaned[i] = cleanPath
+		}
+		return cleaned, nil
+	}
+
+	var err error
+	if c.Frontend.ClientRoots, err = validateRoots("client_roots", c.Frontend.ClientRoots); err != nil {
+		return err
+	}
+	if c.Frontend.ServerRoots, err = validateRoots("server_roots", c.Frontend.ServerRoots); err != nil {
+		return err
+	}
+	if c.Frontend.SharedRoots, err = validateRoots("shared_roots", c.Frontend.SharedRoots); err != nil {
+		return err
+	}
+
 	return nil
 }
 
