@@ -62,7 +62,7 @@ inspect them.
   `config`, `discovery`, and discovery tests. Verification:
   `go test ./config ./discovery`. Depends on task 2. Commit: `feat(discovery): include frontend client sources` (283b847).
 
-- [ ] **4. Implement deterministic client-scope classification.** Detect
+- [x] **4. Implement deterministic client-scope classification.** Detect
   client, server, shared, and unknown files using configured roots, framework
   file conventions, package metadata, and markers such as `"use client"`.
   Explicit roots take precedence over automatic conventions. Classification
@@ -70,8 +70,7 @@ inspect them.
   and return a safe unknown result for malformed inputs. Cover vanilla,
   React/Next.js, Vue/Nuxt, and SvelteKit fixtures. Context: new
   `scanner/frontend` classifier package. Verification:
-  `go test ./scanner/frontend`. Depends on tasks 2–3. Commit:
-  `feat(frontend): classify browser client sources`.
+  `go test ./scanner/frontend`. Depends on tasks 2–3. Commit: `feat(frontend): classify browser client sources` (138ba9f).
 
 ## Phase 2 — Native scanner foundation
 
