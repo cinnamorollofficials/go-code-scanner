@@ -486,30 +486,114 @@ func mutableActionReference(line string) bool {
 
 func unpinnedPackageDependencies(content []byte, path string) []finding.Finding {
 	var manifest struct {
-		Dependencies         map[string]string `json:"dependencies"`
-		DevDependencies      map[string]string `json:"devDependencies"`
-		OptionalDependencies map[string]string `json:"optionalDependencies"`
-		PeerDependencies     map[string]string `json:"peerDependencies"`
+		Dependencies         map[string]string      `json:"dependencies"`
+		DevDependencies      map[string]string      `json:"devDependencies"`
+		OptionalDependencies map[string]string      `json:"optionalDependencies"`
+		PeerDependencies     map[string]string      `json:"peerDependencies"`
+		Scripts              map[string]string      `json:"scripts"`
+		Workspaces           interface{}            `json:"workspaces"`
 	}
 	if json.Unmarshal(content, &manifest) != nil {
 		return nil
 	}
+
+	// collect local workspace package names to avoid false positives
+	workspaceNames := map[string]bool{}
+	switch ws := manifest.Workspaces.(type) {
+	case []interface{}:
+		for _, v := range ws {
+			if s, ok := v.(string); ok {
+				workspaceNames[s] = true
+			}
+		}
+	}
+
 	var findings []finding.Finding
 	groups := []map[string]string{manifest.Dependencies, manifest.DevDependencies, manifest.OptionalDependencies, manifest.PeerDependencies}
 	for _, group := range groups {
 		for name, version := range group {
-			value := strings.ToLower(strings.TrimSpace(version))
-			if value != "*" && value != "latest" && !strings.HasPrefix(value, "git+") && !strings.HasPrefix(value, "github:") {
+			value := strings.TrimSpace(version)
+			lower := strings.ToLower(value)
+
+			// skip local workspace protocol refs (workspace:, file:, link:)
+			if strings.HasPrefix(lower, "workspace:") || strings.HasPrefix(lower, "file:") || strings.HasPrefix(lower, "link:") {
+				continue
+			}
+			// skip local workspace package names
+			if workspaceNames[name] {
+				continue
+			}
+
+			var reason string
+			switch {
+			case lower == "*" || lower == "latest" || lower == "x":
+				reason = "wildcard or latest version"
+			case strings.HasPrefix(lower, "git+") || strings.HasPrefix(lower, "github:") ||
+				strings.HasPrefix(lower, "bitbucket:") || strings.HasPrefix(lower, "gitlab:"):
+				// mutable git ref: check for missing commit SHA
+				if !gitRefHasSHA(value) {
+					reason = "mutable Git reference without commit SHA"
+				}
+			case strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://"):
+				if !strings.Contains(lower, "#") {
+					reason = "unpinned URL dependency without hash"
+				}
+			}
+			if reason == "" {
 				continue
 			}
 			item := fileFinding("javascript-unpinned-dependency", finding.SupplyChain, "unpinned_dependency", finding.High,
-				fmt.Sprintf("Dependency %s menggunakan version reference yang tidak dikunci", name), "Pin dependency ke version range yang terkontrol dan commit lockfile", path, 1)
-			item.Metadata = map[string]string{"dependency": name, "version": version}
+				fmt.Sprintf("Dependency %s menggunakan version reference yang tidak dikunci (%s)", name, reason),
+				"Pin dependency ke version range yang terkontrol dan commit lockfile", path, 1)
+			item.Metadata = map[string]string{"dependency": name, "version": version, "reason": reason}
 			findings = append(findings, item)
 		}
 	}
+
+	// Suspicious lifecycle scripts
+	suspiciousScriptPatterns := []string{"curl", "wget", "bash", "sh ", "eval", "exec", "node -e", "python -c"}
+	for scriptName, scriptBody := range manifest.Scripts {
+		bodyLower := strings.ToLower(scriptBody)
+		for _, pattern := range suspiciousScriptPatterns {
+			if strings.Contains(bodyLower, pattern) {
+				item := fileFinding("javascript-suspicious-lifecycle-script", finding.SupplyChain, "supply_chain_risk", finding.High,
+					fmt.Sprintf("Lifecycle script '%s' contains suspicious command pattern: %s", scriptName, pattern),
+					"Review lifecycle scripts for supply chain risk; avoid shell execution of remote content", path, 1)
+				item.Metadata = map[string]string{"script": scriptName, "pattern": pattern}
+				findings = append(findings, item)
+				break
+			}
+		}
+	}
+
 	return findings
 }
+
+// gitRefHasSHA checks whether a git dependency reference contains a full commit SHA.
+func gitRefHasSHA(ref string) bool {
+	// look for #<sha> or @<sha> where sha is 40 hex chars
+	for _, sep := range []string{"#", "@"} {
+		idx := strings.LastIndex(ref, sep)
+		if idx < 0 {
+			continue
+		}
+		candidate := strings.TrimSpace(ref[idx+1:])
+		if len(candidate) == 40 {
+			allHex := true
+			for _, c := range candidate {
+				if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+					allHex = false
+					break
+				}
+			}
+			if allHex {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 
 func temporaryArtifact(base, extension string) bool {
 	switch extension {
