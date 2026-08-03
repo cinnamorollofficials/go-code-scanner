@@ -171,13 +171,13 @@ inspect them.
   `go test ./scanner/frontend -run 'Vue|Nuxt'`. Depends on tasks 4, 6, and 8–11.
   Commit: `feat(frontend): scan Vue and Nuxt client code` (d0467f3).
 
-- [ ] **15. Add Svelte and SvelteKit client rules.** Detect unsafe `{@html}` use,
+- [x] **15. Add Svelte and SvelteKit client rules.** Detect unsafe `{@html}` use,
   imports from private environment modules in client code, and violations
   between `+page`, `+layout`, and their `.server` counterparts. Cover script and
   template regions and recognize sanitized expressions. Context: frontend
   framework rules and fixtures. Verification:
   `go test ./scanner/frontend -run 'Svelte'`. Depends on tasks 4, 6, and 8–11.
-  Commit: `feat(frontend): scan SvelteKit client code`.
+  Commit: `feat(frontend): scan SvelteKit client code` (782a38d).
 
 ## Phase 5 — External frontend analyzers
 

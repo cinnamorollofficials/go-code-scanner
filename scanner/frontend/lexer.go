@@ -44,7 +44,18 @@ func Tokenize(source []byte) (tokens []Token, err error) {
 	if bytes.Contains(source, []byte("<script")) || bytes.Contains(source, []byte("<template")) {
 		regions := extractTemplateRegions(source)
 		if len(regions) > 0 {
+			lastEnd := 0
 			for _, r := range regions {
+				if r.Start > lastEnd {
+					outsideTokens := tokenizeJS(source[lastEnd:r.Start])
+					lineOffset := bytesLineOffset(source, lastEnd)
+					for idx := range outsideTokens {
+						outsideTokens[idx].Line += lineOffset
+						outsideTokens[idx].Start += lastEnd
+						outsideTokens[idx].End += lastEnd
+					}
+					tokens = append(tokens, outsideTokens...)
+				}
 				innerTokens := tokenizeJS([]byte(r.Value))
 				lineOffset := bytesLineOffset(source, r.Start)
 				for idx := range innerTokens {
@@ -53,6 +64,17 @@ func Tokenize(source []byte) (tokens []Token, err error) {
 					innerTokens[idx].End += r.Start
 				}
 				tokens = append(tokens, innerTokens...)
+				lastEnd = r.End
+			}
+			if lastEnd < len(source) {
+				outsideTokens := tokenizeJS(source[lastEnd:])
+				lineOffset := bytesLineOffset(source, lastEnd)
+				for idx := range outsideTokens {
+					outsideTokens[idx].Line += lineOffset
+					outsideTokens[idx].Start += lastEnd
+					outsideTokens[idx].End += lastEnd
+				}
+				tokens = append(tokens, outsideTokens...)
 			}
 			if len(tokens) > 0 {
 				return tokens, nil
