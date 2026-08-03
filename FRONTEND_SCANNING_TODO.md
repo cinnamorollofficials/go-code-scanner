@@ -105,13 +105,13 @@ inspect them.
 
 ## Phase 3 — High-confidence browser rules
 
-- [ ] **8. Detect DOM injection sinks.** Add rules for unsafe dynamic values
+- [x] **8. Detect DOM injection sinks.** Add rules for unsafe dynamic values
   reaching `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, and
   equivalent direct DOM sinks. Recognize configured sanitizer calls and Trusted
   Types patterns, ignore comments and harmless literals, and emit one stable
   finding per sink location. Context: native frontend security rules. Checks:
   `go test ./scanner/frontend -run 'DOM|Injection|Sanitizer'`. Depends on tasks
-  6–7. Commit: `feat(frontend): detect DOM injection sinks`.
+  6–7. Commit: `feat(frontend): detect DOM injection sinks` (06fc223).
 
 - [ ] **9. Detect dynamic execution and unsafe messaging.** Add rules for
   variable input passed to `eval`, `Function`, string-based timers, wildcard
