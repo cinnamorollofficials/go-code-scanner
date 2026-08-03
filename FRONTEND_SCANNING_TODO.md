@@ -113,14 +113,14 @@ inspect them.
   `go test ./scanner/frontend -run 'DOM|Injection|Sanitizer'`. Depends on tasks
   6–7. Commit: `feat(frontend): detect DOM injection sinks` (06fc223).
 
-- [ ] **9. Detect dynamic execution and unsafe messaging.** Add rules for
+- [x] **9. Detect dynamic execution and unsafe messaging.** Add rules for
   variable input passed to `eval`, `Function`, string-based timers, wildcard
   `postMessage`, and message handlers that consume sensitive data without a
   recognizable origin check. Avoid flagging constant safe messages and test
   fixtures by default. Context: native frontend security/hardening rules.
   Verification: `go test ./scanner/frontend -run 'Execution|Message'`. Depends
   on tasks 6–7. Commit:
-  `feat(frontend): detect unsafe execution and messaging`.
+  `feat(frontend): detect unsafe execution and messaging` (5e0ce98).
 
 - [ ] **10. Detect client-side secret and token exposure.** Detect credential-
   like values stored in localStorage, sessionStorage, or IndexedDB; secret-like

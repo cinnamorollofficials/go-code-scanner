@@ -128,6 +128,15 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 						results <- workerResult{err: err}
 						return
 					}
+
+					execChecker := NewExecutionMessagingChecker(s.cfg)
+					execFindings, err := execChecker.Check(ctx, src)
+					if err != nil {
+						results <- workerResult{err: err}
+						return
+					}
+					findings = append(findings, execFindings...)
+
 					if len(findings) > 0 {
 						results <- workerResult{findings: findings}
 					}
