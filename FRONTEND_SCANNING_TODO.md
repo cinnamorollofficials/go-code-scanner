@@ -299,7 +299,7 @@ inspect them.
   tasks 5 and 16–19. Commit:
   `feat(profiles): select applicable frontend scanners` (c2fffc9).
 
-- [ ] **29. Preserve frontend findings across cache and lifecycle features.**
+- [x] **29. Preserve frontend findings across cache and lifecycle features.**
   Verify cache keys include frontend config, framework detection, sanitizer
   policy, and native rule versions. Prove baseline relocation, new-only policy,
   suppression matching, fingerprint stability, and cached/uncached equivalence
@@ -307,9 +307,9 @@ inspect them.
   lifecycle, and integration tests. Verification:
   `go test ./cache ./baseline ./suppression ./... -run 'Frontend|Fingerprint|Equivalence'`.
   Depends on tasks 7–15 and 22–23. Commit:
-  `test(frontend): preserve finding lifecycle contracts`.
+  `test(frontend): preserve finding lifecycle contracts` (d4ff09b).
 
-- [ ] **30. Validate public report and compatibility contracts.** Add frontend
+- [x] **30. Validate public report and compatibility contracts.** Add frontend
   findings to terminal, JSON, SARIF, and JUnit contract fixtures; confirm safe
   metadata, stable rule IDs, no snippets, and unchanged schema versions. Update
   the compatibility manifest only for intentional additive capabilities and
@@ -317,27 +317,27 @@ inspect them.
   Context: reporters and compatibility tests. Verification:
   `go test ./reporter ./compatibility ./... -run 'Frontend|Golden|Contract'`.
   Depends on tasks 7–29. Commit:
-  `test(frontend): validate public report contracts`.
+  `test(frontend): validate public report contracts` (f0d4155).
 
 ## Phase 9 — Acceptance, performance, and handoff
 
-- [ ] **31. Add end-to-end staged isolation coverage.** Build a real binary and
+- [x] **31. Add end-to-end staged isolation coverage.** Build a real binary and
   prove both staged isolation directions for the native frontend scanner,
   import graph, ESLint, TypeScript, Biome, and local Semgrep when each claims
   staged support. Verify temporary workspace cleanup after success, failure,
   timeout, and cancellation. Context: staged isolation and release-binary E2E
   tests. Verification: targeted staged E2E tests and `go test ./...`. Depends on
   tasks 5, 16–19, and 20–23. Commit:
-  `test(frontend): verify staged scanner isolation`.
+  `test(frontend): verify staged scanner isolation` (9106b95).
 
-- [ ] **32. Establish a cross-framework false-positive corpus.** Add sanitized
+- [x] **32. Establish a cross-framework false-positive corpus.** Add sanitized
   fixtures covering real-world safe and unsafe patterns in vanilla, React,
   Next.js, Vue, Nuxt, Svelte, and SvelteKit. Record expected findings by stable
   rule ID and enforce a reviewed noise budget. Include comments, tests, mocks,
   sanitizers, generated files, malformed syntax, and monorepo layouts. Context:
   test corpus and acceptance harness. Verification: corpus test command plus
   `git diff --check`. Depends on tasks 8–26. Commit:
-  `test(frontend): add false positive corpus`.
+  `test(frontend): add false positive corpus` (a751b12).
 
 - [ ] **33. Enforce frontend resource and performance budgets.** Benchmark
   classification, lexical scanning, native rules, import extraction, graph
