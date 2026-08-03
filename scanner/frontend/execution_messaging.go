@@ -67,7 +67,7 @@ func (c *ExecutionMessagingChecker) Check(ctx context.Context, src scanner.Sourc
 		// 1. eval(...)
 		if val == "eval" {
 			if i+1 < n && tokens[i+1].Value == "(" {
-				args := getArgTokens(tokens, i+2)
+				args := getArgTokens(tokens, i+1)
 				if len(args) > 0 && !isStaticLiteralExpr(args) {
 					rule, _ := LookupRule("frontend/unsafe-execution")
 					findings = append(findings, finding.Finding{
@@ -89,7 +89,7 @@ func (c *ExecutionMessagingChecker) Check(ctx context.Context, src scanner.Sourc
 		// 2. new Function(...) or Function(...)
 		if val == "Function" {
 			if i+1 < n && tokens[i+1].Value == "(" {
-				args := getArgTokens(tokens, i+2)
+				args := getArgTokens(tokens, i+1)
 				if len(args) > 0 && !isStaticLiteralExpr(args) {
 					rule, _ := LookupRule("frontend/unsafe-execution")
 					findings = append(findings, finding.Finding{
@@ -111,7 +111,7 @@ func (c *ExecutionMessagingChecker) Check(ctx context.Context, src scanner.Sourc
 		// 3. String-based timers: setTimeout("code", 100) / setInterval("code", 100)
 		if val == "setTimeout" || val == "setInterval" {
 			if i+1 < n && tokens[i+1].Value == "(" {
-				args := getArgTokens(tokens, i+2)
+				args := getArgTokens(tokens, i+1)
 				if len(args) > 0 && (args[0].Type == TokenString || args[0].Type == TokenTemplate) {
 					rule, _ := LookupRule("frontend/unsafe-execution")
 					findings = append(findings, finding.Finding{
@@ -133,7 +133,7 @@ func (c *ExecutionMessagingChecker) Check(ctx context.Context, src scanner.Sourc
 		// 4. Wildcard postMessage: postMessage(data, "*")
 		if val == "postMessage" {
 			if i+1 < n && tokens[i+1].Value == "(" {
-				args := getArgTokens(tokens, i+2)
+				args := getArgTokens(tokens, i+1)
 				if hasWildcardOriginArg(args) {
 					rule, _ := LookupRule("frontend/unsafe-messaging")
 					findings = append(findings, finding.Finding{
@@ -154,7 +154,7 @@ func (c *ExecutionMessagingChecker) Check(ctx context.Context, src scanner.Sourc
 
 		// 5. addEventListener('message', ...) handler without origin check
 		if val == "addEventListener" && i+2 < n && tokens[i+1].Value == "(" {
-			args := getArgTokens(tokens, i+2)
+			args := getArgTokens(tokens, i+1)
 			if len(args) > 0 && strings.Contains(args[0].Value, "message") {
 				if !hasOriginCheck(tokens, i) {
 					rule, _ := LookupRule("frontend/unsafe-messaging")
