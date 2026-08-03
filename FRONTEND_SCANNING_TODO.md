@@ -190,13 +190,13 @@ inspect them.
   Verification: `go test ./scanner/adapters ./scanner/command`. Depends on task
   5. Commit: `feat(adapters): add ESLint scanner` (e2cbf0c).
 
-- [ ] **17. Add a TypeScript type-check adapter.** Add a preset for
+- [x] **17. Add a TypeScript type-check adapter.** Add a preset for
   `tsc --noEmit --pretty false` with bounded deterministic parsing and safe
   generic diagnostics. Define exact finding exit codes and skip cleanly when no
   applicable TypeScript project exists. Prove staged workspace isolation.
   Context: adapters and command scanner tests. Verification:
   `go test ./scanner/adapters ./scanner/command`. Depends on task 5. Commit:
-  `feat(adapters): add TypeScript checker`.
+  `feat(adapters): add TypeScript checker` (ea21016).
 
 - [ ] **18. Add an optional Biome adapter.** Support Biome lint/format JSON
   output as a quality and reliability analyzer without making it a required

@@ -267,3 +267,49 @@ func parseESLint(data []byte) ([]command.ParsedFinding, error) {
 	}
 	return result, nil
 }
+
+func parseTSC(data []byte) ([]command.ParsedFinding, error) {
+	lines := strings.Split(string(data), "\n")
+	var result []command.ParsedFinding
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		var filePath, lineStr, ruleID string
+		if idx := strings.Index(line, ": error TS"); idx != -1 {
+			prefix := line[:idx]
+			fields := strings.Fields(line[idx+8:])
+			if len(fields) > 0 {
+				ruleID = strings.TrimRight(fields[0], ":")
+			}
+			if pIdx := strings.LastIndex(prefix, "("); pIdx != -1 {
+				filePath = prefix[:pIdx]
+				rest := prefix[pIdx+1:]
+				if cIdx := strings.IndexByte(rest, ','); cIdx != -1 {
+					lineStr = rest[:cIdx]
+				}
+			} else {
+				parts := strings.Split(prefix, ":")
+				if len(parts) >= 2 {
+					filePath = parts[0]
+					lineStr = parts[1]
+				}
+			}
+		}
+		if filePath != "" {
+			lineNum, _ := strconv.Atoi(lineStr)
+			if ruleID == "" {
+				ruleID = "tsc/type-error"
+			}
+			result = append(result, command.ParsedFinding{
+				RuleID:      ruleID,
+				Severity:    finding.High,
+				Description: fmt.Sprintf("TypeScript compilation error %s", ruleID),
+				File:        filePath,
+				Line:        lineNum,
+			})
+		}
+	}
+	return result, nil
+}

@@ -61,4 +61,11 @@ func TestStructuredAdapterParsers(t *testing.T) {
 			t.Fatalf("unexpected eslint parse: items=%+v err=%v", items, err)
 		}
 	})
+	t.Run("tsc", func(t *testing.T) {
+		data := []byte("src/index.ts(10,5): error TS2322: Type 'string' is not assignable to type 'number'.\n")
+		items, err := parseTSC(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "TS2322" || items[0].File != "src/index.ts" || items[0].Line != 10 {
+			t.Fatalf("unexpected tsc parse: items=%+v err=%v", items, err)
+		}
+	})
 }

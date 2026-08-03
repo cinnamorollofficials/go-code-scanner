@@ -20,6 +20,7 @@ const (
 	OSVScanner  = "osv-scanner"
 	Semgrep     = "semgrep"
 	ESLint      = "eslint"
+	TypeScript  = "tsc"
 )
 
 type Options struct {
@@ -80,6 +81,9 @@ func Spec(id, name string, options Options) (command.Spec, error) {
 	case ESLint:
 		spec = command.Spec{ID: id, Domain: finding.Quality, Command: []string{"eslint", "-f", "json", "."},
 			FindingExitCodes: []int{1}, Severity: finding.Medium, Category: "lint", Description: "ESLint reported a lint finding", Parser: parseESLint}
+	case TypeScript:
+		spec = command.Spec{ID: id, Domain: finding.Quality, Command: []string{"tsc", "--noEmit", "--pretty", "false"},
+			FindingExitCodes: []int{1, 2}, Severity: finding.High, Category: "type_check", Description: "TypeScript compiler reported type errors", Parser: parseTSC}
 	default:
 		return command.Spec{}, fmt.Errorf("unknown adapter %q", name)
 	}
