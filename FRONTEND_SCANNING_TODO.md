@@ -83,7 +83,7 @@ inspect them.
   `go test ./scanner/frontend ./... -run 'Frontend|frontend'`. Depends on task
   4. Commit: `feat(frontend): add native scanner lifecycle` (5e31d9e).
 
-- [ ] **6. Add lightweight JavaScript and template lexical context.** Build a
+- [x] **6. Add lightweight JavaScript and template lexical context.** Build a
   bounded, dependency-free tokenizer sufficient to distinguish code, comments,
   string literals, template literals, JSX attributes, and embedded script or
   template regions. It is not a complete TypeScript parser. Malformed or
@@ -91,7 +91,7 @@ inspect them.
   panic. Add fuzz seeds for escaping, nested templates, and truncated files.
   Context: `scanner/frontend` lexer and tests. Verification:
   `go test ./scanner/frontend` and the focused frontend fuzz smoke. Depends on
-  task 5. Commit: `feat(frontend): add lexical source context`.
+  task 5. Commit: `feat(frontend): add lexical source context` (52b45a3).
 
 - [ ] **7. Establish frontend finding metadata and rule registry.** Add an
   internal rule registry that maps stable IDs to domain, category, severity,
