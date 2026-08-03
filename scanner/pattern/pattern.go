@@ -409,15 +409,30 @@ func matchesPolicy(value string, patterns []string) bool {
 }
 
 func hasJavaScriptLockfile(files map[string]struct{}, directory string) bool {
-	if directory == "." {
-		directory = ""
-	} else if directory != "" {
-		directory += "/"
-	}
-	for _, name := range []string{"package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"} {
-		if _, ok := files[strings.ToLower(directory+name)]; ok {
-			return true
+	lockfileNames := []string{"package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"}
+
+	curr := directory
+	for {
+		prefix := curr
+		if prefix == "." {
+			prefix = ""
 		}
+		if prefix != "" && !strings.HasSuffix(prefix, "/") {
+			prefix += "/"
+		}
+		for _, name := range lockfileNames {
+			if _, ok := files[strings.ToLower(prefix+name)]; ok {
+				return true
+			}
+		}
+		if curr == "" || curr == "." {
+			break
+		}
+		parent := filepath.ToSlash(filepath.Dir(curr))
+		if parent == curr {
+			break
+		}
+		curr = parent
 	}
 	return false
 }

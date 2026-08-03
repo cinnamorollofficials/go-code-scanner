@@ -287,6 +287,24 @@ func TestSensitivePathOwnershipPolicy(t *testing.T) {
 	}
 }
 
+func TestJavaScriptLockfileMonorepoSupport(t *testing.T) {
+	lockfiles := []string{"package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"}
+	for _, lockName := range lockfiles {
+		t.Run(lockName, func(t *testing.T) {
+			files := []scanner.Source{
+				memorySource("/repo/"+lockName, ""),
+				memorySource("/repo/apps/web/package.json", `{"dependencies":{"safe":"^1.0.0"}}`),
+			}
+			result := New(nil, 1).Scan(context.Background(), scanner.Request{Root: "/repo", Mode: "staged", Files: files, RepositoryFiles: files})
+			for _, item := range result.Findings {
+				if item.RuleID == "manifest-without-lockfile" {
+					t.Fatalf("unexpected manifest-without-lockfile for monorepo package with root lockfile %s: %+v", lockName, item)
+				}
+			}
+		})
+	}
+}
+
 func memorySource(path, content string) scanner.Source {
 	return scanner.Source{Path: path, Open: func(context.Context) (io.ReadCloser, error) {
 		return io.NopCloser(strings.NewReader(content)), nil

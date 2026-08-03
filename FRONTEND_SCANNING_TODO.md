@@ -253,13 +253,13 @@ inspect them.
 
 ## Phase 7 — JavaScript supply-chain policy
 
-- [ ] **24. Support all common JavaScript lockfiles.** Extend manifest-without-
+- [x] **24. Support all common JavaScript lockfiles.** Extend manifest-without-
   lockfile checks to npm, pnpm, Yarn, and Bun; account for monorepo roots and
   nested projects; and avoid requiring a lockfile in every workspace package.
   Preserve bounded parsing and staged repository inventory semantics. Context:
   pattern file policy and fixtures. Verification:
   `go test ./scanner/pattern -run 'Manifest|Lockfile'`. Depends on task 3.
-  Commit: `feat(supply-chain): support JavaScript lockfiles`.
+  Commit: `feat(supply-chain): support JavaScript lockfiles` (bcad013).
 
 - [ ] **25. Harden JavaScript dependency policies.** Detect wildcard/latest
   versions, mutable Git references, unpinned URL dependencies, and suspicious
