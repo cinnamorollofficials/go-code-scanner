@@ -56,6 +56,7 @@ func Tokenize(source []byte) (tokens []Token, err error) {
 					}
 					tokens = append(tokens, outsideTokens...)
 				}
+				tokens = append(tokens, r)
 				innerTokens := tokenizeJS([]byte(r.Value))
 				lineOffset := bytesLineOffset(source, r.Start)
 				for idx := range innerTokens {
