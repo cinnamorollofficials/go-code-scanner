@@ -201,6 +201,14 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 					}
 					findings = append(findings, cycleFindings...)
 
+					remoteChecker := NewRemoteResourceChecker(s.cfg)
+					remoteFindings, err := remoteChecker.Check(ctx, src)
+					if err != nil {
+						results <- workerResult{err: err}
+						return
+					}
+					findings = append(findings, remoteFindings...)
+
 					if len(findings) > 0 {
 						results <- workerResult{findings: findings}
 					}
