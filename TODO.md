@@ -71,6 +71,10 @@ work is tracked in [`REMAINING_TASKS.md`](REMAINING_TASKS.md).
 These items were suggestions in the original roadmap, not acceptance blockers
 for the current release. They remain intentionally open for a future roadmap:
 
+First-class browser client scanning is planned separately in
+[`FRONTEND_SCANNING_TODO.md`](FRONTEND_SCANNING_TODO.md). That backlog is split
+into atomic numbered tasks, with one required commit per task.
+
 - [ ] Add captured adapter-output fixtures from multiple upstream tool versions;
   current parsers have representative fixtures and fuzz coverage.
 - [ ] Establish a measured false-positive corpus across several external
