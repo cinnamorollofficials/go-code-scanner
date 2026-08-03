@@ -130,11 +130,11 @@ func (c *Classifier) classifyByFileConventions(cleanPath string) Scope {
 	}
 
 	// Next.js & Nuxt server API route conventions
-	if strings.HasPrefix(lowerPath, "app/api/") ||
-		strings.HasPrefix(lowerPath, "pages/api/") ||
-		strings.HasPrefix(lowerPath, "server/api/") ||
-		strings.HasPrefix(lowerPath, "server/routes/") ||
-		strings.HasPrefix(lowerPath, "server/middleware/") {
+	if strings.Contains(lowerPath, "app/api/") ||
+		strings.Contains(lowerPath, "pages/api/") ||
+		strings.Contains(lowerPath, "server/api/") ||
+		strings.Contains(lowerPath, "server/routes/") ||
+		strings.Contains(lowerPath, "server/middleware/") {
 		return ScopeServer
 	}
 

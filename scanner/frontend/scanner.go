@@ -161,6 +161,14 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 					}
 					findings = append(findings, privacyFindings...)
 
+					reactNextChecker := NewReactNextChecker(s.cfg)
+					reactNextFindings, err := reactNextChecker.Check(ctx, src)
+					if err != nil {
+						results <- workerResult{err: err}
+						return
+					}
+					findings = append(findings, reactNextFindings...)
+
 					if len(findings) > 0 {
 						results <- workerResult{findings: findings}
 					}

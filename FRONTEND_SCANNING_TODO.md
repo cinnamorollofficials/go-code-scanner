@@ -154,14 +154,14 @@ inspect them.
 
 ## Phase 4 — Framework-aware checks
 
-- [ ] **13. Add React and Next.js client rules.** Detect dynamic
+- [x] **13. Add React and Next.js client rules.** Detect dynamic
   `dangerouslySetInnerHTML`, client components importing Node/server-only
   modules, private environment access from client modules, and unsafe link or
   redirect constructs. Account for Server Components so server-only findings
   are not emitted outside a client dependency path. Context: frontend framework
   rules and fixtures. Verification:
   `go test ./scanner/frontend -run 'React|Next'`. Depends on tasks 4 and 8–11.
-  Commit: `feat(frontend): scan React and Next client code`.
+  Commit: `feat(frontend): scan React and Next client code` (f1c4272).
 
 - [ ] **14. Add Vue and Nuxt client rules.** Detect unsafe `v-html`, sensitive
   private runtime config used by client code, unsafe dynamic URL bindings, and
