@@ -286,6 +286,20 @@ var Registry = map[string]RuleDefinition{
 		Source:         "dependency-chain",
 		Tags:           []string{"frontend", "governance", "boundary", "architecture"},
 	},
+	"frontend/import-cycle": {
+		ID:             "frontend/import-cycle",
+		Domain:         finding.Quality,
+		Category:       "architecture",
+		Severity:       finding.Medium,
+		Description:    "Circular import dependency detected between local modules",
+		Recommendation: "Refactor shared types or helper functions into a separate common module to break the cycle",
+		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/frontend-scanning-contract.md",
+		Framework:      "vanilla",
+		Confidence:     "HIGH",
+		Sink:           "import",
+		Source:         "dependency-cycle",
+		Tags:           []string{"frontend", "architecture", "circular-dependency"},
+	},
 }
 
 func LookupRule(id string) (RuleDefinition, bool) {

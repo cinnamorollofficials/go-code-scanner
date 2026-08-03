@@ -244,12 +244,12 @@ inspect them.
   and 20–21. Commit:
   `feat(frontend): enforce client server boundaries` (5bc049c).
 
-- [ ] **23. Detect frontend import cycles.** Add deterministic cycle detection
+- [x] **23. Detect frontend import cycles.** Add deterministic cycle detection
   for local client/shared modules, deduplicate equivalent cycles, respect the
   configuration toggle, and preserve full/changed/staged behavior using the
   repository inventory. Context: frontend architecture scanner. Verification:
   `go test ./scanner/frontend -run 'Cycle'`. Depends on tasks 20–21. Commit:
-  `feat(frontend): detect client import cycles`.
+  `feat(frontend): detect client import cycles` (e6bdb27).
 
 ## Phase 7 — JavaScript supply-chain policy
 
