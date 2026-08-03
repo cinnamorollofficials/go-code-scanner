@@ -35,13 +35,13 @@ inspect them.
 
 ## Phase 1 — Product contract and configuration
 
-- [ ] **1. Define the frontend scanning and threat-boundary contract.** Document
+- [x] **1. Define the frontend scanning and threat-boundary contract.** Document
   what qualifies as client, server, and shared code; supported ecosystems;
   trust boundaries; severity principles; sanitizer assumptions; and explicitly
   deferred data-flow behavior. Add representative safe and unsafe examples so
   later rules do not silently broaden the contract. Context: documentation and
   public behavior only; no runtime change. Verification: `git diff --check`.
-  Commit: `docs(frontend): define client scanning contract`.
+  Commit: `docs(frontend): define client scanning contract` (8759768).
 
 - [ ] **2. Add strict frontend configuration.** Add an optional nested
   `frontend` configuration with `enabled`, `frameworks`, `client_roots`,
