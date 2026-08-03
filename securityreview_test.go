@@ -614,3 +614,92 @@ func TestFrontendScannerRegistrationWhenEnabled(t *testing.T) {
 		t.Fatal("expected native frontend scanner to be registered when enabled")
 	}
 }
+
+func TestFrontendFindingFingerprintEquivalenceAndRelocation(t *testing.T) {
+	base := finding.Finding{
+		RuleID: "frontend/dangerously-set-inner-html", Tool: "frontend", Domain: finding.Security,
+		Severity: finding.High, Description: "XSS vulnerability",
+		Location: finding.Location{File: "Component.tsx", Line: 15},
+		Metadata: map[string]string{"sink": "dangerouslySetInnerHTML"},
+	}
+	moved := base
+	moved.Location.Line = 120
+
+	first := normalize([]finding.Finding{base})[0]
+	second := normalize([]finding.Finding{moved})[0]
+
+	if first.Fingerprint == "" {
+		t.Fatal("frontend finding fingerprint is empty")
+	}
+	if first.Fingerprint != second.Fingerprint {
+		t.Fatalf("frontend finding line relocation changed fingerprint: %s != %s", first.Fingerprint, second.Fingerprint)
+	}
+}
+
+func TestFrontendCacheKeyInvalidationOnConfigChange(t *testing.T) {
+	cfg1 := config.Default()
+	cfg1.Root = t.TempDir()
+	cfg1.Frontend.Enabled = true
+	cfg1.Frontend.RecognizeSanitizers = []string{"dompurify"}
+
+	rev1, err := New(cfg1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hash1 := rev1.(*reviewer).configHash
+
+	cfg2 := cfg1
+	cfg2.Frontend.RecognizeSanitizers = []string{"dompurify", "sanitize-html"}
+	rev2, err := New(cfg2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hash2 := rev2.(*reviewer).configHash
+
+	if hash1 == hash2 {
+		t.Fatal("changing frontend sanitizer policy did not invalidate config hash")
+	}
+}
+
+func TestFrontendCachedUncachedEquivalence(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "App.tsx"), []byte("const x = <div dangerouslySetInnerHTML={{__html: input}} />;\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := config.Default()
+	cfg.Root = root
+	cfg.Frontend.Enabled = true
+	cfg.Cache.Enabled = true
+	cfg.Cache.Directory = filepath.Join(root, ".cache")
+
+	rev, err := New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// First run: uncached
+	report1, err := rev.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Second run: cached
+	report2, err := rev.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(report1.Findings) == 0 {
+		t.Fatal("expected frontend finding in report1")
+	}
+	if len(report1.Findings) != len(report2.Findings) {
+		t.Fatalf("uncached vs cached finding count mismatch: %d vs %d", len(report1.Findings), len(report2.Findings))
+	}
+	if report1.Findings[0].RuleID != report2.Findings[0].RuleID {
+		t.Fatalf("rule ID mismatch: %s vs %s", report1.Findings[0].RuleID, report2.Findings[0].RuleID)
+	}
+	if report1.Findings[0].Fingerprint != report2.Findings[0].Fingerprint {
+		t.Fatalf("fingerprint mismatch: %s vs %s", report1.Findings[0].Fingerprint, report2.Findings[0].Fingerprint)
+	}
+}
