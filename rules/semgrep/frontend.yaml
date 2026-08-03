@@ -1,0 +1,27 @@
+rules:
+  - id: frontend.react.dangerously-set-inner-html
+    pattern: <$X dangerouslySetInnerHTML={{ __html: $EXPR }} />
+    message: "React component using dangerouslySetInnerHTML with dynamic expression"
+    languages: [javascript, typescript, jsx, tsx]
+    severity: ERROR
+    metadata:
+      domain: security
+      category: injection
+
+  - id: frontend.vue.unsafe-v-html
+    pattern: v-html="$EXPR"
+    message: "Vue v-html directive bound to dynamic expression"
+    languages: [vue, html]
+    severity: ERROR
+    metadata:
+      domain: security
+      category: injection
+
+  - id: frontend.svelte.unsafe-html-tag
+    pattern: "{@html $EXPR}"
+    message: "Svelte {@html} tag rendering dynamic expression"
+    languages: [svelte, html]
+    severity: ERROR
+    metadata:
+      domain: security
+      category: injection

@@ -206,7 +206,7 @@ inspect them.
   `go test ./scanner/adapters ./scanner/command`. Depends on task 5. Commit:
   `feat(adapters): add Biome scanner` (ecf1385).
 
-- [ ] **19. Bundle an offline Semgrep frontend ruleset.** Add reviewed local
+- [x] **19. Bundle an offline Semgrep frontend ruleset.** Add reviewed local
   Semgrep rules for analysis that requires AST or source-to-sink matching and
   configure the existing adapter to use local files without downloading a
   registry pack. Pin public rule IDs, map findings to the six existing domains,
@@ -214,7 +214,7 @@ inspect them.
   Semgrep adapter, parser fixtures, and packaging tests. Verification:
   `go test ./scanner/adapters ./release ./scripts -run 'Semgrep|Archive|Package'`.
   Depends on tasks 8–15. Commit:
-  `feat(frontend): bundle offline Semgrep rules`.
+  `feat(frontend): bundle offline Semgrep rules` (41308aa).
 
 ## Phase 6 — Frontend architecture analysis
 

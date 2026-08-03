@@ -77,7 +77,7 @@ func Spec(id, name string, options Options) (command.Spec, error) {
 		spec = command.Spec{ID: id, Domain: finding.SupplyChain, Command: []string{"osv-scanner", "scan", "source", "--verbosity=error", "--format", "json", "--recursive", "."},
 			FindingExitCodes: []int{1}, Severity: finding.High, Category: "vulnerability", Description: "OSV-Scanner reported a dependency vulnerability", Parser: parseOSVScanner, RequiresNetwork: true}
 	case Semgrep:
-		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"semgrep", "scan", "--error", "--quiet", "--json", "."},
+		spec = command.Spec{ID: id, Domain: finding.Security, Command: []string{"semgrep", "scan", "--config", "rules/semgrep", "--error", "--quiet", "--json", "."},
 			FindingExitCodes: []int{1}, Severity: finding.High, Category: "static_analysis", Description: "Semgrep reported a security finding", Parser: parseSemgrep}
 	case ESLint:
 		spec = command.Spec{ID: id, Domain: finding.Quality, Command: []string{"eslint", "-f", "json", "."},

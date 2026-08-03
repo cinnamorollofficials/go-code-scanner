@@ -39,6 +39,13 @@ func TestStructuredAdapterParsers(t *testing.T) {
 			t.Fatalf("unexpected semgrep parse: items=%+v err=%v", items, err)
 		}
 	})
+	t.Run("semgrep v2 findings format", func(t *testing.T) {
+		data := []byte(`{"findings":[{"check_id":"frontend.react.dangerously-set-inner-html","path":"src/Card.jsx","line":12,"extra":{"severity":"ERROR"}}]}`)
+		items, err := parseSemgrep(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "frontend.react.dangerously-set-inner-html" || items[0].Line != 12 {
+			t.Fatalf("unexpected semgrep v2 parse: items=%+v err=%v", items, err)
+		}
+	})
 	t.Run("govulncheck stream", func(t *testing.T) {
 		data := []byte("{\"config\":{\"protocol_version\":\"v1.0.0\"}}\n" +
 			"{\"finding\":{\"osv\":\"GO-2026-0001\",\"fixed_version\":\"v1.2.3\",\"trace\":[{\"module\":\"example/mod\",\"version\":\"v1.0.0\",\"package\":\"example/mod/pkg\",\"function\":\"Run\",\"position\":{\"filename\":\"main.go\",\"line\":14}}]}}\n")

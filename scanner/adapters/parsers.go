@@ -110,15 +110,33 @@ func parseSemgrep(data []byte) ([]command.ParsedFinding, error) {
 				Severity string `json:"severity"`
 			} `json:"extra"`
 		} `json:"results"`
+		Findings []struct {
+			CheckID string `json:"check_id"`
+			Path    string `json:"path"`
+			Line    int    `json:"line"`
+			Extra   struct {
+				Severity string `json:"severity"`
+			} `json:"extra"`
+		} `json:"findings"`
 	}
 	if err := json.Unmarshal(data, &report); err != nil {
 		return nil, err
 	}
-	result := make([]command.ParsedFinding, 0, len(report.Results))
+	result := make([]command.ParsedFinding, 0, len(report.Results)+len(report.Findings))
 	for _, item := range report.Results {
+		ruleID := item.CheckID
+		desc := fmt.Sprintf("Semgrep finding for rule %s", ruleID)
 		result = append(result, command.ParsedFinding{
-			RuleID: item.CheckID, Severity: adapterSeverity(item.Extra.Severity), Description: item.Extra.Message,
+			RuleID: ruleID, Severity: adapterSeverity(item.Extra.Severity), Description: desc,
 			File: item.Path, Line: item.Start.Line,
+		})
+	}
+	for _, item := range report.Findings {
+		ruleID := item.CheckID
+		desc := fmt.Sprintf("Semgrep finding for rule %s", ruleID)
+		result = append(result, command.ParsedFinding{
+			RuleID: ruleID, Severity: adapterSeverity(item.Extra.Severity), Description: desc,
+			File: item.Path, Line: item.Line,
 		})
 	}
 	return result, nil
