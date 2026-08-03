@@ -825,3 +825,39 @@ func TestUpgradeCheckCommand(t *testing.T) {
 		t.Fatalf("changed contract exit=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
 	}
 }
+
+func TestScanScopeArgumentValidation(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "safe.go"), []byte("package safe\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// valid scopes should succeed
+	for _, scope := range []string{"all", "client", "server"} {
+		var stdout, stderr bytes.Buffer
+		code := run(context.Background(), []string{"scan", "--root", root, "--scope", scope}, &stdout, &stderr)
+		if code == 2 {
+			t.Errorf("valid scope %q rejected: stderr=%s", scope, stderr.String())
+		}
+	}
+
+	// invalid scope should exit 2
+	var stdout, stderr bytes.Buffer
+	code := run(context.Background(), []string{"scan", "--root", root, "--scope", "invalid-scope"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("expected exit 2 for invalid scope, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "invalid scope") {
+		t.Errorf("expected 'invalid scope' in stderr, got %q", stderr.String())
+	}
+}
+
+func TestScanHelpIncludesScopeFlag(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	// --help should exit 2 (flag.ContinueOnError writes to stderr)
+	run(context.Background(), []string{"scan", "--help"}, &stdout, &stderr)
+	help := stderr.String() + stdout.String()
+	if !strings.Contains(help, "--scope") && !strings.Contains(help, "scope") {
+		t.Errorf("--scope flag not mentioned in scan help output: %q", help)
+	}
+}

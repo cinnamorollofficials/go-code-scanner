@@ -88,6 +88,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	format := flags.String("format", "json", "report format: json, sarif, or junit")
 	fix := flags.Bool("fix", false, "apply deterministic fixes and rescan")
 	dryRun := flags.Bool("dry-run", false, "preview --fix changes without writing")
+	scope := flags.String("scope", "", "client scan scope: client, server, or all (default all)")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -135,6 +136,14 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if err := cfg.Validate(); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
+	}
+	if *scope != "" {
+		parsedScope, scopeErr := config.ParseScanScope(*scope)
+		if scopeErr != nil {
+			fmt.Fprintln(stderr, scopeErr)
+			return 2
+		}
+		cfg.ScanScope = parsedScope
 	}
 	if *explain != "" {
 		return explainRule(cfg, *explain, stdout, stderr)

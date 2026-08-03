@@ -127,16 +127,36 @@ type ArchitecturePolicy struct {
 	DetectCycles          bool                  `json:"detect_cycles,omitempty"`
 }
 
+// ScanScope restricts which code contexts are scanned.
+type ScanScope string
+
+const (
+	ScanScopeAll    ScanScope = "all"    // default: scan client and server (current behaviour)
+	ScanScopeClient ScanScope = "client" // scan client-side frontend code only
+	ScanScopeServer ScanScope = "server" // scan server-side code only
+)
+
+func ParseScanScope(s string) (ScanScope, error) {
+	switch ScanScope(s) {
+	case ScanScopeAll, ScanScopeClient, ScanScopeServer:
+		return ScanScope(s), nil
+	case "":
+		return ScanScopeAll, nil
+	default:
+		return "", fmt.Errorf("invalid scope %q: must be client, server, or all", s)
+	}
+}
+
 type FrontendPolicy struct {
-	Enabled                      bool     `json:"enabled,omitempty"`
-	Frameworks                   []string `json:"frameworks,omitempty"`
-	ClientRoots                  []string `json:"client_roots,omitempty"`
-	ServerRoots                  []string `json:"server_roots,omitempty"`
-	SharedRoots                  []string `json:"shared_roots,omitempty"`
-	IncludeExtensions            []string `json:"include_extensions,omitempty"`
-	RecognizeSanitizers          []string `json:"recognize_sanitizers,omitempty"`
-	DetectImportCycles           bool     `json:"detect_import_cycles,omitempty"`
-	DetectClientServerBoundaries bool     `json:"detect_client_server_boundaries,omitempty"`
+	Enabled                      bool      `json:"enabled,omitempty"`
+	Frameworks                   []string  `json:"frameworks,omitempty"`
+	ClientRoots                  []string  `json:"client_roots,omitempty"`
+	ServerRoots                  []string  `json:"server_roots,omitempty"`
+	SharedRoots                  []string  `json:"shared_roots,omitempty"`
+	IncludeExtensions            []string  `json:"include_extensions,omitempty"`
+	RecognizeSanitizers          []string  `json:"recognize_sanitizers,omitempty"`
+	DetectImportCycles           bool      `json:"detect_import_cycles,omitempty"`
+	DetectClientServerBoundaries bool      `json:"detect_client_server_boundaries,omitempty"`
 }
 
 func (fp *FrontendPolicy) UnmarshalJSON(data []byte) error {
@@ -254,6 +274,7 @@ type Config struct {
 	Cache                CachePolicy                         `json:"cache,omitempty"`
 	Frontend             FrontendPolicy                      `json:"frontend,omitempty"`
 	SelectedProfile      string                              `json:"-"`
+	ScanScope            ScanScope                           `json:"-"`
 }
 
 func Default() Config {
