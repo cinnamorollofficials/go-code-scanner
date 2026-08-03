@@ -180,19 +180,25 @@ func (c *ExecutionMessagingChecker) Check(ctx context.Context, src scanner.Sourc
 func getArgTokens(tokens []Token, startIdx int) []Token {
 	n := len(tokens)
 	i := startIdx
-	depth := 1
+	depth := 0
 	var args []Token
-	for i < n && depth > 0 {
+	for i < n {
 		tok := tokens[i]
 		if tok.Value == "(" {
 			depth++
+			if depth == 1 {
+				i++
+				continue
+			}
 		} else if tok.Value == ")" {
 			depth--
 			if depth == 0 {
 				break
 			}
 		}
-		args = append(args, tok)
+		if depth > 0 {
+			args = append(args, tok)
+		}
 		i++
 	}
 	return args

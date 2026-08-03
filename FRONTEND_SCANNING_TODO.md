@@ -122,7 +122,7 @@ inspect them.
   on tasks 6–7. Commit:
   `feat(frontend): detect unsafe execution and messaging` (5e0ce98).
 
-- [ ] **10. Detect client-side secret and token exposure.** Detect credential-
+- [x] **10. Detect client-side secret and token exposure.** Detect credential-
   like values stored in localStorage, sessionStorage, or IndexedDB; secret-like
   names exposed through `NEXT_PUBLIC_`, `VITE_`, or `REACT_APP_`; and embedded
   private keys or high-confidence tokens. Do not classify ordinary public API
@@ -130,7 +130,7 @@ inspect them.
   terminal, artifacts, and cache. Context: frontend rules and redaction tests.
   Checks: `go test ./scanner/frontend ./reporter ./cache -run 'Secret|Token|Redact'`.
   Depends on tasks 6–7. Commit:
-  `feat(frontend): detect client credential exposure`.
+  `feat(frontend): detect client credential exposure` (baa81a5).
 
 - [ ] **11. Detect unsafe navigation and transport usage.** Add rules for
   untrusted values assigned to browser navigation sinks, `javascript:` URLs,
