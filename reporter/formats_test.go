@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"os"
@@ -115,6 +116,61 @@ func TestJUnitSeparatesPolicyFailuresAndOperationalErrors(t *testing.T) {
 	}
 	if strings.Contains(string(data), "TOP-SECRET-SNIPPET") {
 		t.Fatalf("JUnit leaked operational scanner message: %s", data)
+	}
+}
+
+func TestFrontendFindingsPublicReportFormatsContract(t *testing.T) {
+	report := &finding.Report{
+		Project: "frontend-fixture", ToolVersion: "v1.0.0", SchemaVersion: "1.0", FingerprintVersion: "3",
+		Findings: []finding.Finding{
+			{
+				ID: "F-FE-001", Fingerprint: "fe-fingerprint-1", RuleID: "frontend/dangerously-set-inner-html",
+				Tool: "frontend", Domain: finding.Security, Category: "xss", Severity: finding.High,
+				Description: "Unsanitized HTML injection via dangerouslySetInnerHTML", Recommendation: "Use DOMPurify or safe JSX text",
+				Snippet: "TOP-SECRET-FRONTEND-SNIPPET", Location: finding.Location{File: "Component.tsx", Line: 42},
+				BaselineState: finding.BaselineNew, Metadata: map[string]string{"sink": "dangerouslySetInnerHTML"},
+			},
+			{
+				ID: "F-FE-002", Fingerprint: "fe-fingerprint-2", RuleID: "frontend/missing-subresource-integrity",
+				Tool: "frontend", Domain: finding.Security, Category: "integrity", Severity: finding.High,
+				Description: "Cross-origin script loaded without Subresource Integrity", Recommendation: "Add integrity and crossorigin attributes",
+				Snippet: "<script src=\"https://cdn.example.com/lib.js\"></script>", Location: finding.Location{File: "index.html", Line: 10},
+				BaselineState: finding.BaselineNew, Metadata: map[string]string{"url": "https://cdn.example.com/lib.js"},
+			},
+		},
+	}
+
+	// 1. Terminal output check
+	var termBuf bytes.Buffer
+	if err := WriteTerminal(&termBuf, report); err != nil {
+		t.Fatalf("WriteTerminal failed: %v", err)
+	}
+	termStr := termBuf.String()
+	if strings.Contains(termStr, "TOP-SECRET-FRONTEND-SNIPPET") {
+		t.Errorf("Terminal report leaked snippet")
+	}
+	if !strings.Contains(termStr, "frontend/dangerously-set-inner-html") || !strings.Contains(termStr, "frontend/missing-subresource-integrity") {
+		t.Errorf("Terminal report missing stable rule IDs")
+	}
+
+	// 2. JSON, SARIF, JUnit check
+	writers := map[string]func(string, *finding.Report) error{
+		"json":  WriteJSON,
+		"sarif": WriteSARIF,
+		"junit": WriteJUnit,
+	}
+	for name, write := range writers {
+		path := filepath.Join(t.TempDir(), "report."+name)
+		if err := write(path, report); err != nil {
+			t.Fatalf("%s writer failed: %v", name, err)
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(data), "TOP-SECRET-FRONTEND-SNIPPET") {
+			t.Errorf("%s report leaked snippet", name)
+		}
 	}
 }
 
