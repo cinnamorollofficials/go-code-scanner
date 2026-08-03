@@ -89,6 +89,9 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 	for index := range compiled {
 		ruleValues[index] = compiled[index].Rule
 	}
+	if cfg.Frontend.Enabled {
+		ruleValues = append(ruleValues, frontendscanner.RuleDefinitions()...)
+	}
 	ruleSetHash, err := hashJSON(ruleValues)
 	if err != nil {
 		return nil, fmt.Errorf("hash rule set: %w", err)

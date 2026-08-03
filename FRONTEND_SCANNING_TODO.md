@@ -93,7 +93,7 @@ inspect them.
   `go test ./scanner/frontend` and the focused frontend fuzz smoke. Depends on
   task 5. Commit: `feat(frontend): add lexical source context` (52b45a3).
 
-- [ ] **7. Establish frontend finding metadata and rule registry.** Add an
+- [x] **7. Establish frontend finding metadata and rule registry.** Add an
   internal rule registry that maps stable IDs to domain, category, severity,
   recommendation, documentation, framework, confidence, sink, and source
   metadata. Reuse the public `finding.Finding` contract and existing tags; do
@@ -101,7 +101,7 @@ inspect them.
   `--explain` and include registry content in the rule-set hash. Context:
   `scanner/frontend`, rule explanation, cache/rule hashing tests. Verification:
   `go test ./scanner/frontend ./cache ./... -run 'Explain|RuleSetHash'`. Depends
-  on tasks 5–6. Commit: `feat(frontend): register client rule metadata`.
+  on tasks 5–6. Commit: `feat(frontend): register client rule metadata` (3229750).
 
 ## Phase 3 — High-confidence browser rules
 

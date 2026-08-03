@@ -26,6 +26,7 @@ import (
 	releasepkg "github.com/cinnamorollofficials/go-code-scanner/release"
 	"github.com/cinnamorollofficials/go-code-scanner/reporter"
 	"github.com/cinnamorollofficials/go-code-scanner/rules"
+	frontendscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/frontend"
 	"github.com/cinnamorollofficials/go-code-scanner/suppression"
 )
 
@@ -270,6 +271,20 @@ func explainRule(cfg config.Config, id string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "Tags: %s\n", strings.Join(item.Tags, ", "))
 		}
 		fmt.Fprintf(stdout, "Fixable: %t\n", item.Fixable)
+		return 0
+	}
+	if fRule, ok := frontendscanner.LookupRule(id); ok {
+		fmt.Fprintf(stdout, "Rule: %s\nDomain: %s\nCategory: %s\nSeverity: %s\nDescription: %s\n", fRule.ID, fRule.Domain, fRule.Category, fRule.Severity, fRule.Description)
+		if fRule.Recommendation != "" {
+			fmt.Fprintf(stdout, "Recommendation: %s\n", fRule.Recommendation)
+		}
+		if fRule.Documentation != "" {
+			fmt.Fprintf(stdout, "Documentation: %s\n", fRule.Documentation)
+		}
+		if len(fRule.Tags) > 0 {
+			fmt.Fprintf(stdout, "Tags: %s\n", strings.Join(fRule.Tags, ", "))
+		}
+		fmt.Fprintf(stdout, "Fixable: %t\n", false)
 		return 0
 	}
 	fmt.Fprintf(stderr, "unknown rule %q\n", id)
