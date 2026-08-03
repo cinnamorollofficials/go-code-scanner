@@ -198,13 +198,13 @@ inspect them.
   `go test ./scanner/adapters ./scanner/command`. Depends on task 5. Commit:
   `feat(adapters): add TypeScript checker` (ea21016).
 
-- [ ] **18. Add an optional Biome adapter.** Support Biome lint/format JSON
+- [x] **18. Add an optional Biome adapter.** Support Biome lint/format JSON
   output as a quality and reliability analyzer without making it a required
   runtime dependency. Preserve user-provided arguments and environment
   allowlisting. Add fixtures for at least two supported output shapes or reject
   unknown shapes safely. Context: adapters. Verification:
   `go test ./scanner/adapters ./scanner/command`. Depends on task 5. Commit:
-  `feat(adapters): add Biome scanner`.
+  `feat(adapters): add Biome scanner` (ecf1385).
 
 - [ ] **19. Bundle an offline Semgrep frontend ruleset.** Add reviewed local
   Semgrep rules for analysis that requires AST or source-to-sink matching and

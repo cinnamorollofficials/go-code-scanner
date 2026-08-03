@@ -21,6 +21,7 @@ const (
 	Semgrep     = "semgrep"
 	ESLint      = "eslint"
 	TypeScript  = "tsc"
+	Biome       = "biome"
 )
 
 type Options struct {
@@ -84,6 +85,9 @@ func Spec(id, name string, options Options) (command.Spec, error) {
 	case TypeScript:
 		spec = command.Spec{ID: id, Domain: finding.Quality, Command: []string{"tsc", "--noEmit", "--pretty", "false"},
 			FindingExitCodes: []int{1, 2}, Severity: finding.High, Category: "type_check", Description: "TypeScript compiler reported type errors", Parser: parseTSC}
+	case Biome:
+		spec = command.Spec{ID: id, Domain: finding.Quality, Command: []string{"biome", "check", "--reporter=json", "."},
+			FindingExitCodes: []int{1}, Severity: finding.Medium, Category: "lint", Description: "Biome reported a lint or formatting finding", Parser: parseBiome}
 	default:
 		return command.Spec{}, fmt.Errorf("unknown adapter %q", name)
 	}

@@ -313,3 +313,61 @@ func parseTSC(data []byte) ([]command.ParsedFinding, error) {
 	}
 	return result, nil
 }
+
+func parseBiome(data []byte) ([]command.ParsedFinding, error) {
+	var obj struct {
+		Diagnostics []struct {
+			Category string `json:"category"`
+			Severity string `json:"severity"`
+			Location struct {
+				Path struct {
+					File string `json:"file"`
+				} `json:"path"`
+			} `json:"location"`
+		} `json:"diagnostics"`
+	}
+	if err := json.Unmarshal(data, &obj); err == nil && len(obj.Diagnostics) > 0 {
+		var result []command.ParsedFinding
+		for _, diag := range obj.Diagnostics {
+			ruleID := diag.Category
+			if ruleID == "" {
+				ruleID = "biome/lint"
+			}
+			result = append(result, command.ParsedFinding{
+				RuleID:      ruleID,
+				Severity:    adapterSeverity(diag.Severity),
+				Description: fmt.Sprintf("Biome finding for rule %s", ruleID),
+				File:        diag.Location.Path.File,
+			})
+		}
+		return result, nil
+	}
+
+	var list []struct {
+		Category string `json:"category"`
+		Severity string `json:"severity"`
+		Location struct {
+			Path struct {
+				File string `json:"file"`
+			} `json:"path"`
+		} `json:"location"`
+	}
+	if err := json.Unmarshal(data, &list); err == nil {
+		var result []command.ParsedFinding
+		for _, diag := range list {
+			ruleID := diag.Category
+			if ruleID == "" {
+				ruleID = "biome/lint"
+			}
+			result = append(result, command.ParsedFinding{
+				RuleID:      ruleID,
+				Severity:    adapterSeverity(diag.Severity),
+				Description: fmt.Sprintf("Biome finding for rule %s", ruleID),
+				File:        diag.Location.Path.File,
+			})
+		}
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("unknown or malformed Biome output format")
+}

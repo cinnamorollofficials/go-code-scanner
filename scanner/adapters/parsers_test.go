@@ -68,4 +68,25 @@ func TestStructuredAdapterParsers(t *testing.T) {
 			t.Fatalf("unexpected tsc parse: items=%+v err=%v", items, err)
 		}
 	})
+	t.Run("biome shape 1", func(t *testing.T) {
+		data := []byte(`{"diagnostics":[{"category":"lint/style/useConst","severity":"error","location":{"path":{"file":"src/index.ts"}}}]}`)
+		items, err := parseBiome(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "lint/style/useConst" || items[0].File != "src/index.ts" {
+			t.Fatalf("unexpected biome parse: items=%+v err=%v", items, err)
+		}
+	})
+	t.Run("biome shape 2", func(t *testing.T) {
+		data := []byte(`[{"category":"lint/correctness/noUnusedVariables","severity":"warning","location":{"path":{"file":"src/app.ts"}}}]`)
+		items, err := parseBiome(data)
+		if err != nil || len(items) != 1 || items[0].RuleID != "lint/correctness/noUnusedVariables" || items[0].File != "src/app.ts" {
+			t.Fatalf("unexpected biome parse: items=%+v err=%v", items, err)
+		}
+	})
+	t.Run("biome malformed", func(t *testing.T) {
+		data := []byte(`not-json`)
+		_, err := parseBiome(data)
+		if err == nil {
+			t.Fatalf("expected error for malformed biome output")
+		}
+	})
 }
