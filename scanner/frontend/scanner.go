@@ -145,6 +145,14 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 					}
 					findings = append(findings, secretFindings...)
 
+					navChecker := NewNavigationTransportChecker(s.cfg)
+					navFindings, err := navChecker.Check(ctx, src)
+					if err != nil {
+						results <- workerResult{err: err}
+						return
+					}
+					findings = append(findings, navFindings...)
+
 					if len(findings) > 0 {
 						results <- workerResult{findings: findings}
 					}

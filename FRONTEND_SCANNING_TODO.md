@@ -132,7 +132,7 @@ inspect them.
   Depends on tasks 6–7. Commit:
   `feat(frontend): detect client credential exposure` (baa81a5).
 
-- [ ] **11. Detect unsafe navigation and transport usage.** Add rules for
+- [x] **11. Detect unsafe navigation and transport usage.** Add rules for
   untrusted values assigned to browser navigation sinks, `javascript:` URLs,
   production HTTP API endpoints, unsafe `window.open` usage, and sensitive
   fields placed in URL query parameters. Do not flag localhost development URLs
@@ -140,7 +140,7 @@ inspect them.
   hardening, and governance rules. Verification:
   `go test ./scanner/frontend -run 'Navigation|Transport|Query'`. Depends on
   tasks 6–7. Commit:
-  `feat(frontend): detect unsafe navigation and transport`.
+  `feat(frontend): detect unsafe navigation and transport` (e12a100).
 
 - [ ] **12. Detect privacy leakage in logs and telemetry.** Extend PII checks to
   browser logs, analytics calls, error-reporting context, and telemetry events.
