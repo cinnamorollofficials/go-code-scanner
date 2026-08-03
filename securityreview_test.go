@@ -588,3 +588,29 @@ func TestRequiredScannerFailureReturnsReportAndError(t *testing.T) {
 		t.Fatalf("expected report and operational error, report=%v err=%v", report, err)
 	}
 }
+
+func TestFrontendScannerRegistrationWhenEnabled(t *testing.T) {
+	cfg := config.Default()
+	cfg.Root = t.TempDir()
+	cfg.Frontend.Enabled = true
+
+	rev, err := New(cfg)
+	if err != nil {
+		t.Fatalf("failed to create reviewer with frontend enabled: %v", err)
+	}
+	r, ok := rev.(*reviewer)
+	if !ok {
+		t.Fatal("expected *reviewer type")
+	}
+
+	found := false
+	for _, sc := range r.scanners {
+		if sc.scanner.ID() == "frontend" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected native frontend scanner to be registered when enabled")
+	}
+}

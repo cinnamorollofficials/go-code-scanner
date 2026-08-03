@@ -20,6 +20,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/scanner/adapters"
 	architecturescanner "github.com/cinnamorollofficials/go-code-scanner/scanner/architecture"
 	commandscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/command"
+	frontendscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/frontend"
 	patternscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/pattern"
 	"github.com/cinnamorollofficials/go-code-scanner/suppression"
 )
@@ -131,6 +132,16 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 		r.scanners = append(r.scanners, registeredScanner{scanner: architecturescanner.New(layers, boundaries, architecturescanner.Options{
 			DetectCycles: cfg.Architecture.DetectCycles,
 		}), required: true})
+	}
+	if cfg.Frontend.Enabled {
+		required := false
+		if sc, ok := cfg.Scanners["frontend"]; ok {
+			required = sc.Required
+		}
+		r.scanners = append(r.scanners, registeredScanner{
+			scanner:  frontendscanner.New(cfg),
+			required: required,
+		})
 	}
 	configuredIDs := make([]string, 0, len(cfg.Scanners))
 	for id, configured := range cfg.Scanners {

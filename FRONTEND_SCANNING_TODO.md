@@ -74,14 +74,14 @@ inspect them.
 
 ## Phase 2 — Native scanner foundation
 
-- [ ] **5. Add the bounded frontend scanner lifecycle.** Implement the scanner
+- [x] **5. Add the bounded frontend scanner lifecycle.** Implement the scanner
   shell, descriptor, deterministic worker orchestration, resource limits,
   cancellation, partial/failure states, and safe diagnostics. Register it only
   when frontend scanning is enabled; do not add blocking rules yet. Verify
   enabled/disabled, required, timeout, panic, cache, and profile behavior.
   Context: `scanner/frontend`, `securityreview.go`, orchestration tests. Checks:
   `go test ./scanner/frontend ./... -run 'Frontend|frontend'`. Depends on task
-  4. Commit: `feat(frontend): add native scanner lifecycle`.
+  4. Commit: `feat(frontend): add native scanner lifecycle` (5e31d9e).
 
 - [ ] **6. Add lightweight JavaScript and template lexical context.** Build a
   bounded, dependency-free tokenizer sufficient to distinguish code, comments,
