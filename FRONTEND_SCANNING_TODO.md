@@ -339,25 +339,25 @@ inspect them.
   `git diff --check`. Depends on tasks 8–26. Commit:
   `test(frontend): add false positive corpus` (a751b12).
 
-- [ ] **33. Enforce frontend resource and performance budgets.** Benchmark
+- [x] **33. Enforce frontend resource and performance budgets.** Benchmark
   classification, lexical scanning, native rules, import extraction, graph
   traversal, and cached scans. Add non-flaky budgets for file size, line size,
   file count, graph size, traversal depth, command output, and fast pre-commit
   runtime. Context: benchmarks, resource-boundary tests, performance script.
   Verification: frontend benchmarks, boundary tests, and
   `scripts/performance-budget.sh`. Depends on tasks 5–26 and 32. Commit:
-  `test(frontend): enforce scanning budgets`.
+  `test(frontend): enforce scanning budgets` (0a0b6fa).
 
-- [ ] **34. Add frontend fuzz and redaction gates.** Fuzz configuration,
+- [x] **34. Add frontend fuzz and redaction gates.** Fuzz configuration,
   classifier, lexer, manifest parsing, import resolution, and adapter parsers.
   Add secret/PII canaries covering terminal, JSON, SARIF, JUnit, cache, baseline,
   scanner status, and operational errors. Integrate bounded frontend fuzz smoke
   into the canonical verification script. Context: fuzz targets, redaction
   integration tests, verification scripts. Verification:
   `scripts/fuzz-smoke.sh` and focused redaction tests. Depends on tasks 2–30.
-  Commit: `test(frontend): fuzz parsers and verify redaction`.
+  Commit: `test(frontend): fuzz parsers and verify redaction` (31eca30).
 
-- [ ] **35. Complete frontend user and contributor documentation.** Document
+- [x] **35. Complete frontend user and contributor documentation.** Document
   supported file types and frameworks, scope classification, configuration,
   profiles, optional analyzer installation, offline behavior, rule catalog,
   severity, suppressions, staged limitations, troubleshooting, and the process
@@ -365,9 +365,9 @@ inspect them.
   contribution, security, and migration documentation as applicable. Context:
   documentation only. Verification: documentation link checks where available
   and `git diff --check`. Depends on tasks 1–34. Commit:
-  `docs(frontend): document client scanning`.
+  `docs(frontend): document client scanning` (a4aa6bc).
 
-- [ ] **36. Certify the frontend scanning release candidate.** Run unit,
+- [x] **36. Certify the frontend scanning release candidate.** Run unit,
   integration, end-to-end, race, vet, fuzz smoke, vulnerability, golden,
   self-scan, cached/uncached equivalence, staged isolation, performance, and
   release reproducibility checks. Fix discovered defects in separate atomic
