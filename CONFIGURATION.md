@@ -78,10 +78,41 @@ default values before the JSON overlay is validated.
 | `governance` | object | Required files/headers, ownership, and suppression requirements. |
 | `architecture` | object | Go layer boundaries and cycle detection. |
 | `cache` | object | Content-addressed scanner cache policy. |
-| `frontend` | object | Optional frontend scanning policy. |
+| `frontend` | object | Browser client scanning policy. |
 
 Severities are `CRITICAL`, `HIGH`, `MEDIUM`, and `LOW`. Domains are `quality`,
 `reliability`, `hardening`, `security`, `supply_chain`, and `governance`.
+
+## Frontend policy (`frontend`)
+
+Configure built-in browser client scanning, framework detection, and sanitizer overrides:
+
+```json
+{
+  "frontend": {
+    "enabled": true,
+    "frameworks": ["react", "nextjs", "vue", "svelte"],
+    "client_roots": ["src/client", "app"],
+    "server_roots": ["src/server", "server"],
+    "shared_roots": ["src/shared"],
+    "recognize_sanitizers": ["dompurify", "sanitize-html"],
+    "detect_import_cycles": true,
+    "detect_client_server_boundaries": true
+  }
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `enabled` | boolean | Enables built-in native frontend client scanning (`frontend` scanner). |
+| `frameworks` | string array | Target frameworks to scan (`react`, `nextjs`, `vue`, `nuxt`, `svelte`, `sveltekit`). |
+| `client_roots` | string array | Directory paths categorized as client code. |
+| `server_roots` | string array | Directory paths categorized as server code. |
+| `shared_roots` | string array | Directory paths categorized as shared code. |
+| `include_extensions` | string array | Additional extensions to evaluate for frontend rules. |
+| `recognize_sanitizers` | string array | Function names recognized as valid HTML sanitizers. |
+| `detect_import_cycles` | boolean | Default `true`; detects circular import dependencies between frontend modules. |
+| `detect_client_server_boundaries` | boolean | Default `true`; prevents server-only modules from being imported into client code. |
 
 ## Profiles and offline behavior
 
@@ -92,9 +123,10 @@ Default profiles are:
   "profiles": {
     "fast": ["pattern"],
     "standard": ["pattern", "govulncheck"],
-    "full": ["pattern", "govulncheck"]
+    "full": ["pattern", "govulncheck"],
+    "frontend": ["pattern", "frontend", "tsc", "biome", "eslint", "semgrep"]
   },
-  "offline_profiles": ["fast"]
+  "offline_profiles": ["fast", "frontend"]
 }
 ```
 

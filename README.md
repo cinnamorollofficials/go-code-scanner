@@ -94,9 +94,12 @@ Profiles select scanners:
 - `fast`: offline built-in checks suitable for pre-commit.
 - `standard`: broader checks suitable for pre-push.
 - `full`: the complete configured CI set.
+- `frontend`: offline native browser client checks and optional frontend adapters (`tsc`, `biome`, `eslint`, `semgrep`).
+
+Scan scope can be selected via `--scope client|server|all` (default `all`).
 
 `offline_profiles` prevents scanners marked `requires_network` from running in
-those profiles. The default fast profile is offline.
+those profiles. Default fast and frontend profiles are offline.
 
 Policy thresholds can be global (`fail_on`) or per domain (`policy`). A finding
 blocks `--ci` when its severity reaches the relevant threshold. `--fail-on`
