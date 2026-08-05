@@ -27,14 +27,14 @@ The documentation system must complement `README.md` (which remains lightweight 
 
 ## Considered Alternatives
 
-1. **Docusaurus (React)**: Robust documentation ecosystem, but introduces heavy JavaScript bundle defaults, React runtime overhead, and complex theme customization for pure static documentation.
-2. **Hugo (Go-based)**: Extremely fast build times native to the Go ecosystem, but lacks out-of-the-box structured documentation features (sidebar navigation, built-in search, accessible theme, MDX components) equivalent to Starlight without extensive custom theme maintenance.
-3. **MkDocs (Material for MkDocs)**: Strong documentation framework, but requires a Python environment setup for repository contributors and lacks native MDX component support.
-4. **Custom Next.js / Vite Application**: Maximum design flexibility, but introduces high maintenance burden for standard documentation features (sidebar, search, TOC, i18n structure, dark mode).
+1. **Astro Starlight**: Excellent static site generator with zero JS defaults, but uses Astro components rather than Vue 3 components for client-side interactivity (such as our planned configuration builder).
+2. **Docusaurus (React)**: Robust documentation ecosystem, but introduces heavy JavaScript bundle defaults, React runtime overhead, and complex theme customization for pure static documentation.
+3. **Hugo (Go-based)**: Extremely fast build times native to the Go ecosystem, but lacks out-of-the-box structured documentation features (sidebar navigation, built-in search, accessible theme) without extensive custom theme maintenance.
+4. **MkDocs (Material for MkDocs)**: Strong documentation framework, but requires a Python environment setup for repository contributors.
 
-## Decision: Astro Starlight
+## Decision: VitePress
 
-We choose **Astro Starlight** as the static documentation site generator, located isolated within the `website/` directory of the repository.
+We choose **VitePress** (powered by Vite and Vue 3) as the static documentation site generator, located isolated within the `website/` directory of the repository.
 
 ### Architectural Rules & Conventions
 
@@ -42,21 +42,21 @@ We choose **Astro Starlight** as the static documentation site generator, locate
    - Node.js usage and `package.json` / `package-lock.json` are strictly contained within `website/`.
    - The Go build and CLI binary remain completely independent of Node.js.
 
-2. **Content Ownership (Markdown / MDX)**:
-   - Hand-authored documentation (guides, tutorials, architecture overviews) lives under `website/src/content/docs/`.
-   - Content uses standard Markdown (`.md`) or MDX (`.mdx`) when custom interactive components (e.g. badges, cards, configuration generator UI) are required.
+2. **Content Ownership (Markdown / Vue)**:
+   - Hand-authored documentation (guides, tutorials, architecture overviews) lives under `website/docs/`.
+   - Content uses standard Markdown (`.md`) with Vue components (`.vue`) when custom interactive components (e.g. badges, cards, configuration generator UI) are required.
 
 3. **Sources of Truth & Reference Generation**:
    - Go definitions in `security-review` (in `cmd/`, `config/`, `rules/`, `scanner/`) are the authoritative sources of truth.
-   - Dedicated Go generators (`go generate ./...` or `go run ./cmd/...`) extract metadata and output deterministic Markdown/MDX files into `website/src/content/docs/reference/`.
+   - Dedicated Go generators (`go generate ./...` or `go run ./cmd/...`) extract metadata and output deterministic Markdown files into `website/docs/reference/`.
    - CI enforces clean working tree checks (`git diff --exit-code`) to prevent generated reference drift.
 
 4. **Deployment Target & Hosting**:
    - Published via **GitHub Pages** using GitHub Actions (`.github/workflows/docs.yml`).
-   - PR builds perform strict linting, type checks, link validation, and Astro site builds without deployment credentials or publish permissions.
+   - PR builds perform strict linting, type checks, link validation, and VitePress site builds (`npm run docs:build`) without deployment credentials or publish permissions.
 
 5. **URL Policy & Base Path**:
-   - **Initial Deployment**: Configured with a project path subpath (`https://<owner>.github.io/go-code-scanner/`) using `base: '/go-code-scanner/'` in `website/astro.config.mjs`.
+   - **Initial Deployment**: Configured with a project path subpath (`https://<owner>.github.io/go-code-scanner/`) using `base: '/go-code-scanner/'` in `website/.vitepress/config.mts`.
    - **Custom Domain Readiness**: Configuration allows seamless transition to a custom domain (e.g. `https://security-review.dev`) by updating `site` and `base` parameters without breaking asset paths or internal links.
 
 6. **Versioning Strategy**:
@@ -78,19 +78,19 @@ We choose **Astro Starlight** as the static documentation site generator, locate
                                   v
 +-------------------------------------------------------------------+
 |                   Generated Reference Files                       |
-|  - website/src/content/docs/reference/cli.mdx                     |
-|  - website/src/content/docs/reference/configuration.mdx           |
-|  - website/src/content/docs/reference/rules.mdx                   |
-|  - website/src/content/docs/reference/scanners.mdx                |
+|  - website/docs/reference/cli.md                              |
+|  - website/docs/reference/configuration.md                    |
+|  - website/docs/reference/rules.md                            |
+|  - website/docs/reference/scanners.md                         |
 +-------------------------------------------------------------------+
                                   |
                                   | Combined with Hand-Written Docs
                                   v
 +-------------------------------------------------------------------+
-|                     Astro Starlight Toolchain                     |
-|  - Hand-authored Guides (website/src/content/docs/...)           |
-|  - Accessible Theme & Search                                      |
-|  - Build & Asset Processing (`npm run build`)                     |
+|                     VitePress Toolchain                           |
+|  - Hand-authored Guides (website/docs/...)                        |
+|  - Accessible Theme & Built-in Search                             |
+|  - Build & Asset Processing (`npm run docs:build`)                |
 +-------------------------------------------------------------------+
                                   |
                                   | GitHub Actions (`docs.yml`)
@@ -106,7 +106,7 @@ We choose **Astro Starlight** as the static documentation site generator, locate
 ### Positive
 - Authoritative metadata in Go prevents documentation rot.
 - Zero impact on Go binary size, build times, or runtime dependencies.
-- Astro Starlight delivers near-zero JavaScript by default, fast page loads, accessible UI out of the box, and structured search.
+- VitePress delivers fast Vite HMR, Vue 3 component integration, lightweight static output, and built-in local search out of the box.
 - Pre-configured asset base path ensures zero broken links from initial deployment.
 
 ### Negative / Trade-offs
