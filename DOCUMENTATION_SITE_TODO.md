@@ -40,7 +40,7 @@ be delivered as one atomic commit.
 
 ## Phase 1 — Foundation and deployment
 
-- [ ] **1. Record the documentation architecture decision.** Add an ADR covering
+- [x] **1. Record the documentation architecture decision.** Add an ADR covering
   Astro Starlight, Markdown/MDX ownership, Node usage limited to documentation,
   generated references, deployment target, URL policy, versioning strategy, and
   rejected alternatives. Define whether the initial site uses a project path or
