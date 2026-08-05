@@ -32,7 +32,7 @@ case "$version" in
   *) echo "VERSION must be a semantic version such as v1.2.3" >&2; exit 2 ;;
 esac
 
-ldflags="-s -w -X github.com/cinnamorollofficials/go-code-scanner/buildinfo.Version=$version -X github.com/cinnamorollofficials/go-code-scanner/buildinfo.Commit=$commit -X github.com/cinnamorollofficials/go-code-scanner/buildinfo.Date=$build_date"
+ldflags="-s -w -X github.com/cinnamorollofficials/go-code-scanner/pkg/buildinfo.Version=$version -X github.com/cinnamorollofficials/go-code-scanner/pkg/buildinfo.Commit=$commit -X github.com/cinnamorollofficials/go-code-scanner/pkg/buildinfo.Date=$build_date"
 
 if [ "$dry_run" = false ]; then
   case "$build_date" in

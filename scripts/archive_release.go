@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cinnamorollofficials/go-code-scanner/release"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/release"
 )
 
 func main() {

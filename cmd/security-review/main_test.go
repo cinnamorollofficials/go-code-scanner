@@ -18,12 +18,12 @@ import (
 	"time"
 
 	securityreview "github.com/cinnamorollofficials/go-code-scanner"
-	"github.com/cinnamorollofficials/go-code-scanner/baseline"
-	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
-	compatibilitypkg "github.com/cinnamorollofficials/go-code-scanner/compatibility"
-	"github.com/cinnamorollofficials/go-code-scanner/finding"
-	releasepkg "github.com/cinnamorollofficials/go-code-scanner/release"
-	"github.com/cinnamorollofficials/go-code-scanner/scanner"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/baseline"
+	cachepkg "github.com/cinnamorollofficials/go-code-scanner/pkg/cache"
+	compatibilitypkg "github.com/cinnamorollofficials/go-code-scanner/pkg/compatibility"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
+	releasepkg "github.com/cinnamorollofficials/go-code-scanner/pkg/release"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/scanner"
 )
 
 func TestScanExitCodes(t *testing.T) {

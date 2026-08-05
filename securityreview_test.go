@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cinnamorollofficials/go-code-scanner/config"
-	"github.com/cinnamorollofficials/go-code-scanner/finding"
-	"github.com/cinnamorollofficials/go-code-scanner/scanner"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/config"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/scanner"
 )
 
 func TestReviewerRunsDefaultPatternScanner(t *testing.T) {

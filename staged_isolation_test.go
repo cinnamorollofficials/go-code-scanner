@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cinnamorollofficials/go-code-scanner/config"
-	"github.com/cinnamorollofficials/go-code-scanner/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/config"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
 )
 
 func TestBuiltInScannersUseOnlyStagedContent(t *testing.T) {

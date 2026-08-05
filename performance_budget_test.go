@@ -10,14 +10,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cinnamorollofficials/go-code-scanner/baseline"
-	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
-	"github.com/cinnamorollofficials/go-code-scanner/config"
-	"github.com/cinnamorollofficials/go-code-scanner/discovery"
-	"github.com/cinnamorollofficials/go-code-scanner/finding"
-	"github.com/cinnamorollofficials/go-code-scanner/rules"
-	"github.com/cinnamorollofficials/go-code-scanner/scanner"
-	patternscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/pattern"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/baseline"
+	cachepkg "github.com/cinnamorollofficials/go-code-scanner/pkg/cache"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/config"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/discovery"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/rules"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/scanner"
+	patternscanner "github.com/cinnamorollofficials/go-code-scanner/pkg/scanner/pattern"
 )
 
 func BenchmarkDiscovery(b *testing.B) {

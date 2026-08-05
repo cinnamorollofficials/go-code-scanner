@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	cachepkg "github.com/cinnamorollofficials/go-code-scanner/cache"
-	"github.com/cinnamorollofficials/go-code-scanner/config"
-	"github.com/cinnamorollofficials/go-code-scanner/finding"
-	"github.com/cinnamorollofficials/go-code-scanner/gitrepo"
-	"github.com/cinnamorollofficials/go-code-scanner/scanner"
-	commandscanner "github.com/cinnamorollofficials/go-code-scanner/scanner/command"
-	"github.com/cinnamorollofficials/go-code-scanner/workspace"
+	cachepkg "github.com/cinnamorollofficials/go-code-scanner/pkg/cache"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/config"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/gitrepo"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/scanner"
+	commandscanner "github.com/cinnamorollofficials/go-code-scanner/pkg/scanner/command"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/workspace"
 )
 
 func TestResourceBoundariesEndToEnd(t *testing.T) {
