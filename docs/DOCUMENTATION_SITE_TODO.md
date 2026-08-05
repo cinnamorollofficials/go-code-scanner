@@ -4,7 +4,7 @@ This roadmap tracks the implementation of a public documentation website for
 Go Code Scanner. It is intentionally separate from `TODO.md` and
 `REMAINING_TASKS.md`, which describe the scanner and release implementation.
 
-The target is a static Astro Starlight site built from repository-owned content,
+The target is a static VitePress site built from repository-owned content,
 with generated CLI, configuration, and rule references. Each numbered task must
 be delivered as one atomic commit.
 
@@ -41,34 +41,34 @@ be delivered as one atomic commit.
 ## Phase 1 — Foundation and deployment
 
 - [x] **1. Record the documentation architecture decision.** Add an ADR covering
-  Astro Starlight, Markdown/MDX ownership, Node usage limited to documentation,
+  VitePress, Markdown/Vue ownership, Node usage limited to documentation,
   generated references, deployment target, URL policy, versioning strategy, and
   rejected alternatives. Define whether the initial site uses a project path or
   custom domain so asset URLs are correct from the first deployment.
   Acceptance: the ADR identifies sources of truth and contains a content/data
   flow diagram. Commit: `docs(adr): define documentation site architecture`.
 
-- [ ] **2. Scaffold the Starlight application.** Create `website/` with pinned
-  dependencies, lockfile, Astro configuration, TypeScript configuration, base
-  styles, public assets, and placeholder home page. Add local scripts for
-  development, build, preview, and Astro validation. Do not migrate product
-  content yet. Acceptance: a clean install and production build succeed from a
-  fresh checkout. Commit: `docs(site): scaffold Starlight application`.
+- [x] **2. Scaffold the VitePress application.** Create `website/` with pinned
+  dependencies, lockfile, VitePress configuration (`.vitepress/config.mts`), TypeScript
+  configuration, base styles, public assets, and placeholder home page. Add local
+  scripts for development, build, preview, and VitePress validation. Do not migrate
+  product content yet. Acceptance: a clean install and production build succeed from a
+  fresh checkout. Commit: `docs(site): scaffold VitePress application`.
 
-- [ ] **3. Establish brand and accessibility foundations.** Add the product
+- [x] **3. Establish brand and accessibility foundations.** Add the product
   wordmark or text logo, favicon, theme colors, typography, visible focus states,
   skip navigation, accessible contrast, social metadata defaults, and responsive
   layout rules. Avoid inventing security certification claims. Acceptance: the
   landing placeholder is usable at narrow and wide viewports and has no critical
   automated accessibility violations. Commit: `style(docs): establish accessible site theme`.
 
-- [ ] **4. Add documentation CI.** Add a least-privilege workflow that installs
-  locked dependencies, checks formatting, runs Astro validation, builds the site,
+- [x] **4. Add documentation CI.** Add a least-privilege workflow that installs
+  locked dependencies, checks formatting, runs VitePress validation, builds the site,
   and checks internal links. Cache only safe dependency/build data. Acceptance:
   pull requests fail on broken builds or links, and workflow actions are pinned
   to full SHAs. Commit: `ci(docs): validate documentation site`.
 
-- [ ] **5. Deploy a previewable production site.** Add the GitHub Pages build and
+- [x] **5. Deploy a previewable production site.** Add the GitHub Pages build and
   deployment workflow, correct `site` and `base` configuration, canonical URLs,
   artifact upload, concurrency cancellation, and documented repository settings.
   Keep pull requests read-only and without deployment credentials. Acceptance:
@@ -154,7 +154,7 @@ be delivered as one atomic commit.
   test. Commit: `feat(docs): expose configuration reference metadata`.
 
 - [ ] **16. Generate the complete configuration reference.** Build a deterministic
-  Go generator that converts configuration metadata into Markdown/MDX tables and
+  Go generator that converts configuration metadata into Markdown tables and
   detail sections. Add `go generate` or an explicit documented command and a CI
   clean-tree check. Acceptance: two runs are byte-identical and CI detects stale
   generated pages. Commit: `docs(config): generate field reference from Go metadata`.
@@ -273,9 +273,9 @@ Run the documentation checks from `website/` using the selected package manager:
 
 ```sh
 npm ci
-npm run check
-npm run test
-npm run build
+npm run docs:dev
+npm run docs:build
+npm run docs:preview
 ```
 
 Run the unified generator after task 20:
