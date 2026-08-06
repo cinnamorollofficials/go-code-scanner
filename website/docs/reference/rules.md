@@ -55,17 +55,41 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Remove hardcoded mock tokens and load credentials from environment variables or key vaults
 
-##### ❌ Don't (Unsafe)
+##### ❌ Don't (Unsafe Examples)
 
-```go
+::: code-group
+
+```go [Go]
+const authHeader = "Bearer google-mock-jwt-token-12345"
+```
+
+```ts [TypeScript / JavaScript]
 const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";
 ```
 
-##### ✅ Do (Recommended)
+```python [Python]
+AUTH_HEADER = "Bearer google-mock-jwt-token-12345"
+```
 
-```go
+:::
+
+##### ✅ Do (Recommended Solutions)
+
+::: code-group
+
+```go [Go]
+authHeader := fmt.Sprintf("Bearer %s", os.Getenv("AUTH_TOKEN"))
+```
+
+```ts [TypeScript / JavaScript]
 const AUTH_HEADER = `Bearer ${process.env.AUTH_TOKEN}`;
 ```
+
+```python [Python]
+auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"
+```
+
+:::
 
 ---
 
@@ -103,9 +127,11 @@ await fetch("/api/login", { credentials: "include", method: "POST", body });
 
 **Recommendation**: Remove permission bypass conditions and enforce strict authorization checks
 
-##### ❌ Don't (Unsafe)
+##### ❌ Don't (Unsafe Examples)
 
-```go
+::: code-group
+
+```go [Go]
 func CheckPermission(user User) bool {
     if user.Role == "admin" || bypassPermission {
         return true
@@ -114,13 +140,46 @@ func CheckPermission(user User) bool {
 }
 ```
 
-##### ✅ Do (Recommended)
+```ts [TypeScript / JavaScript]
+function checkPermission(user: User): boolean {
+    if (user.role === 'admin' || process.env.BYPASS_PERMISSIONS === 'true') {
+        return true;
+    }
+    return false;
+}
+```
 
-```go
+```python [Python]
+def check_permission(user):
+    if user.role == "admin" or bypass_permission:
+        return True
+    return False
+```
+
+:::
+
+##### ✅ Do (Recommended Solutions)
+
+::: code-group
+
+```go [Go]
 func CheckPermission(ctx context.Context, user User, resource string) bool {
     return authzService.CanAccess(ctx, user.ID, resource)
 }
 ```
+
+```ts [TypeScript / JavaScript]
+async function checkPermission(user: User, resource: string): Promise<boolean> {
+    return await authzService.canAccess(user.id, resource);
+}
+```
+
+```python [Python]
+def check_permission(user, resource):
+    return authz_service.can_access(user.id, resource)
+```
+
+:::
 
 ---
 
@@ -134,17 +193,41 @@ func CheckPermission(ctx context.Context, user User, resource string) bool {
 
 **Recommendation**: Replace default/placeholder secrets with cryptographically strong random values from secure configuration
 
-##### ❌ Don't (Unsafe)
+##### ❌ Don't (Unsafe Examples)
 
-```go
+::: code-group
+
+```go [Go]
 jwtSecret := []byte("change-me-in-production")
 ```
 
-##### ✅ Do (Recommended)
+```ts [TypeScript / JavaScript]
+const jwtSecret = "change-me-in-production";
+```
 
-```go
+```python [Python]
+JWT_SECRET = "change-me-in-production"
+```
+
+:::
+
+##### ✅ Do (Recommended Solutions)
+
+::: code-group
+
+```go [Go]
 jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))
 ```
+
+```ts [TypeScript / JavaScript]
+const jwtSecret = process.env.JWT_SECRET_KEY;
+```
+
+```python [Python]
+JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
+```
+
+:::
 
 ---
 
@@ -206,17 +289,47 @@ log.Printf("Connecting to DB host: %s", dbHost)
 
 **Recommendation**: Use parameterized queries or prepared statements instead of string formatting
 
-##### ❌ Don't (Unsafe)
+##### ❌ Don't (Unsafe Examples)
 
-```go
+::: code-group
+
+```go [Go]
 query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)
+rows, err := db.Query(query)
 ```
 
-##### ✅ Do (Recommended)
-
-```go
-db.Query("SELECT * FROM users WHERE email = $1", userEmail)
+```ts [TypeScript / JavaScript]
+const query = `SELECT * FROM users WHERE email = '${userEmail}'`;
+const result = await client.query(query);
 ```
+
+```python [Python]
+query = f"SELECT * FROM users WHERE email = '{user_email}'"
+cursor.execute(query)
+```
+
+:::
+
+##### ✅ Do (Recommended Solutions)
+
+::: code-group
+
+```go [Go]
+query := "SELECT * FROM users WHERE email = $1"
+rows, err := db.Query(query, userEmail)
+```
+
+```ts [TypeScript / JavaScript]
+const query = "SELECT * FROM users WHERE email = $1";
+const result = await client.query(query, [userEmail]);
+```
+
+```python [Python]
+query = "SELECT * FROM users WHERE email = %s"
+cursor.execute(query, (user_email,))
+```
+
+:::
 
 ---
 
@@ -230,17 +343,49 @@ db.Query("SELECT * FROM users WHERE email = $1", userEmail)
 
 **Recommendation**: Extract credentials to environment variables or secret management services
 
-##### ❌ Don't (Unsafe)
+##### ❌ Don't (Unsafe Examples)
 
-```go
-const apiKey = "synthetic_secret_api_key_12345"
+::: code-group
+
+```go [Go]
+apiKey := "synthetic_secret_api_key_12345"
 ```
 
-##### ✅ Do (Recommended)
+```ts [TypeScript / JavaScript]
+const apiKey = "synthetic_secret_api_key_12345";
+```
 
-```go
+```python [Python]
+api_key = "synthetic_secret_api_key_12345"
+```
+
+```java [Java]
+String apiKey = "synthetic_secret_api_key_12345";
+```
+
+:::
+
+##### ✅ Do (Recommended Solutions)
+
+::: code-group
+
+```go [Go]
 apiKey := os.Getenv("STRIPE_API_KEY")
 ```
+
+```ts [TypeScript / JavaScript]
+const apiKey = process.env.STRIPE_API_KEY;
+```
+
+```python [Python]
+api_key = os.environ.get("STRIPE_API_KEY")
+```
+
+```java [Java]
+String apiKey = System.getenv("STRIPE_API_KEY");
+```
+
+:::
 
 ---
 
@@ -361,17 +506,41 @@ type Account struct {
 
 **Recommendation**: Execute binary commands directly with argument arrays and sanitize untrusted input
 
-##### ❌ Don't (Unsafe)
+##### ❌ Don't (Unsafe Examples)
 
-```go
-exec.Command("sh", "-c", "ls " + userInput)
+::: code-group
+
+```go [Go]
+cmd := exec.Command("sh", "-c", "ls " + userInput)
 ```
 
-##### ✅ Do (Recommended)
-
-```go
-exec.Command("ls", "--", validatedPath)
+```ts [TypeScript / Node.js]
+child_process.exec("ls " + userInput);
 ```
+
+```python [Python]
+subprocess.Popen("ls " + user_input, shell=True)
+```
+
+:::
+
+##### ✅ Do (Recommended Solutions)
+
+::: code-group
+
+```go [Go]
+cmd := exec.Command("ls", "--", validatedPath)
+```
+
+```ts [TypeScript / Node.js]
+child_process.execFile("ls", ["--", validatedPath]);
+```
+
+```python [Python]
+subprocess.Popen(["ls", "--", validated_path], shell=False)
+```
+
+:::
 
 ---
 
@@ -385,19 +554,43 @@ exec.Command("ls", "--", validatedPath)
 
 **Recommendation**: Use SHA-256 or stronger algorithms; use bcrypt/argon2 for password hashing
 
-##### ❌ Don't (Unsafe)
+##### ❌ Don't (Unsafe Examples)
 
-```go
+::: code-group
+
+```go [Go]
 hasher := md5.New()
 hasher.Write([]byte(password))
 ```
 
-##### ✅ Do (Recommended)
+```ts [TypeScript / Node.js]
+const hash = crypto.createHash("md5").update(password).digest("hex");
+```
 
-```go
+```python [Python]
+hash_val = hashlib.md5(password.encode()).hexdigest()
+```
+
+:::
+
+##### ✅ Do (Recommended Solutions)
+
+::: code-group
+
+```go [Go]
 hasher := sha256.New()
 hasher.Write([]byte(password))
 ```
+
+```ts [TypeScript / Node.js]
+const hash = crypto.createHash("sha256").update(password).digest("hex");
+```
+
+```python [Python]
+hash_val = hashlib.sha256(password.encode()).hexdigest()
+```
+
+:::
 
 ---
 

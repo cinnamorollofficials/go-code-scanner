@@ -12,6 +12,23 @@ func DefaultSecurity() []Rule {
 			Recommendation: "Remove hardcoded mock tokens and load credentials from environment variables or key vaults",
 			UnsafeExample:  `const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";`,
 			SafeExample:    `const AUTH_HEADER = ` + "`" + `Bearer ${process.env.AUTH_TOKEN}` + "`" + `;`,
+			Examples: []CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `const authHeader = "Bearer google-mock-jwt-token-12345"`,
+					Safe:   `authHeader := fmt.Sprintf("Bearer %s", os.Getenv("AUTH_TOKEN"))`,
+				},
+				{
+					Language: "ts", Label: "TypeScript / JavaScript",
+					Unsafe: `const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";`,
+					Safe:   `const AUTH_HEADER = ` + "`" + `Bearer ${process.env.AUTH_TOKEN}` + "`" + `;`,
+				},
+				{
+					Language: "python", Label: "Python",
+					Unsafe: `AUTH_HEADER = "Bearer google-mock-jwt-token-12345"`,
+					Safe:   `auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"`,
+				},
+			},
 		},
 		{
 			ID: "browser-token-storage", Pattern: `localStorage\.(setItem|getItem)\(['\"]?(access_token|refresh_token|token)`,
@@ -36,6 +53,41 @@ func DefaultSecurity() []Rule {
 			SafeExample: `func CheckPermission(ctx context.Context, user User, resource string) bool {
     return authzService.CanAccess(ctx, user.ID, resource)
 }`,
+			Examples: []CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `func CheckPermission(user User) bool {
+    if user.Role == "admin" || bypassPermission {
+        return true
+    }
+    return false
+}`,
+					Safe: `func CheckPermission(ctx context.Context, user User, resource string) bool {
+    return authzService.CanAccess(ctx, user.ID, resource)
+}`,
+				},
+				{
+					Language: "ts", Label: "TypeScript / JavaScript",
+					Unsafe: `function checkPermission(user: User): boolean {
+    if (user.role === 'admin' || process.env.BYPASS_PERMISSIONS === 'true') {
+        return true;
+    }
+    return false;
+}`,
+					Safe: `async function checkPermission(user: User, resource: string): Promise<boolean> {
+    return await authzService.canAccess(user.id, resource);
+}`,
+				},
+				{
+					Language: "python", Label: "Python",
+					Unsafe: `def check_permission(user):
+    if user.role == "admin" or bypass_permission:
+        return True
+    return False`,
+					Safe: `def check_permission(user, resource):
+    return authz_service.can_access(user.id, resource)`,
+				},
+			},
 		},
 		{
 			ID: "weak-secret", Pattern: `change-me-in-production|your_super_secret|your_secret_key_here`,
@@ -44,6 +96,23 @@ func DefaultSecurity() []Rule {
 			Recommendation: "Replace default/placeholder secrets with cryptographically strong random values from secure configuration",
 			UnsafeExample:  `jwtSecret := []byte("change-me-in-production")`,
 			SafeExample:    `jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))`,
+			Examples: []CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `jwtSecret := []byte("change-me-in-production")`,
+					Safe:   `jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))`,
+				},
+				{
+					Language: "ts", Label: "TypeScript / JavaScript",
+					Unsafe: `const jwtSecret = "change-me-in-production";`,
+					Safe:   `const jwtSecret = process.env.JWT_SECRET_KEY;`,
+				},
+				{
+					Language: "python", Label: "Python",
+					Unsafe: `JWT_SECRET = "change-me-in-production"`,
+					Safe:   `JWT_SECRET = os.environ.get("JWT_SECRET_KEY")`,
+				},
+			},
 		},
 		{
 			ID: "frontend-sensitive-log", Pattern: `console\.(log|debug|info|error).*\b(token|password|secret|permission|user_id|tenant)`,
@@ -71,6 +140,29 @@ func DefaultSecurity() []Rule {
 			Extensions:     []string{".go"},
 			UnsafeExample:  `query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)`,
 			SafeExample:    `db.Query("SELECT * FROM users WHERE email = $1", userEmail)`,
+			Examples: []CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)
+rows, err := db.Query(query)`,
+					Safe: `query := "SELECT * FROM users WHERE email = $1"
+rows, err := db.Query(query, userEmail)`,
+				},
+				{
+					Language: "ts", Label: "TypeScript / JavaScript",
+					Unsafe: `const query = ` + "`SELECT * FROM users WHERE email = '${userEmail}'`" + `;
+const result = await client.query(query);`,
+					Safe: `const query = "SELECT * FROM users WHERE email = $1";
+const result = await client.query(query, [userEmail]);`,
+				},
+				{
+					Language: "python", Label: "Python",
+					Unsafe: `query = f"SELECT * FROM users WHERE email = '{user_email}'"
+cursor.execute(query)`,
+					Safe: `query = "SELECT * FROM users WHERE email = %s"
+cursor.execute(query, (user_email,))`,
+				},
+			},
 		},
 		{
 			ID: "hardcoded-credential", Pattern: `(password|passwd|pwd|secret|api_key)\s*[:=]\s*['\"][^'\"]{6,}['\"]`,
@@ -79,6 +171,28 @@ func DefaultSecurity() []Rule {
 			Recommendation: "Extract credentials to environment variables or secret management services",
 			UnsafeExample:  `const apiKey = "synthetic_secret_api_key_12345"`,
 			SafeExample:    `apiKey := os.Getenv("STRIPE_API_KEY")`,
+			Examples: []CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `apiKey := "synthetic_secret_api_key_12345"`,
+					Safe:   `apiKey := os.Getenv("STRIPE_API_KEY")`,
+				},
+				{
+					Language: "ts", Label: "TypeScript / JavaScript",
+					Unsafe: `const apiKey = "synthetic_secret_api_key_12345";`,
+					Safe:   `const apiKey = process.env.STRIPE_API_KEY;`,
+				},
+				{
+					Language: "python", Label: "Python",
+					Unsafe: `api_key = "synthetic_secret_api_key_12345"`,
+					Safe:   `api_key = os.environ.get("STRIPE_API_KEY")`,
+				},
+				{
+					Language: "java", Label: "Java",
+					Unsafe: `String apiKey = "synthetic_secret_api_key_12345";`,
+					Safe:   `String apiKey = System.getenv("STRIPE_API_KEY");`,
+				},
+			},
 		},
 		{
 			ID: "unsafe-inner-html", Pattern: `dangerouslySetInnerHTML\s*=\s*\{`,
@@ -135,6 +249,23 @@ c.JSON(http.StatusOK, response)`,
 			Extensions:     []string{".go"},
 			UnsafeExample:  `exec.Command("sh", "-c", "ls " + userInput)`,
 			SafeExample:    `exec.Command("ls", "--", validatedPath)`,
+			Examples: []CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `cmd := exec.Command("sh", "-c", "ls " + userInput)`,
+					Safe:   `cmd := exec.Command("ls", "--", validatedPath)`,
+				},
+				{
+					Language: "ts", Label: "TypeScript / Node.js",
+					Unsafe: `child_process.exec("ls " + userInput);`,
+					Safe:   `child_process.execFile("ls", ["--", validatedPath]);`,
+				},
+				{
+					Language: "python", Label: "Python",
+					Unsafe: `subprocess.Popen("ls " + user_input, shell=True)`,
+					Safe:   `subprocess.Popen(["ls", "--", validated_path], shell=False)`,
+				},
+			},
 		},
 		{
 			ID: "go-weak-cryptographic-hash", Pattern: `(md5|sha1)\.(New|Sum)\(`,
@@ -146,6 +277,25 @@ c.JSON(http.StatusOK, response)`,
 hasher.Write([]byte(password))`,
 			SafeExample: `hasher := sha256.New()
 hasher.Write([]byte(password))`,
+			Examples: []CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `hasher := md5.New()
+hasher.Write([]byte(password))`,
+					Safe: `hasher := sha256.New()
+hasher.Write([]byte(password))`,
+				},
+				{
+					Language: "ts", Label: "TypeScript / Node.js",
+					Unsafe: `const hash = crypto.createHash("md5").update(password).digest("hex");`,
+					Safe:   `const hash = crypto.createHash("sha256").update(password).digest("hex");`,
+				},
+				{
+					Language: "python", Label: "Python",
+					Unsafe: `hash_val = hashlib.md5(password.encode()).hexdigest()`,
+					Safe:   `hash_val = hashlib.sha256(password.encode()).hexdigest()`,
+				},
+			},
 		},
 		{
 			ID: "go-tainted-file-path", Pattern: `os\.(Open|OpenFile|ReadFile|WriteFile|Remove)\([^)]*(r\.URL\.Query|r\.FormValue|c\.Param)\(`,

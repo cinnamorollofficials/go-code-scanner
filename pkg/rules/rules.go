@@ -14,6 +14,13 @@ import (
 
 const SchemaVersion = 1
 
+type CodeExample struct {
+	Language string `json:"language"`
+	Label    string `json:"label,omitempty"`
+	Unsafe   string `json:"unsafe"`
+	Safe     string `json:"safe"`
+}
+
 type Rule struct {
 	ID             string           `json:"id"`
 	Pattern        string           `json:"pattern"`
@@ -29,6 +36,7 @@ type Rule struct {
 	Enabled        *bool            `json:"enabled,omitempty"`
 	UnsafeExample  string           `json:"unsafe_example,omitempty"`
 	SafeExample    string           `json:"safe_example,omitempty"`
+	Examples       []CodeExample    `json:"examples,omitempty"`
 }
 
 type Set struct {
