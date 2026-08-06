@@ -28,7 +28,9 @@ export default defineConfig({
         {
           text: 'Getting Started',
           items: [
-            { text: 'Overview', link: '/getting-started/' }
+            { text: 'Overview', link: '/getting-started/' },
+            { text: 'Installation', link: '/getting-started/installation' },
+            { text: 'First Scan & Exit Codes', link: '/getting-started/first-scan' }
           ]
         }
       ],
