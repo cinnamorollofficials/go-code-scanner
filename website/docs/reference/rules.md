@@ -1,117 +1,51 @@
 ---
 title: Rule Catalog
-description: Complete catalog of default built-in security, secret, governance, and quality rules.
+description: Complete catalog of default built-in security, secret, governance, and quality rules grouped by domain.
 ---
 
 # Built-In Rule Catalog
 
-Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog is automatically generated from Go rule registries.
+Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog is organized into functional policy domains.
 
-| Rule ID | Domain | Severity | Category | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `merge-conflict-marker` | `quality` | `HIGH` | `repository_hygiene` | Unresolved merge-conflict marker ditemukan |
-| `javascript-debugger` | `quality` | `MEDIUM` | `debug_code` | JavaScript debugger statement ditemukan |
-| `trailing-whitespace` | `quality` | `LOW` | `formatting` | Trailing whitespace ditemukan |
-| `mixed-indentation` | `quality` | `LOW` | `formatting` | Tab dan spasi tercampur pada indentation baris yang sama |
-| `javascript-console-debug` | `quality` | `LOW` | `debug_code` | Console debug statement mungkin tertinggal |
-| `mock-token` | `security` | `CRITICAL` | `secret_leak` | Hardcoded mock token ditemukan — hapus sebelum production |
-| `browser-token-storage` | `security` | `HIGH` | `data_leak` | Token disimpan di localStorage — gunakan HttpOnly Cookie |
-| `permission-bypass` | `security` | `CRITICAL` | `security_misconfiguration` | Permission bypass hardcoded ditemukan |
-| `weak-secret` | `security` | `CRITICAL` | `secret_leak` | Default atau weak secret ditemukan |
-| `frontend-sensitive-log` | `security` | `MEDIUM` | `data_leak` | Log frontend mungkin menampilkan data sensitif |
-| `backend-sensitive-log` | `security` | `MEDIUM` | `data_leak` | Log backend mungkin menampilkan data sensitif |
-| `sql-string-format` | `security` | `HIGH` | `injection` | Potensi SQL injection — gunakan parameterized query |
-| `hardcoded-credential` | `security` | `HIGH` | `secret_leak` | Credential hardcoded ditemukan |
-| `unsafe-inner-html` | `security` | `HIGH` | `xss` | dangerouslySetInnerHTML ditemukan — pastikan input disanitasi |
-| `dynamic-order` | `security` | `HIGH` | `injection` | ORDER BY dinamis harus memakai whitelist |
-| `api-struct-response` | `security` | `HIGH` | `data_leak` | Struct sensitif mungkin dikirim langsung ke response |
-| `sensitive-json-field` | `security` | `HIGH` | `data_leak` | Field sensitif mungkin terekspos dalam JSON |
-| `go-shell-command` | `security` | `HIGH` | `command_injection` | Shell command interpreter digunakan melalui os/exec |
-| `go-weak-cryptographic-hash` | `security` | `MEDIUM` | `weak_cryptography` | Algoritma hash kriptografi yang lemah ditemukan |
-| `go-tainted-file-path` | `security` | `HIGH` | `path_traversal` | Input request mungkin digunakan langsung sebagai path file |
-| `go-weak-random-secret` | `security` | `HIGH` | `insecure_randomness` | Nilai keamanan mungkin dibuat menggunakan math/rand |
-| `javascript-dynamic-eval` | `security` | `HIGH` | `unsafe_deserialization` | Dynamic eval mungkin mengeksekusi data sebagai kode |
-| `hardcoded-api-url` | `hardening` | `MEDIUM` | `configuration_leak` | URL API hardcoded — gunakan environment variable |
-| `tls-insecure-skip-verify` | `hardening` | `HIGH` | `transport_security` | Verifikasi sertifikat TLS dinonaktifkan |
-| `wildcard-cors-origin` | `hardening` | `HIGH` | `cors` | Wildcard CORS origin ditemukan |
-| `go-permissive-file-mode` | `hardening` | `MEDIUM` | `file_permission` | File atau directory dibuat dengan permission world-writable |
-| `debug-mode-enabled` | `hardening` | `MEDIUM` | `debug_configuration` | Debug mode tampak diaktifkan secara eksplisit |
-| `go-insecure-cookie-attribute` | `hardening` | `HIGH` | `cookie_security` | Cookie memiliki atribut keamanan yang secara eksplisit tidak aman |
-| `go-multipart-memory` | `reliability` | `MEDIUM` | `resource_exhaustion` | Pastikan request multipart memiliki batas ukuran |
-| `go-http-default-server` | `reliability` | `MEDIUM` | `missing_timeout` | Default HTTP server tidak mengonfigurasi timeout defensif |
-| `go-unbounded-request-read` | `reliability` | `MEDIUM` | `resource_exhaustion` | Request body mungkin dibaca tanpa batas ukuran |
-| `go-discarded-error` | `reliability` | `MEDIUM` | `error_handling` | Return value error mungkin dibuang secara eksplisit |
-| `go-process-termination` | `reliability` | `MEDIUM` | `process_termination` | Application path mungkin menghentikan seluruh process |
-| `go-http-client-without-timeout` | `reliability` | `MEDIUM` | `missing_timeout` | HTTP client literal tidak menetapkan timeout keseluruhan |
-| `privacy-pii-log` | `governance` | `HIGH` | `privacy_log` | Logging statement may expose personally identifiable information |
-| `privacy-pii-url` | `governance` | `HIGH` | `privacy_url` | Personally identifiable information may be placed in a URL query string |
-| `privacy-pii-fixture` | `governance` | `MEDIUM` | `privacy_fixture` | Fixture may contain a literal personally identifiable value |
-| `privacy-sensitive-response` | `governance` | `HIGH` | `privacy_response` | Response construction may expose a sensitive personal field |
+## Domain Overview
 
-
-## Rule Details & Guidance
-
-### `merge-conflict-marker`
-
-- **Domain**: `quality`
-- **Severity**: `HIGH`
-- **Category**: `repository_hygiene`
-
-**Description**: Unresolved merge-conflict marker ditemukan
-
-**Recommendation**: Selesaikan conflict dan hapus seluruh marker sebelum commit
+| Domain | Icon | Total Rules | Scope & Focus |
+| :--- | :---: | :---: | :--- |
+| **Security Rules** | 🔒 | 17 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
+| **Hardening Rules** | 🛡️ | 6 | Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings. |
+| **Reliability Rules** | ⚡ | 6 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
+| **Quality Rules** | 🧹 | 5 | Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements. |
+| **Governance Rules** | 📜 | 4 | Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints. |
 
 ---
 
-### `javascript-debugger`
+## 🔒 Security Rules
 
-- **Domain**: `quality`
-- **Severity**: `MEDIUM`
-- **Category**: `debug_code`
+Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws.
 
-**Description**: JavaScript debugger statement ditemukan
+| Rule ID | Severity | Category | Description |
+| :--- | :--- | :--- | :--- |
+| [`mock-token`](#mock-token) | `CRITICAL` | `secret_leak` | Hardcoded mock token ditemukan — hapus sebelum production |
+| [`browser-token-storage`](#browser-token-storage) | `HIGH` | `data_leak` | Token disimpan di localStorage — gunakan HttpOnly Cookie |
+| [`permission-bypass`](#permission-bypass) | `CRITICAL` | `security_misconfiguration` | Permission bypass hardcoded ditemukan |
+| [`weak-secret`](#weak-secret) | `CRITICAL` | `secret_leak` | Default atau weak secret ditemukan |
+| [`frontend-sensitive-log`](#frontend-sensitive-log) | `MEDIUM` | `data_leak` | Log frontend mungkin menampilkan data sensitif |
+| [`backend-sensitive-log`](#backend-sensitive-log) | `MEDIUM` | `data_leak` | Log backend mungkin menampilkan data sensitif |
+| [`sql-string-format`](#sql-string-format) | `HIGH` | `injection` | Potensi SQL injection — gunakan parameterized query |
+| [`hardcoded-credential`](#hardcoded-credential) | `HIGH` | `secret_leak` | Credential hardcoded ditemukan |
+| [`unsafe-inner-html`](#unsafe-inner-html) | `HIGH` | `xss` | dangerouslySetInnerHTML ditemukan — pastikan input disanitasi |
+| [`dynamic-order`](#dynamic-order) | `HIGH` | `injection` | ORDER BY dinamis harus memakai whitelist |
+| [`api-struct-response`](#api-struct-response) | `HIGH` | `data_leak` | Struct sensitif mungkin dikirim langsung ke response |
+| [`sensitive-json-field`](#sensitive-json-field) | `HIGH` | `data_leak` | Field sensitif mungkin terekspos dalam JSON |
+| [`go-shell-command`](#go-shell-command) | `HIGH` | `command_injection` | Shell command interpreter digunakan melalui os/exec |
+| [`go-weak-cryptographic-hash`](#go-weak-cryptographic-hash) | `MEDIUM` | `weak_cryptography` | Algoritma hash kriptografi yang lemah ditemukan |
+| [`go-tainted-file-path`](#go-tainted-file-path) | `HIGH` | `path_traversal` | Input request mungkin digunakan langsung sebagai path file |
+| [`go-weak-random-secret`](#go-weak-random-secret) | `HIGH` | `insecure_randomness` | Nilai keamanan mungkin dibuat menggunakan math/rand |
+| [`javascript-dynamic-eval`](#javascript-dynamic-eval) | `HIGH` | `unsafe_deserialization` | Dynamic eval mungkin mengeksekusi data sebagai kode |
 
-**Recommendation**: Hapus debugger statement sebelum commit
+### Details & Guidance
 
----
-
-### `trailing-whitespace`
-
-- **Domain**: `quality`
-- **Severity**: `LOW`
-- **Category**: `formatting`
-
-**Description**: Trailing whitespace ditemukan
-
-**Recommendation**: Hapus whitespace pada akhir baris
-
----
-
-### `mixed-indentation`
-
-- **Domain**: `quality`
-- **Severity**: `LOW`
-- **Category**: `formatting`
-
-**Description**: Tab dan spasi tercampur pada indentation baris yang sama
-
-**Recommendation**: Gunakan satu gaya indentation yang konsisten
-
----
-
-### `javascript-console-debug`
-
-- **Domain**: `quality`
-- **Severity**: `LOW`
-- **Category**: `debug_code`
-
-**Description**: Console debug statement mungkin tertinggal
-
-**Recommendation**: Hapus statement debug atau gunakan logger aplikasi dengan level yang sesuai
-
----
-
-### `mock-token`
+#### `mock-token`
 
 - **Domain**: `security`
 - **Severity**: `CRITICAL`
@@ -119,11 +53,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Hardcoded mock token ditemukan — hapus sebelum production
 
-**Recommendation**: 
-
 ---
 
-### `browser-token-storage`
+#### `browser-token-storage`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -131,11 +63,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Token disimpan di localStorage — gunakan HttpOnly Cookie
 
-**Recommendation**: 
-
 ---
 
-### `permission-bypass`
+#### `permission-bypass`
 
 - **Domain**: `security`
 - **Severity**: `CRITICAL`
@@ -143,11 +73,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Permission bypass hardcoded ditemukan
 
-**Recommendation**: 
-
 ---
 
-### `weak-secret`
+#### `weak-secret`
 
 - **Domain**: `security`
 - **Severity**: `CRITICAL`
@@ -155,11 +83,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Default atau weak secret ditemukan
 
-**Recommendation**: 
-
 ---
 
-### `frontend-sensitive-log`
+#### `frontend-sensitive-log`
 
 - **Domain**: `security`
 - **Severity**: `MEDIUM`
@@ -167,11 +93,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Log frontend mungkin menampilkan data sensitif
 
-**Recommendation**: 
-
 ---
 
-### `backend-sensitive-log`
+#### `backend-sensitive-log`
 
 - **Domain**: `security`
 - **Severity**: `MEDIUM`
@@ -179,11 +103,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Log backend mungkin menampilkan data sensitif
 
-**Recommendation**: 
-
 ---
 
-### `sql-string-format`
+#### `sql-string-format`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -191,11 +113,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Potensi SQL injection — gunakan parameterized query
 
-**Recommendation**: 
-
 ---
 
-### `hardcoded-credential`
+#### `hardcoded-credential`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -203,11 +123,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Credential hardcoded ditemukan
 
-**Recommendation**: 
-
 ---
 
-### `unsafe-inner-html`
+#### `unsafe-inner-html`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -215,11 +133,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: dangerouslySetInnerHTML ditemukan — pastikan input disanitasi
 
-**Recommendation**: 
-
 ---
 
-### `dynamic-order`
+#### `dynamic-order`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -227,11 +143,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: ORDER BY dinamis harus memakai whitelist
 
-**Recommendation**: 
-
 ---
 
-### `api-struct-response`
+#### `api-struct-response`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -239,11 +153,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Struct sensitif mungkin dikirim langsung ke response
 
-**Recommendation**: 
-
 ---
 
-### `sensitive-json-field`
+#### `sensitive-json-field`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -251,11 +163,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Field sensitif mungkin terekspos dalam JSON
 
-**Recommendation**: 
-
 ---
 
-### `go-shell-command`
+#### `go-shell-command`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -267,7 +177,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-weak-cryptographic-hash`
+#### `go-weak-cryptographic-hash`
 
 - **Domain**: `security`
 - **Severity**: `MEDIUM`
@@ -279,7 +189,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-tainted-file-path`
+#### `go-tainted-file-path`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -291,7 +201,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-weak-random-secret`
+#### `go-weak-random-secret`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -303,7 +213,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `javascript-dynamic-eval`
+#### `javascript-dynamic-eval`
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -315,7 +225,22 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `hardcoded-api-url`
+## 🛡️ Hardening Rules
+
+Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings.
+
+| Rule ID | Severity | Category | Description |
+| :--- | :--- | :--- | :--- |
+| [`hardcoded-api-url`](#hardcoded-api-url) | `MEDIUM` | `configuration_leak` | URL API hardcoded — gunakan environment variable |
+| [`tls-insecure-skip-verify`](#tls-insecure-skip-verify) | `HIGH` | `transport_security` | Verifikasi sertifikat TLS dinonaktifkan |
+| [`wildcard-cors-origin`](#wildcard-cors-origin) | `HIGH` | `cors` | Wildcard CORS origin ditemukan |
+| [`go-permissive-file-mode`](#go-permissive-file-mode) | `MEDIUM` | `file_permission` | File atau directory dibuat dengan permission world-writable |
+| [`debug-mode-enabled`](#debug-mode-enabled) | `MEDIUM` | `debug_configuration` | Debug mode tampak diaktifkan secara eksplisit |
+| [`go-insecure-cookie-attribute`](#go-insecure-cookie-attribute) | `HIGH` | `cookie_security` | Cookie memiliki atribut keamanan yang secara eksplisit tidak aman |
+
+### Details & Guidance
+
+#### `hardcoded-api-url`
 
 - **Domain**: `hardening`
 - **Severity**: `MEDIUM`
@@ -323,11 +248,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: URL API hardcoded — gunakan environment variable
 
-**Recommendation**: 
-
 ---
 
-### `tls-insecure-skip-verify`
+#### `tls-insecure-skip-verify`
 
 - **Domain**: `hardening`
 - **Severity**: `HIGH`
@@ -339,7 +262,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `wildcard-cors-origin`
+#### `wildcard-cors-origin`
 
 - **Domain**: `hardening`
 - **Severity**: `HIGH`
@@ -351,7 +274,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-permissive-file-mode`
+#### `go-permissive-file-mode`
 
 - **Domain**: `hardening`
 - **Severity**: `MEDIUM`
@@ -363,7 +286,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `debug-mode-enabled`
+#### `debug-mode-enabled`
 
 - **Domain**: `hardening`
 - **Severity**: `MEDIUM`
@@ -375,7 +298,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-insecure-cookie-attribute`
+#### `go-insecure-cookie-attribute`
 
 - **Domain**: `hardening`
 - **Severity**: `HIGH`
@@ -387,7 +310,22 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-multipart-memory`
+## ⚡ Reliability Rules
+
+Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes.
+
+| Rule ID | Severity | Category | Description |
+| :--- | :--- | :--- | :--- |
+| [`go-multipart-memory`](#go-multipart-memory) | `MEDIUM` | `resource_exhaustion` | Pastikan request multipart memiliki batas ukuran |
+| [`go-http-default-server`](#go-http-default-server) | `MEDIUM` | `missing_timeout` | Default HTTP server tidak mengonfigurasi timeout defensif |
+| [`go-unbounded-request-read`](#go-unbounded-request-read) | `MEDIUM` | `resource_exhaustion` | Request body mungkin dibaca tanpa batas ukuran |
+| [`go-discarded-error`](#go-discarded-error) | `MEDIUM` | `error_handling` | Return value error mungkin dibuang secara eksplisit |
+| [`go-process-termination`](#go-process-termination) | `MEDIUM` | `process_termination` | Application path mungkin menghentikan seluruh process |
+| [`go-http-client-without-timeout`](#go-http-client-without-timeout) | `MEDIUM` | `missing_timeout` | HTTP client literal tidak menetapkan timeout keseluruhan |
+
+### Details & Guidance
+
+#### `go-multipart-memory`
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -395,11 +333,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 **Description**: Pastikan request multipart memiliki batas ukuran
 
-**Recommendation**: 
-
 ---
 
-### `go-http-default-server`
+#### `go-http-default-server`
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -411,7 +347,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-unbounded-request-read`
+#### `go-unbounded-request-read`
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -423,7 +359,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-discarded-error`
+#### `go-discarded-error`
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -435,7 +371,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-process-termination`
+#### `go-process-termination`
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -447,7 +383,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `go-http-client-without-timeout`
+#### `go-http-client-without-timeout`
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -459,7 +395,94 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `privacy-pii-log`
+## 🧹 Quality Rules
+
+Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements.
+
+| Rule ID | Severity | Category | Description |
+| :--- | :--- | :--- | :--- |
+| [`merge-conflict-marker`](#merge-conflict-marker) | `HIGH` | `repository_hygiene` | Unresolved merge-conflict marker ditemukan |
+| [`javascript-debugger`](#javascript-debugger) | `MEDIUM` | `debug_code` | JavaScript debugger statement ditemukan |
+| [`trailing-whitespace`](#trailing-whitespace) | `LOW` | `formatting` | Trailing whitespace ditemukan |
+| [`mixed-indentation`](#mixed-indentation) | `LOW` | `formatting` | Tab dan spasi tercampur pada indentation baris yang sama |
+| [`javascript-console-debug`](#javascript-console-debug) | `LOW` | `debug_code` | Console debug statement mungkin tertinggal |
+
+### Details & Guidance
+
+#### `merge-conflict-marker`
+
+- **Domain**: `quality`
+- **Severity**: `HIGH`
+- **Category**: `repository_hygiene`
+
+**Description**: Unresolved merge-conflict marker ditemukan
+
+**Recommendation**: Selesaikan conflict dan hapus seluruh marker sebelum commit
+
+---
+
+#### `javascript-debugger`
+
+- **Domain**: `quality`
+- **Severity**: `MEDIUM`
+- **Category**: `debug_code`
+
+**Description**: JavaScript debugger statement ditemukan
+
+**Recommendation**: Hapus debugger statement sebelum commit
+
+---
+
+#### `trailing-whitespace`
+
+- **Domain**: `quality`
+- **Severity**: `LOW`
+- **Category**: `formatting`
+
+**Description**: Trailing whitespace ditemukan
+
+**Recommendation**: Hapus whitespace pada akhir baris
+
+---
+
+#### `mixed-indentation`
+
+- **Domain**: `quality`
+- **Severity**: `LOW`
+- **Category**: `formatting`
+
+**Description**: Tab dan spasi tercampur pada indentation baris yang sama
+
+**Recommendation**: Gunakan satu gaya indentation yang konsisten
+
+---
+
+#### `javascript-console-debug`
+
+- **Domain**: `quality`
+- **Severity**: `LOW`
+- **Category**: `debug_code`
+
+**Description**: Console debug statement mungkin tertinggal
+
+**Recommendation**: Hapus statement debug atau gunakan logger aplikasi dengan level yang sesuai
+
+---
+
+## 📜 Governance Rules
+
+Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints.
+
+| Rule ID | Severity | Category | Description |
+| :--- | :--- | :--- | :--- |
+| [`privacy-pii-log`](#privacy-pii-log) | `HIGH` | `privacy_log` | Logging statement may expose personally identifiable information |
+| [`privacy-pii-url`](#privacy-pii-url) | `HIGH` | `privacy_url` | Personally identifiable information may be placed in a URL query string |
+| [`privacy-pii-fixture`](#privacy-pii-fixture) | `MEDIUM` | `privacy_fixture` | Fixture may contain a literal personally identifiable value |
+| [`privacy-sensitive-response`](#privacy-sensitive-response) | `HIGH` | `privacy_response` | Response construction may expose a sensitive personal field |
+
+### Details & Guidance
+
+#### `privacy-pii-log`
 
 - **Domain**: `governance`
 - **Severity**: `HIGH`
@@ -471,7 +494,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `privacy-pii-url`
+#### `privacy-pii-url`
 
 - **Domain**: `governance`
 - **Severity**: `HIGH`
@@ -483,7 +506,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `privacy-pii-fixture`
+#### `privacy-pii-fixture`
 
 - **Domain**: `governance`
 - **Severity**: `MEDIUM`
@@ -495,7 +518,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 ---
 
-### `privacy-sensitive-response`
+#### `privacy-sensitive-response`
 
 - **Domain**: `governance`
 - **Severity**: `HIGH`

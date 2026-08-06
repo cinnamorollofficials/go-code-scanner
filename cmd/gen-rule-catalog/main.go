@@ -7,37 +7,105 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
 	"github.com/cinnamorollofficials/go-code-scanner/pkg/rules"
 )
+
+type DomainInfo struct {
+	Domain      finding.Domain
+	Title       string
+	Description string
+}
 
 func main() {
 	allRules := rules.Default()
 
+	domains := []DomainInfo{
+		{
+			Domain:      finding.Security,
+			Title:       "🔒 Security Rules",
+			Description: "Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws.",
+		},
+		{
+			Domain:      finding.Hardening,
+			Title:       "🛡️ Hardening Rules",
+			Description: "Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings.",
+		},
+		{
+			Domain:      finding.Reliability,
+			Title:       "⚡ Reliability Rules",
+			Description: "Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes.",
+		},
+		{
+			Domain:      finding.Quality,
+			Title:       "🧹 Quality Rules",
+			Description: "Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements.",
+		},
+		{
+			Domain:      finding.Governance,
+			Title:       "📜 Governance Rules",
+			Description: "Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints.",
+		},
+	}
+
+	// Group rules by domain
+	grouped := make(map[finding.Domain][]rules.Rule)
+	for _, r := range allRules {
+		grouped[r.Domain] = append(grouped[r.Domain], r)
+	}
+
 	var buf bytes.Buffer
 	buf.WriteString("---\n")
 	buf.WriteString("title: Rule Catalog\n")
-	buf.WriteString("description: Complete catalog of default built-in security, secret, governance, and quality rules.\n")
+	buf.WriteString("description: Complete catalog of default built-in security, secret, governance, and quality rules grouped by domain.\n")
 	buf.WriteString("---\n\n")
 
 	buf.WriteString("# Built-In Rule Catalog\n\n")
-	buf.WriteString("Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog is automatically generated from Go rule registries.\n\n")
+	buf.WriteString("Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog is organized into functional policy domains.\n\n")
 
-	buf.WriteString("| Rule ID | Domain | Severity | Category | Description |\n")
-	buf.WriteString("| :--- | :--- | :--- | :--- | :--- |\n")
-
-	for _, r := range allRules {
-		desc := strings.ReplaceAll(r.Description, "\n", " ")
-		buf.WriteString(fmt.Sprintf("| `%s` | `%s` | `%s` | `%s` | %s |\n", r.ID, r.Domain, r.Severity, r.Category, desc))
+	// Domain Overview Table
+	buf.WriteString("## Domain Overview\n\n")
+	buf.WriteString("| Domain | Icon | Total Rules | Scope & Focus |\n")
+	buf.WriteString("| :--- | :---: | :---: | :--- |\n")
+	for _, info := range domains {
+		count := len(grouped[info.Domain])
+		icon := strings.Fields(info.Title)[0]
+		titleWithoutIcon := strings.TrimSpace(strings.TrimPrefix(info.Title, icon))
+		buf.WriteString(fmt.Sprintf("| **%s** | %s | %d | %s |\n", titleWithoutIcon, icon, count, info.Description))
 	}
+	buf.WriteString("\n---\n\n")
 
-	buf.WriteString("\n\n## Rule Details & Guidance\n\n")
-	for _, r := range allRules {
-		buf.WriteString(fmt.Sprintf("### `%s`\n\n", r.ID))
-		buf.WriteString(fmt.Sprintf("- **Domain**: `%s`\n", r.Domain))
-		buf.WriteString(fmt.Sprintf("- **Severity**: `%s`\n", r.Severity))
-		buf.WriteString(fmt.Sprintf("- **Category**: `%s`\n\n", r.Category))
-		buf.WriteString(fmt.Sprintf("**Description**: %s\n\n", r.Description))
-		buf.WriteString(fmt.Sprintf("**Recommendation**: %s\n\n---\n\n", r.Recommendation))
+	// Render each Domain Section
+	for _, info := range domains {
+		domainRules := grouped[info.Domain]
+		if len(domainRules) == 0 {
+			continue
+		}
+
+		buf.WriteString(fmt.Sprintf("## %s\n\n", info.Title))
+		buf.WriteString(fmt.Sprintf("%s\n\n", info.Description))
+
+		// Table for this domain
+		buf.WriteString("| Rule ID | Severity | Category | Description |\n")
+		buf.WriteString("| :--- | :--- | :--- | :--- |\n")
+
+		for _, r := range domainRules {
+			desc := strings.ReplaceAll(r.Description, "\n", " ")
+			buf.WriteString(fmt.Sprintf("| [`%s`](#%s) | `%s` | `%s` | %s |\n", r.ID, r.ID, r.Severity, r.Category, desc))
+		}
+
+		buf.WriteString("\n### Details & Guidance\n\n")
+		for _, r := range domainRules {
+			buf.WriteString(fmt.Sprintf("#### `%s`\n\n", r.ID))
+			buf.WriteString(fmt.Sprintf("- **Domain**: `%s`\n", r.Domain))
+			buf.WriteString(fmt.Sprintf("- **Severity**: `%s`\n", r.Severity))
+			buf.WriteString(fmt.Sprintf("- **Category**: `%s`\n\n", r.Category))
+			buf.WriteString(fmt.Sprintf("**Description**: %s\n\n", r.Description))
+			if r.Recommendation != "" {
+				buf.WriteString(fmt.Sprintf("**Recommendation**: %s\n\n", r.Recommendation))
+			}
+			buf.WriteString("---\n\n")
+		}
 	}
 
 	targetPath := filepath.Join("website", "docs", "reference", "rules.md")
@@ -51,5 +119,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Successfully generated rule catalog at %s (%d rules)\n", targetPath, len(allRules))
+	fmt.Printf("Successfully generated grouped rule catalog at %s (%d rules across %d domains)\n", targetPath, len(allRules), len(domains))
 }
