@@ -31,6 +31,7 @@ function sidebarDocs() {
     {
       text: 'Development',
       items: [
+        { text: 'Security Model', link: '/security' },
         { text: 'Contributing Guide', link: '/contributing' },
         { text: 'Author Guide', link: '/author-guide' },
         { text: 'Changelog', link: '/changelog' }
@@ -61,7 +62,7 @@ export default defineConfig({
       { 
         text: 'Documentation', 
         link: '/getting-started/', 
-        activeMatch: '^/(getting-started|features|guides|author-guide|changelog|contributing)/' 
+        activeMatch: '^/(getting-started|features|guides|author-guide|changelog|contributing|security)/' 
       },
       { 
         text: 'Reference', 
@@ -80,6 +81,7 @@ export default defineConfig({
       '/author-guide': sidebarDocs(),
       '/changelog': sidebarDocs(),
       '/contributing': sidebarDocs(),
+      '/security': sidebarDocs(),
 
       '/reference/': [
         {
