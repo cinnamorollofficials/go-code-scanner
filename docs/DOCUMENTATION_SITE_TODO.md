@@ -139,7 +139,7 @@ be delivered as one atomic commit.
   exactly one canonical reference location. Commit:
   `docs(config): restructure configuration reference`.
 
-- [ ] **14. Add validated configuration recipes.** Add minimal, Go service,
+- [x] **14. Add validated configuration recipes.** Add minimal, Go service,
   frontend application, monorepo, staged hook, offline, strict CI, external
   scanner, and gradual-adoption examples under `examples/config/`. Add a test
   that validates every complete example with the built CLI. Acceptance: examples
