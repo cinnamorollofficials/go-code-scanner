@@ -205,7 +205,7 @@ be delivered as one atomic commit.
   common operational failure exposed by the CLI has a troubleshooting route.
   Commit: `docs(guides): add adoption and troubleshooting playbooks`.
 
-- [ ] **23. Add search, SEO, and social metadata.** Enable local static search,
+- [x] **23. Add search, SEO, and social metadata.** Enable local static search,
   sitemap, robots policy, canonical metadata, Open Graph cards, descriptive page
   metadata, and meaningful heading structure. Exclude duplicate/generated data
   routes when appropriate. Acceptance: production search indexes core content and
