@@ -250,7 +250,7 @@ be delivered as one atomic commit.
   a reference describes and reach older compatibility information.
   Commit: `docs(release): integrate site with version lifecycle`.
 
-- [ ] **29. Run documentation release acceptance.** Perform clean checkout/build,
+- [x] **29. Run documentation release acceptance.** Perform clean checkout/build,
   link, accessibility, responsive, browser smoke, generated-reference drift,
   example validation, security-header guidance, and GitHub Pages route checks.
   Fix discovered defects in focused prerequisite commits; use this commit only
