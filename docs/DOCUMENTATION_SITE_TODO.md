@@ -183,7 +183,7 @@ be delivered as one atomic commit.
   represented and offline/network claims have automated consistency checks.
   Commit: `docs(scanners): generate compatibility reference`.
 
-- [ ] **20. Add a unified reference generation gate.** Provide one cross-platform
+- [x] **20. Add a unified reference generation gate.** Provide one cross-platform
   command that generates configuration, CLI, rule, and scanner references. Add a
   CI step that runs it and fails on a dirty tree, with actionable output for
   contributors. Acceptance: reference drift cannot merge unnoticed and the
