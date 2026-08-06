@@ -161,7 +161,7 @@ be delivered as one atomic commit.
 
 ## Phase 4 — Generated product references
 
-- [ ] **17. Generate the CLI command reference.** Produce pages for scan,
+- [x] **17. Generate the CLI command reference.** Produce pages for scan,
   baseline, suppress, cache, config, hooks, release, upgrade, and version command
   groups from the command definitions or structured help metadata. Include usage,
   arguments, flags, defaults, exit behavior, and examples. Do not parse unstable
