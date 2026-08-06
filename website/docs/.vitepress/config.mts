@@ -24,7 +24,8 @@ export default defineConfig({
       { text: 'Features', link: '/features/' },
       { text: 'Reference', link: '/reference/' },
       { text: 'Guides', link: '/guides/' },
-      { text: 'Author Guide', link: '/author-guide' }
+      { text: 'Author Guide', link: '/author-guide' },
+      { text: 'v1.0.0', link: 'https://github.com/cinnamorollofficials/go-code-scanner/releases' }
     ],
     sidebar: {
       '/getting-started/': [
