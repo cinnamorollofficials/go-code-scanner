@@ -36,6 +36,15 @@ func detectLanguage(exts []string) string {
 	return "text"
 }
 
+func commentPrefix(lang string) string {
+	switch strings.ToLower(lang) {
+	case "python", "py", "yaml", "yml", "sh", "bash", "ps1", "powershell":
+		return "#"
+	default:
+		return "//"
+	}
+}
+
 func main() {
 	allRules := rules.Default()
 
@@ -125,34 +134,35 @@ func main() {
 			}
 
 			if len(r.Examples) > 0 {
-				buf.WriteString("##### ❌ Don't (Unsafe Examples)\n\n")
+				buf.WriteString("##### Code Examples (Don't vs Do)\n\n")
 				buf.WriteString("::: code-group\n\n")
 				for _, ex := range r.Examples {
 					label := ex.Label
 					if label == "" {
 						label = strings.ToUpper(ex.Language)
 					}
-					buf.WriteString(fmt.Sprintf("```%s [%s]\n%s\n```\n\n", ex.Language, label, strings.TrimSpace(ex.Unsafe)))
-				}
-				buf.WriteString(":::\n\n")
-
-				buf.WriteString("##### ✅ Do (Recommended Solutions)\n\n")
-				buf.WriteString("::: code-group\n\n")
-				for _, ex := range r.Examples {
-					label := ex.Label
-					if label == "" {
-						label = strings.ToUpper(ex.Language)
-					}
-					buf.WriteString(fmt.Sprintf("```%s [%s]\n%s\n```\n\n", ex.Language, label, strings.TrimSpace(ex.Safe)))
+					comment := commentPrefix(ex.Language)
+					buf.WriteString(fmt.Sprintf("```%s [%s]\n%s ❌ Don't (Unsafe)\n%s\n\n%s ✅ Do (Recommended)\n%s\n```\n\n",
+						ex.Language,
+						label,
+						comment,
+						strings.TrimSpace(ex.Unsafe),
+						comment,
+						strings.TrimSpace(ex.Safe),
+					))
 				}
 				buf.WriteString(":::\n\n")
 			} else if r.UnsafeExample != "" || r.SafeExample != "" {
 				lang := detectLanguage(r.Extensions)
-				buf.WriteString("##### ❌ Don't (Unsafe)\n\n")
-				buf.WriteString(fmt.Sprintf("```%s\n%s\n```\n\n", lang, strings.TrimSpace(r.UnsafeExample)))
-
-				buf.WriteString("##### ✅ Do (Recommended)\n\n")
-				buf.WriteString(fmt.Sprintf("```%s\n%s\n```\n\n", lang, strings.TrimSpace(r.SafeExample)))
+				comment := commentPrefix(lang)
+				buf.WriteString("##### Code Example (Don't vs Do)\n\n")
+				buf.WriteString(fmt.Sprintf("```%s\n%s ❌ Don't (Unsafe)\n%s\n\n%s ✅ Do (Recommended)\n%s\n```\n\n",
+					lang,
+					comment,
+					strings.TrimSpace(r.UnsafeExample),
+					comment,
+					strings.TrimSpace(r.SafeExample),
+				))
 			}
 
 			buf.WriteString("---\n\n")

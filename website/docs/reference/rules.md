@@ -55,37 +55,31 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Remove hardcoded mock tokens and load credentials from environment variables or key vaults
 
-##### ❌ Don't (Unsafe Examples)
+##### Code Examples (Don't vs Do)
 
 ::: code-group
 
 ```go [Go]
+// ❌ Don't (Unsafe)
 const authHeader = "Bearer google-mock-jwt-token-12345"
-```
 
-```ts [TypeScript / JavaScript]
-const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";
-```
-
-```python [Python]
-AUTH_HEADER = "Bearer google-mock-jwt-token-12345"
-```
-
-:::
-
-##### ✅ Do (Recommended Solutions)
-
-::: code-group
-
-```go [Go]
+// ✅ Do (Recommended)
 authHeader := fmt.Sprintf("Bearer %s", os.Getenv("AUTH_TOKEN"))
 ```
 
 ```ts [TypeScript / JavaScript]
+// ❌ Don't (Unsafe)
+const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";
+
+// ✅ Do (Recommended)
 const AUTH_HEADER = `Bearer ${process.env.AUTH_TOKEN}`;
 ```
 
 ```python [Python]
+# ❌ Don't (Unsafe)
+AUTH_HEADER = "Bearer google-mock-jwt-token-12345"
+
+# ✅ Do (Recommended)
 auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"
 ```
 
@@ -103,15 +97,13 @@ auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"
 
 **Recommendation**: Store authentication tokens in HttpOnly, Secure, SameSite cookies instead of localStorage
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```ts
+// ❌ Don't (Unsafe)
 localStorage.setItem("access_token", response.token);
-```
 
-##### ✅ Do (Recommended)
-
-```ts
+// ✅ Do (Recommended)
 await fetch("/api/login", { credentials: "include", method: "POST", body });
 ```
 
@@ -127,54 +119,48 @@ await fetch("/api/login", { credentials: "include", method: "POST", body });
 
 **Recommendation**: Remove permission bypass conditions and enforce strict authorization checks
 
-##### ❌ Don't (Unsafe Examples)
+##### Code Examples (Don't vs Do)
 
 ::: code-group
 
 ```go [Go]
+// ❌ Don't (Unsafe)
 func CheckPermission(user User) bool {
     if user.Role == "admin" || bypassPermission {
         return true
     }
     return false
 }
-```
 
-```ts [TypeScript / JavaScript]
-function checkPermission(user: User): boolean {
-    if (user.role === 'admin' || process.env.BYPASS_PERMISSIONS === 'true') {
-        return true;
-    }
-    return false;
-}
-```
-
-```python [Python]
-def check_permission(user):
-    if user.role == "admin" or bypass_permission:
-        return True
-    return False
-```
-
-:::
-
-##### ✅ Do (Recommended Solutions)
-
-::: code-group
-
-```go [Go]
+// ✅ Do (Recommended)
 func CheckPermission(ctx context.Context, user User, resource string) bool {
     return authzService.CanAccess(ctx, user.ID, resource)
 }
 ```
 
 ```ts [TypeScript / JavaScript]
+// ❌ Don't (Unsafe)
+function checkPermission(user: User): boolean {
+    if (user.role === 'admin' || process.env.BYPASS_PERMISSIONS === 'true') {
+        return true;
+    }
+    return false;
+}
+
+// ✅ Do (Recommended)
 async function checkPermission(user: User, resource: string): Promise<boolean> {
     return await authzService.canAccess(user.id, resource);
 }
 ```
 
 ```python [Python]
+# ❌ Don't (Unsafe)
+def check_permission(user):
+    if user.role == "admin" or bypass_permission:
+        return True
+    return False
+
+# ✅ Do (Recommended)
 def check_permission(user, resource):
     return authz_service.can_access(user.id, resource)
 ```
@@ -193,37 +179,31 @@ def check_permission(user, resource):
 
 **Recommendation**: Replace default/placeholder secrets with cryptographically strong random values from secure configuration
 
-##### ❌ Don't (Unsafe Examples)
+##### Code Examples (Don't vs Do)
 
 ::: code-group
 
 ```go [Go]
+// ❌ Don't (Unsafe)
 jwtSecret := []byte("change-me-in-production")
-```
 
-```ts [TypeScript / JavaScript]
-const jwtSecret = "change-me-in-production";
-```
-
-```python [Python]
-JWT_SECRET = "change-me-in-production"
-```
-
-:::
-
-##### ✅ Do (Recommended Solutions)
-
-::: code-group
-
-```go [Go]
+// ✅ Do (Recommended)
 jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))
 ```
 
 ```ts [TypeScript / JavaScript]
+// ❌ Don't (Unsafe)
+const jwtSecret = "change-me-in-production";
+
+// ✅ Do (Recommended)
 const jwtSecret = process.env.JWT_SECRET_KEY;
 ```
 
 ```python [Python]
+# ❌ Don't (Unsafe)
+JWT_SECRET = "change-me-in-production"
+
+# ✅ Do (Recommended)
 JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 ```
 
@@ -241,15 +221,13 @@ JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 
 **Recommendation**: Sanitize log parameters and remove sensitive tokens or user identifiers from console logs
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```ts
+// ❌ Don't (Unsafe)
 console.log("User auth failed for password:", password);
-```
 
-##### ✅ Do (Recommended)
-
-```ts
+// ✅ Do (Recommended)
 console.error("User authentication failed", { username });
 ```
 
@@ -265,15 +243,13 @@ console.error("User authentication failed", { username });
 
 **Recommendation**: Redact sensitive parameters before writing to application log streams
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 log.Printf("Connecting to DB with secret: %s", dbSecret)
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 log.Printf("Connecting to DB host: %s", dbHost)
 ```
 
@@ -289,42 +265,36 @@ log.Printf("Connecting to DB host: %s", dbHost)
 
 **Recommendation**: Use parameterized queries or prepared statements instead of string formatting
 
-##### ❌ Don't (Unsafe Examples)
+##### Code Examples (Don't vs Do)
 
 ::: code-group
 
 ```go [Go]
+// ❌ Don't (Unsafe)
 query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)
 rows, err := db.Query(query)
-```
 
-```ts [TypeScript / JavaScript]
-const query = `SELECT * FROM users WHERE email = '${userEmail}'`;
-const result = await client.query(query);
-```
-
-```python [Python]
-query = f"SELECT * FROM users WHERE email = '{user_email}'"
-cursor.execute(query)
-```
-
-:::
-
-##### ✅ Do (Recommended Solutions)
-
-::: code-group
-
-```go [Go]
+// ✅ Do (Recommended)
 query := "SELECT * FROM users WHERE email = $1"
 rows, err := db.Query(query, userEmail)
 ```
 
 ```ts [TypeScript / JavaScript]
+// ❌ Don't (Unsafe)
+const query = `SELECT * FROM users WHERE email = '${userEmail}'`;
+const result = await client.query(query);
+
+// ✅ Do (Recommended)
 const query = "SELECT * FROM users WHERE email = $1";
 const result = await client.query(query, [userEmail]);
 ```
 
 ```python [Python]
+# ❌ Don't (Unsafe)
+query = f"SELECT * FROM users WHERE email = '{user_email}'"
+cursor.execute(query)
+
+# ✅ Do (Recommended)
 query = "SELECT * FROM users WHERE email = %s"
 cursor.execute(query, (user_email,))
 ```
@@ -343,45 +313,39 @@ cursor.execute(query, (user_email,))
 
 **Recommendation**: Extract credentials to environment variables or secret management services
 
-##### ❌ Don't (Unsafe Examples)
+##### Code Examples (Don't vs Do)
 
 ::: code-group
 
 ```go [Go]
+// ❌ Don't (Unsafe)
 apiKey := "synthetic_secret_api_key_12345"
-```
 
-```ts [TypeScript / JavaScript]
-const apiKey = "synthetic_secret_api_key_12345";
-```
-
-```python [Python]
-api_key = "synthetic_secret_api_key_12345"
-```
-
-```java [Java]
-String apiKey = "synthetic_secret_api_key_12345";
-```
-
-:::
-
-##### ✅ Do (Recommended Solutions)
-
-::: code-group
-
-```go [Go]
+// ✅ Do (Recommended)
 apiKey := os.Getenv("STRIPE_API_KEY")
 ```
 
 ```ts [TypeScript / JavaScript]
+// ❌ Don't (Unsafe)
+const apiKey = "synthetic_secret_api_key_12345";
+
+// ✅ Do (Recommended)
 const apiKey = process.env.STRIPE_API_KEY;
 ```
 
 ```python [Python]
+# ❌ Don't (Unsafe)
+api_key = "synthetic_secret_api_key_12345"
+
+# ✅ Do (Recommended)
 api_key = os.environ.get("STRIPE_API_KEY")
 ```
 
 ```java [Java]
+// ❌ Don't (Unsafe)
+String apiKey = "synthetic_secret_api_key_12345";
+
+// ✅ Do (Recommended)
 String apiKey = System.getenv("STRIPE_API_KEY");
 ```
 
@@ -399,15 +363,13 @@ String apiKey = System.getenv("STRIPE_API_KEY");
 
 **Recommendation**: Sanitize raw HTML using DOMPurify before injecting into the DOM
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```ts
+// ❌ Don't (Unsafe)
 <div dangerouslySetInnerHTML={{ __html: userInput }} />
-```
 
-##### ✅ Do (Recommended)
-
-```ts
+// ✅ Do (Recommended)
 <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
 ```
 
@@ -423,15 +385,13 @@ String apiKey = System.getenv("STRIPE_API_KEY");
 
 **Recommendation**: Validate dynamic column names against an explicit allowlist before building queries
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 db.Order(fmt.Sprintf("%s ASC", sortColumn))
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 allowedColumns := map[string]bool{"created_at": true, "name": true}
 if allowedColumns[sortColumn] {
     db.Order(sortColumn + " ASC")
@@ -450,16 +410,14 @@ if allowedColumns[sortColumn] {
 
 **Recommendation**: Map internal domain entities to explicit response DTOs to avoid leaking sensitive fields
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 var user User // Contains HashedPassword, SecretToken
 c.JSON(http.StatusOK, user)
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 response := UserResponse{ID: user.ID, Email: user.Email}
 c.JSON(http.StatusOK, response)
 ```
@@ -476,18 +434,16 @@ c.JSON(http.StatusOK, response)
 
 **Recommendation**: Use json:"-" struct tag or custom serializer to exclude sensitive attributes
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 type Account struct {
     ID           string `json:"id"`
     PasswordHash string `json:"password_hash"`
 }
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 type Account struct {
     ID           string `json:"id"`
     PasswordHash string `json:"-"`
@@ -506,37 +462,31 @@ type Account struct {
 
 **Recommendation**: Execute binary commands directly with argument arrays and sanitize untrusted input
 
-##### ❌ Don't (Unsafe Examples)
+##### Code Examples (Don't vs Do)
 
 ::: code-group
 
 ```go [Go]
+// ❌ Don't (Unsafe)
 cmd := exec.Command("sh", "-c", "ls " + userInput)
-```
 
-```ts [TypeScript / Node.js]
-child_process.exec("ls " + userInput);
-```
-
-```python [Python]
-subprocess.Popen("ls " + user_input, shell=True)
-```
-
-:::
-
-##### ✅ Do (Recommended Solutions)
-
-::: code-group
-
-```go [Go]
+// ✅ Do (Recommended)
 cmd := exec.Command("ls", "--", validatedPath)
 ```
 
 ```ts [TypeScript / Node.js]
+// ❌ Don't (Unsafe)
+child_process.exec("ls " + userInput);
+
+// ✅ Do (Recommended)
 child_process.execFile("ls", ["--", validatedPath]);
 ```
 
 ```python [Python]
+# ❌ Don't (Unsafe)
+subprocess.Popen("ls " + user_input, shell=True)
+
+# ✅ Do (Recommended)
 subprocess.Popen(["ls", "--", validated_path], shell=False)
 ```
 
@@ -554,39 +504,33 @@ subprocess.Popen(["ls", "--", validated_path], shell=False)
 
 **Recommendation**: Use SHA-256 or stronger algorithms; use bcrypt/argon2 for password hashing
 
-##### ❌ Don't (Unsafe Examples)
+##### Code Examples (Don't vs Do)
 
 ::: code-group
 
 ```go [Go]
+// ❌ Don't (Unsafe)
 hasher := md5.New()
 hasher.Write([]byte(password))
-```
 
-```ts [TypeScript / Node.js]
-const hash = crypto.createHash("md5").update(password).digest("hex");
-```
-
-```python [Python]
-hash_val = hashlib.md5(password.encode()).hexdigest()
-```
-
-:::
-
-##### ✅ Do (Recommended Solutions)
-
-::: code-group
-
-```go [Go]
+// ✅ Do (Recommended)
 hasher := sha256.New()
 hasher.Write([]byte(password))
 ```
 
 ```ts [TypeScript / Node.js]
+// ❌ Don't (Unsafe)
+const hash = crypto.createHash("md5").update(password).digest("hex");
+
+// ✅ Do (Recommended)
 const hash = crypto.createHash("sha256").update(password).digest("hex");
 ```
 
 ```python [Python]
+# ❌ Don't (Unsafe)
+hash_val = hashlib.md5(password.encode()).hexdigest()
+
+# ✅ Do (Recommended)
 hash_val = hashlib.sha256(password.encode()).hexdigest()
 ```
 
@@ -604,16 +548,14 @@ hash_val = hashlib.sha256(password.encode()).hexdigest()
 
 **Recommendation**: Normalize paths, enforce base directory boundaries, and use allowlisted identifiers
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 filePath := r.URL.Query().Get("file")
 data, _ := os.ReadFile(filePath)
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 filename := filepath.Base(r.URL.Query().Get("file"))
 safePath := filepath.Join("/var/app/storage", filename)
 data, _ := os.ReadFile(safePath)
@@ -631,15 +573,13 @@ data, _ := os.ReadFile(safePath)
 
 **Recommendation**: Use crypto/rand for generating tokens, nonces, session identifiers, and secret keys
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 sessionToken := fmt.Sprintf("%d", rand.Intn(1000000))
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 tokenBytes := make([]byte, 32)
 cryptoRand.Read(tokenBytes)
 sessionToken := hex.EncodeToString(tokenBytes)
@@ -657,15 +597,13 @@ sessionToken := hex.EncodeToString(tokenBytes)
 
 **Recommendation**: Use structured data parsers (JSON.parse) and schema validators instead of code evaluation
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```ts
+// ❌ Don't (Unsafe)
 const config = eval("(" + jsonString + ")");
-```
 
-##### ✅ Do (Recommended)
-
-```ts
+// ✅ Do (Recommended)
 const config = JSON.parse(jsonString);
 ```
 
@@ -696,15 +634,13 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 
 **Recommendation**: Configure API endpoints dynamically via environment variables for different environments
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 const API_URL = "http://localhost:8080/api/v1";
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 ```
 
@@ -720,17 +656,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 **Recommendation**: Enable certificate verification and configure valid trust stores
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 tr := &http.Transport{
     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 tr := &http.Transport{
     TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 }
@@ -748,15 +682,13 @@ tr := &http.Transport{
 
 **Recommendation**: Use an explicit CORS origin allowlist tailored for each deployment environment
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 c.Header("Access-Control-Allow-Origin", "*")
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 c.Header("Access-Control-Allow-Origin", "https://app.example.com")
 ```
 
@@ -772,15 +704,13 @@ c.Header("Access-Control-Allow-Origin", "https://app.example.com")
 
 **Recommendation**: Use minimum required file permissions such as 0600 for files or 0750 for directories
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 os.WriteFile("config.json", data, 0777)
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 os.WriteFile("config.json", data, 0600)
 ```
 
@@ -796,15 +726,13 @@ os.WriteFile("config.json", data, 0600)
 
 **Recommendation**: Disable debug mode in production deployment configurations to prevent information disclosure
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 debug := true
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 debug := os.Getenv("APP_ENV") == "development"
 ```
 
@@ -820,15 +748,13 @@ debug := os.Getenv("APP_ENV") == "development"
 
 **Recommendation**: Enable Secure and HttpOnly flags and set an appropriate SameSite policy for session cookies
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 cookie := &http.Cookie{Name: "session", Value: token, Secure: false}
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 cookie := &http.Cookie{Name: "session", Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode}
 ```
 
@@ -859,15 +785,13 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 
 **Recommendation**: Set explicit memory limit with ParseMultipartForm or MaxBytesReader to prevent memory exhaustion
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 c.Request.ParseMultipartForm(100 << 20) // Unbounded 100MB buffer
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 c.Request.ParseMultipartForm(10 << 20) // Controlled 10MB memory limit
 ```
 
@@ -883,15 +807,13 @@ c.Request.ParseMultipartForm(10 << 20) // Controlled 10MB memory limit
 
 **Recommendation**: Use custom http.Server with ReadHeaderTimeout, ReadTimeout, WriteTimeout, and IdleTimeout
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 http.ListenAndServe(":8080", handler)
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 server := &http.Server{
     Addr: ":8080", Handler: handler,
     ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second,
@@ -911,15 +833,13 @@ server.ListenAndServe()
 
 **Recommendation**: Limit request body with http.MaxBytesReader or io.LimitReader before reading into memory
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 body, err := io.ReadAll(r.Body)
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB size limit
 ```
 
@@ -935,15 +855,13 @@ body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB size limit
 
 **Recommendation**: Check and handle returned errors or document valid reason for ignoring
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 _ = db.Close()
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 if err := db.Close(); err != nil {
     log.Printf("Failed to close DB connection: %v", err)
 }
@@ -961,17 +879,15 @@ if err := db.Close(); err != nil {
 
 **Recommendation**: Propagate errors to request boundaries and perform controlled shutdown instead of calling panic/log.Fatal
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 if err != nil {
     panic(err)
 }
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 if err != nil {
     return fmt.Errorf("process request: %w", err)
 }
@@ -989,15 +905,13 @@ if err != nil {
 
 **Recommendation**: Configure explicit http.Client.Timeout and appropriate transport timeouts
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 client := &http.Client{}
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 client := &http.Client{Timeout: 10 * time.Second}
 ```
 
@@ -1027,19 +941,17 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 
 **Recommendation**: Resolve merge conflict and remove all markers before committing
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 <<<<<<< HEAD
 const apiURL = "http://localhost:8080";
 =======
 const apiURL = "https://api.production.com";
 >>>>>>> main
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 const apiURL = process.env.API_URL || "https://api.production.com";
 ```
 
@@ -1055,18 +967,16 @@ const apiURL = process.env.API_URL || "https://api.production.com";
 
 **Recommendation**: Remove debugger statement before committing
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```ts
+// ❌ Don't (Unsafe)
 function calculateTotal(items: Item[]) {
   debugger; // Leftover debug statement
   return items.reduce((acc, item) => acc + item.price, 0);
 }
-```
 
-##### ✅ Do (Recommended)
-
-```ts
+// ✅ Do (Recommended)
 function calculateTotal(items: Item[]) {
   return items.reduce((acc, item) => acc + item.price, 0);
 }
@@ -1084,15 +994,13 @@ function calculateTotal(items: Item[]) {
 
 **Recommendation**: Remove trailing whitespace at line end
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 const username = "john_doe";
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 const username = "john_doe";
 ```
 
@@ -1108,17 +1016,15 @@ const username = "john_doe";
 
 **Recommendation**: Use a consistent indentation style throughout the project
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 func process() {
 	  var x = 10 // Mixed tabs and spaces
 }
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 func process() {
 	var x = 10 // Consistent tab indentation
 }
@@ -1136,17 +1042,15 @@ func process() {
 
 **Recommendation**: Remove debug statements or use an application logger with proper log level
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```ts
+// ❌ Don't (Unsafe)
 function handleLogin(user: User) {
   console.log("User logged in:", user);
 }
-```
 
-##### ✅ Do (Recommended)
-
-```ts
+// ✅ Do (Recommended)
 function handleLogin(user: User) {
   logger.info("User logged in", { userId: user.id });
 }
@@ -1177,15 +1081,13 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 
 **Recommendation**: Remove the PII field or log a non-reversible, access-controlled reference identifier
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 log.Printf("User registered with email: %s, phone: %s", email, phone)
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 log.Printf("User registered with ID: %s", userID)
 ```
 
@@ -1201,15 +1103,13 @@ log.Printf("User registered with ID: %s", userID)
 
 **Recommendation**: Transmit sensitive fields in an authenticated request body and avoid retaining them in URLs or access logs
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 urlParams.append("email", userEmail);
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 // Transmit sensitive parameters in authenticated POST request body
 ```
 
@@ -1225,15 +1125,13 @@ urlParams.append("email", userEmail);
 
 **Recommendation**: Use clearly synthetic, reserved test data and keep production-derived records out of the repository
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```json
+// ❌ Don't (Unsafe)
 {"email": "real_person_1985@gmail.com", "ssn": "123-45-6789"}
-```
 
-##### ✅ Do (Recommended)
-
-```json
+// ✅ Do (Recommended)
 {"email": "user@example.com", "ssn": "000-00-0000"}
 ```
 
@@ -1249,15 +1147,13 @@ urlParams.append("email", userEmail);
 
 **Recommendation**: Map the response through an explicit allowlisted DTO and omit sensitive fields
 
-##### ❌ Don't (Unsafe)
+##### Code Example (Don't vs Do)
 
 ```go
+// ❌ Don't (Unsafe)
 res.json({ id: user.id, email: user.email, ssn: user.ssn });
-```
 
-##### ✅ Do (Recommended)
-
-```go
+// ✅ Do (Recommended)
 res.json({ id: user.id, email: user.email });
 ```
 
