@@ -56,6 +56,7 @@ export default defineConfig({
             { text: 'Reference Overview', link: '/reference/' },
             { text: 'CLI Reference', link: '/reference/cli' },
             { text: 'Configuration Reference', link: '/reference/configuration' },
+            { text: 'Interactive Config Generator', link: '/reference/config-builder' },
             { text: 'Rule Catalog', link: '/reference/rules' },
             { text: 'Scanner Compatibility', link: '/reference/scanners' }
           ]
