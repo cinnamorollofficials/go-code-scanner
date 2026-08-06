@@ -91,7 +91,7 @@ be delivered as one atomic commit.
   install and run a first scan without opening another page. Commit:
   `docs(site): add product landing page`.
 
-- [ ] **8. Publish getting-started guides.** Add requirements, installation from
+- [x] **8. Publish getting-started guides.** Add requirements, installation from
   source and releases, first scan, result interpretation, exit codes, and a
   guided next-step page. Explain that findings only return exit code 1 under
   policy-enforcing conditions such as `--ci`. Acceptance: commands match current
