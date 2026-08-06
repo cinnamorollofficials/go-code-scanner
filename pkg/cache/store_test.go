@@ -3,6 +3,7 @@ package cache
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -30,7 +31,7 @@ func TestStoreRoundTripRedactsSnippetsAndUsesSafePermissions(t *testing.T) {
 		t.Fatal("cache persisted a source snippet")
 	}
 	info, _ := os.Stat(filepath.Join(directory, key+".json"))
-	if info.Mode().Perm() != 0o600 {
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
 		t.Fatalf("unexpected cache permissions: %o", info.Mode().Perm())
 	}
 	loaded, found, err := store.Get(key)

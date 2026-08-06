@@ -47,7 +47,9 @@ func (c *CycleChecker) Check(ctx context.Context, src scanner.Source) ([]finding
 
 	relPath := src.Path
 	if c.cfg.Root != "" {
-		if rel, err := filepath.Rel(c.cfg.Root, src.Path); err == nil {
+		rootClean := filepath.Clean(c.cfg.Root)
+		srcClean := filepath.Clean(src.Path)
+		if rel, err := filepath.Rel(rootClean, srcClean); err == nil && !strings.HasPrefix(rel, "..") {
 			relPath = rel
 		}
 	}

@@ -36,7 +36,7 @@ func TestMaterializeIndexUsesStagedContent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(content) != "staged\n" {
+	if strings.ReplaceAll(string(content), "\r\n", "\n") != "staged\n" {
 		t.Fatalf("expected staged content, got %q", content)
 	}
 	if _, err := os.Stat(filepath.Join(snapshotRoot, ".git")); !os.IsNotExist(err) {

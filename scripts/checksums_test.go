@@ -10,6 +10,7 @@ import (
 )
 
 func TestChecksumsAreDeterministicAndExcludeManifest(t *testing.T) {
+	requireSh(t)
 	directory := t.TempDir()
 	if err := os.WriteFile(filepath.Join(directory, "z-binary"), []byte("z"), 0o600); err != nil {
 		t.Fatal(err)

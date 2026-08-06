@@ -278,9 +278,13 @@ func TestCommandScannerFiltersEnvironment(t *testing.T) {
 
 func helperScanner(t *testing.T, mode, workspaceMode string) *Scanner {
 	t.Helper()
+	exe, err := os.Executable()
+	if err != nil {
+		exe = os.Args[0]
+	}
 	source, err := New(Spec{
 		ID: "fixture", Domain: finding.Quality,
-		Command:   []string{os.Args[0], "-test.run=TestCommandHelperProcess", "--", mode},
+		Command:   []string{exe, "-test.run=TestCommandHelperProcess", "--", mode},
 		Workspace: workspaceMode, FindingExitCodes: []int{10},
 		Severity: finding.High, Category: "fixture", Description: "fixture finding",
 	})
@@ -354,7 +358,11 @@ func TestCommandHelperProcess(t *testing.T) {
 		if separator+2 >= len(os.Args) {
 			os.Exit(12)
 		}
-		child := exec.Command(os.Args[0], "-test.run=TestCommandHelperProcess", "--", "wait-child")
+		exe, err := os.Executable()
+		if err != nil {
+			exe = os.Args[0]
+		}
+		child := exec.Command(exe, "-test.run=TestCommandHelperProcess", "--", "wait-child")
 		if err := child.Start(); err != nil {
 			os.Exit(12)
 		}

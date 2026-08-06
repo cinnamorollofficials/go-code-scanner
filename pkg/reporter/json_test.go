@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -36,7 +37,9 @@ func TestJSONReportSchemaGolden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(actual, expected) {
+	actualNormalized := bytes.ReplaceAll(actual, []byte("\r\n"), []byte("\n"))
+	expectedNormalized := bytes.ReplaceAll(expected, []byte("\r\n"), []byte("\n"))
+	if !bytes.Equal(actualNormalized, expectedNormalized) {
 		t.Fatalf("JSON report schema changed; review and update the golden contract intentionally\nactual:\n%s\nexpected:\n%s", actual, expected)
 	}
 }
@@ -64,7 +67,7 @@ func TestWriteJSONReplacesExistingReport(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm() != 0o600 {
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
 		t.Fatalf("expected report mode 0600, got %o", info.Mode().Perm())
 	}
 }

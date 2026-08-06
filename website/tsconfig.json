@@ -11,5 +11,5 @@
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true
   },
-  "include": ["docs/**/*", ".vitepress/**/*"]
+  "include": ["docs/**/*", "docs/.vitepress/**/*"]
 }

@@ -12,6 +12,7 @@ import (
 )
 
 func TestReleaseBuildIsReproducible(t *testing.T) {
+	requireSh(t)
 	first := buildReleaseForReproducibility(t, filepath.Join(t.TempDir(), "first"))
 	second := buildReleaseForReproducibility(t, filepath.Join(t.TempDir(), "second"))
 	firstDigest := sha256.Sum256(first)

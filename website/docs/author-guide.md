@@ -18,7 +18,7 @@ Use a single `<h1>` (`# Page Title`) per document. Subsections should follow a s
 ## Code Examples
 
 - Always declare the code block language (e.g. `sh`, `json`, `go`, `yaml`).
-- Never include real secrets, tokens, internal URLs, or local absolute paths (`C:\Users\...` or `/home/...`).
+- Never include real secrets, tokens, internal URLs, or local absolute paths (`C:\Users\<user>\...` or `/home/...`).
 - Use synthetic placeholders (`your-api-key`, `example.org`, `path/to/file.go`).
 
 ## Admonitions (Callouts)

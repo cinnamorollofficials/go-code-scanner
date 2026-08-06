@@ -9,6 +9,7 @@ import (
 )
 
 func TestBuildReleaseDryRunCoversSupportedMatrix(t *testing.T) {
+	requireSh(t)
 	command := exec.Command("sh", "build-release.sh", "--dry-run")
 	command.Env = append(os.Environ(), "VERSION=v1.2.3")
 	output, err := command.CombinedOutput()
@@ -27,6 +28,7 @@ func TestBuildReleaseDryRunCoversSupportedMatrix(t *testing.T) {
 }
 
 func TestBuildReleaseProducesOnlyArchives(t *testing.T) {
+	requireSh(t)
 	directory := t.TempDir()
 	command := exec.Command("sh", "build-release.sh")
 	command.Env = append(os.Environ(),

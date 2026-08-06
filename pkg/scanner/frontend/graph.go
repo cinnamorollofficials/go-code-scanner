@@ -47,7 +47,7 @@ func ExtractImportEdges(fromFile string, tokens []Token) []ImportEdge {
 				continue
 			}
 
-			for j := i + 1; j < n && j < i+10; j++ {
+			for j := i + 1; j < n && j < i+30; j++ {
 				if tokens[j].Type == TokenString {
 					spec := strings.Trim(tokens[j].Value, `"'`+"`")
 					if IsLocalSpecifier(spec) {
@@ -64,9 +64,9 @@ func ExtractImportEdges(fromFile string, tokens []Token) []ImportEdge {
 		}
 
 		if val == "export" {
-			for j := i + 1; j < n && j < i+15; j++ {
+			for j := i + 1; j < n && j < i+30; j++ {
 				if tokens[j].Value == "from" {
-					for k := j + 1; k < n && k < j+5; k++ {
+					for k := j + 1; k < n && k < j+15; k++ {
 						if tokens[k].Type == TokenString {
 							spec := strings.Trim(tokens[k].Value, `"'`+"`")
 							if IsLocalSpecifier(spec) {

@@ -13,6 +13,7 @@ import (
 )
 
 func TestReleasePipelineEndToEnd(t *testing.T) {
+	requireSh(t)
 	root := t.TempDir()
 	dist := filepath.Join(root, "dist")
 	if err := os.MkdirAll(dist, 0o700); err != nil {
