@@ -39,7 +39,8 @@ export default defineConfig({
           text: 'Core Features',
           items: [
             { text: 'Features Overview', link: '/features/' },
-            { text: 'Scan Execution & Policy', link: '/features/scan-execution-and-policy' }
+            { text: 'Scan Execution & Policy', link: '/features/scan-execution-and-policy' },
+            { text: 'Reports & Finding Lifecycle', link: '/features/reports-and-finding-lifecycle' }
           ]
         }
       ],
