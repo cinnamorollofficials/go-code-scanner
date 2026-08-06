@@ -192,7 +192,7 @@ be delivered as one atomic commit.
 
 ## Phase 5 — Task-oriented guides and discoverability
 
-- [ ] **21. Add local and CI integration guides.** Publish guides for pre-commit,
+- [x] **21. Add local and CI integration guides.** Publish guides for pre-commit,
   pre-push, GitHub Actions, generic CI, SARIF upload, artifact retention, and
   offline execution. Pin example actions, grant minimum permissions, and explain
   safe handling of untrusted pull requests. Acceptance: snippets are syntactically
