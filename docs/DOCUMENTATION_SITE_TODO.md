@@ -119,7 +119,7 @@ be delivered as one atomic commit.
   example includes prerequisites and expected side effects. Commit:
   `docs(features): cover developer workflow features`.
 
-- [ ] **12. Publish frontend scanning documentation.** Convert the existing
+- [x] **12. Publish frontend scanning documentation.** Convert the existing
   frontend contract into task-oriented pages covering framework detection,
   client/server/shared classification, supported ecosystems, threat boundaries,
   native rules, sanitizers, import cycles, secret exposure, telemetry privacy,
