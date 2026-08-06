@@ -112,7 +112,7 @@ be delivered as one atomic commit.
   distinguish baselines from suppressions and know which artifacts are suitable
   for CI systems. Commit: `docs(features): document reports and finding lifecycle`.
 
-- [ ] **11. Document hooks, cache, fixes, and utility commands.** Explain hook
+- [x] **11. Document hooks, cache, fixes, and utility commands.** Explain hook
   install/status/run/uninstall behavior, effective `core.hooksPath`, managed-file
   safety, cache identity and retention, deterministic fixes and dry runs, rule
   explanation, configuration validation, and upgrade checks. Acceptance: every
