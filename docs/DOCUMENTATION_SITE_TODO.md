@@ -212,7 +212,7 @@ be delivered as one atomic commit.
   generated references, and canonical URLs contain the configured base path.
   Commit: `feat(docs): add search and discovery metadata`.
 
-- [ ] **24. Add documentation quality tests.** Check internal links, duplicate
+- [x] **24. Add documentation quality tests.** Check internal links, duplicate
   headings/IDs, missing descriptions, malformed code fences, forbidden local
   paths, accidental secret-like examples, unreferenced pages, and spelling of
   product terminology. Maintain a narrow allowlist for intentional fake tokens.
