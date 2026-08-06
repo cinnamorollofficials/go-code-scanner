@@ -130,7 +130,7 @@ be delivered as one atomic commit.
 
 ## Phase 3 — Configuration documentation
 
-- [ ] **13. Split the configuration reference into navigable pages.** Preserve
+- [x] **13. Split the configuration reference into navigable pages.** Preserve
   all material from `CONFIGURATION.md` while creating overview, paths and input,
   profiles and policy, scanner definitions, hooks, frontend, supply chain,
   governance, architecture, cache, and complete-example pages. Keep the original
