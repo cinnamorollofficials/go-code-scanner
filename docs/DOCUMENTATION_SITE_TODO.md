@@ -146,7 +146,7 @@ be delivered as one atomic commit.
   use synthetic paths, state their tradeoffs, and pass strict decoding.
   Commit: `docs(config): add validated configuration recipes`.
 
-- [ ] **15. Introduce machine-readable configuration metadata.** Define a stable
+- [x] **15. Introduce machine-readable configuration metadata.** Define a stable
   generator input or derive metadata from Go configuration definitions for field
   path, type, default, allowed values, requirement, description, and version.
   Fail generation on duplicate or undocumented public fields. Acceptance:
