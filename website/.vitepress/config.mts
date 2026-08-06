@@ -58,6 +58,7 @@ export default defineConfig({
         {
           text: 'Configuration Fields',
           items: [
+            { text: 'Generated Field Reference', link: '/reference/config/generated-reference' },
             { text: 'Input & Paths', link: '/reference/config/input-and-paths' },
             { text: 'Profiles & Policy', link: '/reference/config/profiles-and-policy' },
             { text: 'Scanner Definitions', link: '/reference/config/scanners' },
