@@ -105,7 +105,7 @@ be delivered as one atomic commit.
   profiles. Acceptance: staged-versus-working-tree guarantees and mutually
   exclusive flags are explicit. Commit: `docs(features): explain scan execution and policy`.
 
-- [ ] **10. Document reports and finding lifecycle.** Cover terminal, JSON,
+- [x] **10. Document reports and finding lifecycle.** Cover terminal, JSON,
   SARIF, and JUnit output; deterministic ordering; redaction boundaries;
   fingerprints; new/existing/resolved lifecycle; baselines; and suppressions.
   Include safe sample output with synthetic values only. Acceptance: users can
