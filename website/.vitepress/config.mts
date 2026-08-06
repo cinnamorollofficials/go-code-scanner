@@ -38,7 +38,8 @@ export default defineConfig({
         {
           text: 'Core Features',
           items: [
-            { text: 'Features Overview', link: '/features/' }
+            { text: 'Features Overview', link: '/features/' },
+            { text: 'Scan Execution & Policy', link: '/features/scan-execution-and-policy' }
           ]
         }
       ],
