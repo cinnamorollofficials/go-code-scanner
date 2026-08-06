@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "project": "staged-hook-project",
+  "root": ".",
+  "mode": "staged",
+  "output": "security_findings.json",
+  "fail_on": "HIGH",
+  "include_extensions": [".go", ".ts", ".tsx"],
+  "exclude_directories": [".git", "node_modules", "vendor"],
+  "exclude_files": ["security_findings.json"],
+  "workers": 4,
+  "pattern_max_file_bytes": 1048576,
+  "pattern_max_line_bytes": 4096,
+  "scanners": {},
+  "hooks": {
+    "pre_commit": {
+      "enabled": true,
+      "profile": "fast",
+      "staged_only": true,
+      "new_only": true
+    },
+    "commit_msg": {
+      "enabled": true,
+      "message_pattern": "^(feat|fix|docs|style|refactor|test|ci|chore): .*",
+      "max_subject_length": 72
+    },
+    "pre_push": {
+      "enabled": true,
+      "profile": "standard"
+    }
+  }
+}

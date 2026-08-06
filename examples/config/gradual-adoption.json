@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "project": "legacy-adoption-project",
+  "root": ".",
+  "mode": "changed",
+  "output": "security_findings.json",
+  "fail_on": "HIGH",
+  "baseline_file": ".security-baseline.json",
+  "suppression_file": ".security-suppress.json",
+  "include_extensions": [".go", ".ts", ".js"],
+  "exclude_directories": [".git", "node_modules", "vendor"],
+  "exclude_files": ["security_findings.json"],
+  "workers": 4,
+  "pattern_max_file_bytes": 1048576,
+  "pattern_max_line_bytes": 4096,
+  "scanners": {}
+}

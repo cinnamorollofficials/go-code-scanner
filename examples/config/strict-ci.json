@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "project": "strict-ci-service",
+  "root": ".",
+  "mode": "full",
+  "output": "results.sarif",
+  "fail_on": "HIGH",
+  "include_extensions": [".go", ".ts", ".tsx", ".yaml"],
+  "exclude_directories": [".git", "node_modules", "vendor"],
+  "exclude_files": ["results.sarif"],
+  "workers": 8,
+  "pattern_max_file_bytes": 1048576,
+  "pattern_max_line_bytes": 4096,
+  "scanners": {},
+  "governance": {
+    "required_files": ["README.md", "LICENSE", "SECURITY.md"],
+    "ownership_file": "CODEOWNERS"
+  },
+  "supply_chain": {
+    "license_allowlist": ["MIT", "Apache-2.0", "BSD-3-Clause"],
+    "license_denylist": ["GPL-3.0-only", "AGPL-3.0-only"]
+  }
+}

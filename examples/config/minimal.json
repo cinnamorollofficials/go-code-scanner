@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "project": "minimal-app",
+  "root": ".",
+  "mode": "full",
+  "output": "security_findings.json",
+  "fail_on": "HIGH",
+  "include_extensions": [".go"],
+  "exclude_directories": [".git", "vendor"],
+  "exclude_files": ["security_findings.json"],
+  "workers": 4,
+  "pattern_max_file_bytes": 1048576,
+  "pattern_max_line_bytes": 4096,
+  "scanners": {}
+}

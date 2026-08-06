@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "project": "offline-project",
+  "root": ".",
+  "mode": "full",
+  "output": "security_findings.json",
+  "fail_on": "HIGH",
+  "include_extensions": [".go", ".ts", ".js"],
+  "exclude_directories": [".git", "vendor"],
+  "exclude_files": ["security_findings.json"],
+  "workers": 4,
+  "pattern_max_file_bytes": 1048576,
+  "pattern_max_line_bytes": 4096,
+  "scanners": {},
+  "offline_profiles": ["fast", "standard", "frontend"],
+  "cache": {
+    "enabled": true,
+    "directory": ".cache/security-review",
+    "max_age": "168h",
+    "max_bytes": 524288000
+  }
+}

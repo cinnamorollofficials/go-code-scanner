@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "project": "go-service",
+  "root": ".",
+  "mode": "full",
+  "output": "security_findings.json",
+  "fail_on": "HIGH",
+  "include_extensions": [".go", ".yaml", ".yml", ".json"],
+  "exclude_directories": [".git", "vendor", "bin"],
+  "exclude_files": ["security_findings.json"],
+  "workers": 8,
+  "pattern_max_file_bytes": 1048576,
+  "pattern_max_line_bytes": 4096,
+  "scanners": {},
+  "supply_chain": {
+    "license_allowlist": ["MIT", "Apache-2.0", "BSD-3-Clause"]
+  },
+  "architecture": {
+    "detect_cycles": true,
+    "layers": [
+      { "name": "cmd", "paths": ["cmd/*"] },
+      { "name": "pkg", "paths": ["pkg/*"] }
+    ],
+    "forbidden_dependencies": [
+      { "from": "pkg/*", "to": "cmd/*" }
+    ]
+  }
+}

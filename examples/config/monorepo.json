@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "project": "monorepo-suite",
+  "root": ".",
+  "mode": "full",
+  "output": "security_findings.json",
+  "fail_on": "HIGH",
+  "include_extensions": [".go", ".ts", ".tsx", ".js", ".json"],
+  "exclude_directories": [".git", "node_modules", "vendor", "dist", "build"],
+  "exclude_files": ["security_findings.json"],
+  "workers": 8,
+  "pattern_max_file_bytes": 1048576,
+  "pattern_max_line_bytes": 4096,
+  "scanners": {},
+  "frontend": {
+    "enabled": true,
+    "frameworks": ["react", "nextjs"],
+    "client_roots": ["apps/web", "packages/ui"],
+    "server_roots": ["services/api"],
+    "detect_import_cycles": true,
+    "detect_client_server_boundaries": true
+  }
+}
