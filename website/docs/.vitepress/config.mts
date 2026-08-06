@@ -31,7 +31,8 @@ function sidebarDocs() {
     {
       text: 'Development',
       items: [
-        { text: 'Author Guide', link: '/author-guide' }
+        { text: 'Author Guide', link: '/author-guide' },
+        { text: 'Changelog', link: '/changelog' }
       ]
     }
   ]
@@ -59,7 +60,7 @@ export default defineConfig({
       { 
         text: 'Documentation', 
         link: '/getting-started/', 
-        activeMatch: '^/(getting-started|features|guides|author-guide)/' 
+        activeMatch: '^/(getting-started|features|guides|author-guide|changelog)/' 
       },
       { 
         text: 'Reference', 
@@ -76,6 +77,7 @@ export default defineConfig({
       '/features/': sidebarDocs(),
       '/guides/': sidebarDocs(),
       '/author-guide': sidebarDocs(),
+      '/changelog': sidebarDocs(),
 
       '/reference/': [
         {
