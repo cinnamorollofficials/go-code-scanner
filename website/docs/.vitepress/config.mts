@@ -16,6 +16,7 @@ function sidebarDocs() {
         { text: 'Features Overview', link: '/features/' },
         { text: 'Scan Execution & Policy', link: '/features/scan-execution-and-policy' },
         { text: 'Reports & Finding Lifecycle', link: '/features/reports-and-finding-lifecycle' },
+        { text: 'How It Works & Reproduce Findings', link: '/features/analysis-and-reproduction' },
         { text: 'Developer Workflow Features', link: '/features/developer-workflow-features' },
         { text: 'Frontend & Client Scanning', link: '/features/client-scanning' }
       ]

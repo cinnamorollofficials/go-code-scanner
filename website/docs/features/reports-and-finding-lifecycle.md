@@ -57,7 +57,7 @@ A **suppression** is an intentional, permanent exception approved for a false po
 {
   "suppressions": [
     {
-      "rule_id": "secret/gcp-api-key",
+      "rule_id": "hardcoded-credential",
       "file_pattern": "testdata/mock_key.go",
       "reason": "Synthetic test fixture for unit tests",
       "approved_by": "sec-team"

@@ -22,9 +22,9 @@ The scanner automatically discovers Go packages, configuration files, supply cha
 Scan output is structured by severity and domain:
 
 ```
-[HIGH] secret/gcp-api-key: GCP API Key identified in config/secrets.go:12
-[MEDIUM] sast/sql-concat: Unsanitized SQL query string concatenation in pkg/db/user.go:45
-[LOW] governance/missing-license: LICENSE file missing in repository root
+[HIGH] hardcoded-credential: Hardcoded credential string identified in config/secrets.go:12
+[MEDIUM] sql-string-format: Unsanitized SQL query format string in pkg/db/user.go:45
+[LOW] merge-conflict-marker: Git merge conflict marker left in repository root
 
 Scan Summary: 3 finding(s) across 3 domain(s) [1 High, 1 Medium, 1 Low]
 ```
@@ -53,6 +53,6 @@ security-review scan --fail-on HIGH
 
 ## Next Steps
 
-- Explore [Scan Execution & Policy](/features/) to configure scan modes (staged, full, changed).
-- Configure suppressions and baselines in [Reports & Finding Lifecycle](/features/).
+- Explore [Scan Execution & Policy](/features/scan-execution-and-policy) to configure scan modes (staged, full, changed).
+- Configure suppressions and baselines in [Reports & Finding Lifecycle](/features/reports-and-finding-lifecycle).
 - View complete command flag details in the [CLI Reference](/reference/cli).

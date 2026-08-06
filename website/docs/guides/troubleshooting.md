@@ -29,7 +29,7 @@ security-review scan --ci --baseline .security-baseline.json --new-only
 Audit baseline issues over time. For legitimate false positives or risk-accepted exceptions, record explicit suppressions in `.security-suppress.json`:
 
 ```sh
-security-review suppress add --rule secret/gcp-api-key --reason "Synthetic unit test fixture"
+security-review suppress add --rule hardcoded-credential --reason "Synthetic unit test fixture"
 ```
 
 ---

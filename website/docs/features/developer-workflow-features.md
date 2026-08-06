@@ -13,13 +13,13 @@ Explore developer workflow tools provided by `security-review`, including git ho
 
 ```sh
 # Install pre-commit hook in active repository
-security-review hooks install
+security-review hook install pre-commit
 
-# Inspect hook status and core.hooksPath configuration
-security-review hooks status
+# Inspect hook status and active installation state
+security-review hook status pre-commit
 
-# Uninstall hook cleanly
-security-review hooks uninstall
+# Uninstall pre-commit hook cleanly
+security-review hook uninstall pre-commit
 ```
 
 ::: tip Managed-File Safety Guarantee
@@ -63,7 +63,7 @@ security-review scan --fix
 Get detailed remediation guidance and examples for any rule ID:
 
 ```sh
-security-review explain secret/gcp-api-key
+security-review scan --explain hardcoded-credential
 ```
 
 ### Configuration Validation

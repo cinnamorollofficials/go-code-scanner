@@ -106,7 +106,7 @@ security-review baseline check .security-baseline.json
 Manages false-positive and risk-accepted rule suppressions.
 
 ```sh
-security-review suppress add --rule secret/gcp-api-key --reason "Fixture"
+security-review suppress add --rule hardcoded-credential --reason "Fixture"
 security-review suppress list
 security-review suppress check
 ```
