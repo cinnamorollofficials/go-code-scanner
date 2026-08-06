@@ -1,0 +1,288 @@
+{
+  "version": 1,
+  "fields": [
+    {
+      "path": "baseline_file",
+      "type": "string",
+      "default": "",
+      "required": false,
+      "description": "Path to baseline snapshot JSON file.",
+      "version": 1
+    },
+    {
+      "path": "cache.directory",
+      "type": "string",
+      "default": "",
+      "required": false,
+      "description": "Path to local cache storage directory.",
+      "version": 1
+    },
+    {
+      "path": "cache.enabled",
+      "type": "bool",
+      "default": false,
+      "required": false,
+      "description": "Enables local AST and scan caching.",
+      "version": 1
+    },
+    {
+      "path": "cache.max_age",
+      "type": "string",
+      "default": "",
+      "required": false,
+      "description": "Maximum cache entry retention duration string.",
+      "version": 1
+    },
+    {
+      "path": "cache.max_bytes",
+      "type": "int64",
+      "default": 0,
+      "required": false,
+      "description": "Maximum byte size threshold for local cache directory.",
+      "version": 1
+    },
+    {
+      "path": "exclude_directories",
+      "type": "[]string",
+      "default": [
+        ".git",
+        "node_modules",
+        "vendor",
+        "dist",
+        "build",
+        ".next",
+        ".nuxt",
+        ".svelte-kit",
+        ".output",
+        "out",
+        "bin"
+      ],
+      "required": false,
+      "description": "Directory names or paths excluded during discovery.",
+      "version": 1
+    },
+    {
+      "path": "exclude_files",
+      "type": "[]string",
+      "default": [
+        "security_findings.json",
+        "package-lock.json"
+      ],
+      "required": false,
+      "description": "Filenames excluded during discovery.",
+      "version": 1
+    },
+    {
+      "path": "fail_on",
+      "type": "string",
+      "default": "CRITICAL",
+      "allowed_values": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "required": false,
+      "description": "Global severity threshold that triggers exit code 1.",
+      "version": 1
+    },
+    {
+      "path": "frontend.client_roots",
+      "type": "[]string",
+      "default": [],
+      "required": false,
+      "description": "Client-side root directory paths.",
+      "version": 1
+    },
+    {
+      "path": "frontend.enabled",
+      "type": "bool",
+      "default": false,
+      "required": false,
+      "description": "Enables native frontend AST and pattern scanning.",
+      "version": 1
+    },
+    {
+      "path": "frontend.frameworks",
+      "type": "[]string",
+      "default": [],
+      "required": false,
+      "description": "Framework identifiers for frontend detection.",
+      "version": 1
+    },
+    {
+      "path": "frontend.server_roots",
+      "type": "[]string",
+      "default": [],
+      "required": false,
+      "description": "Server-side root directory paths.",
+      "version": 1
+    },
+    {
+      "path": "hooks.pre_commit.enabled",
+      "type": "bool",
+      "default": false,
+      "required": false,
+      "description": "Enables pre-commit git hook execution.",
+      "version": 1
+    },
+    {
+      "path": "hooks.pre_commit.new_only",
+      "type": "bool",
+      "default": false,
+      "required": false,
+      "description": "Evaluates pre-commit findings against baseline snapshot.",
+      "version": 1
+    },
+    {
+      "path": "hooks.pre_commit.profile",
+      "type": "string",
+      "default": "fast",
+      "required": false,
+      "description": "Performance profile used by pre-commit hook.",
+      "version": 1
+    },
+    {
+      "path": "hooks.pre_commit.staged_only",
+      "type": "bool",
+      "default": false,
+      "required": false,
+      "description": "Restricts pre-commit scan to git staged index snapshot.",
+      "version": 1
+    },
+    {
+      "path": "include_extensions",
+      "type": "[]string",
+      "default": [
+        ".go",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".mts",
+        ".cts",
+        ".html",
+        ".vue",
+        ".svelte",
+        ".yaml",
+        ".yml",
+        ".json"
+      ],
+      "required": false,
+      "description": "List of file extensions included during discovery.",
+      "version": 1
+    },
+    {
+      "path": "mode",
+      "type": "string",
+      "default": "full",
+      "allowed_values": [
+        "full",
+        "changed",
+        "staged"
+      ],
+      "required": false,
+      "description": "Default scan discovery mode.",
+      "version": 1
+    },
+    {
+      "path": "offline_profiles",
+      "type": "[]string",
+      "default": [],
+      "required": false,
+      "description": "List of profiles runnable offline without network access.",
+      "version": 1
+    },
+    {
+      "path": "output",
+      "type": "string",
+      "default": "security_findings.json",
+      "required": false,
+      "description": "Default report output filename.",
+      "version": 1
+    },
+    {
+      "path": "pattern_max_file_bytes",
+      "type": "int64",
+      "default": 1048576,
+      "required": false,
+      "description": "Maximum file size in bytes for pattern scanner.",
+      "version": 1
+    },
+    {
+      "path": "pattern_max_line_bytes",
+      "type": "int",
+      "default": 4096,
+      "required": false,
+      "description": "Maximum line buffer length in bytes for pattern scanner.",
+      "version": 1
+    },
+    {
+      "path": "profiles",
+      "type": "map[string][]string",
+      "default": {},
+      "required": false,
+      "description": "Custom named profile scanner mappings.",
+      "version": 1
+    },
+    {
+      "path": "project",
+      "type": "string",
+      "default": "security-review",
+      "required": false,
+      "description": "Project or repository identifier.",
+      "version": 1
+    },
+    {
+      "path": "root",
+      "type": "string",
+      "default": ".",
+      "required": false,
+      "description": "Target root workspace directory.",
+      "version": 1
+    },
+    {
+      "path": "rule_files",
+      "type": "[]string",
+      "default": [],
+      "required": false,
+      "description": "External JSON rule file paths.",
+      "version": 1
+    },
+    {
+      "path": "scanners",
+      "type": "map[string]Scanner",
+      "default": {},
+      "required": false,
+      "description": "Map of declared scanner definitions.",
+      "version": 1
+    },
+    {
+      "path": "suppression_file",
+      "type": "string",
+      "default": "",
+      "required": false,
+      "description": "Path to suppressions JSON file.",
+      "version": 1
+    },
+    {
+      "path": "version",
+      "type": "int",
+      "default": 1,
+      "required": true,
+      "description": "Configuration schema version (must be 1).",
+      "version": 1
+    },
+    {
+      "path": "workers",
+      "type": "int",
+      "default": 4,
+      "required": false,
+      "description": "Maximum concurrent worker goroutines.",
+      "version": 1
+    }
+  ]
+}
