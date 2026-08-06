@@ -52,7 +52,8 @@ export default defineConfig({
           items: [
             { text: 'Reference Overview', link: '/reference/' },
             { text: 'CLI Reference', link: '/reference/cli' },
-            { text: 'Configuration Reference', link: '/reference/configuration' }
+            { text: 'Configuration Reference', link: '/reference/configuration' },
+            { text: 'Rule Catalog', link: '/reference/rules' }
           ]
         },
         {
