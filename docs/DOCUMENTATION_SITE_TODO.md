@@ -198,7 +198,7 @@ be delivered as one atomic commit.
   safe handling of untrusted pull requests. Acceptance: snippets are syntactically
   validated where tooling permits. Commit: `docs(guides): add local and CI integrations`.
 
-- [ ] **22. Add adoption, troubleshooting, and migration guides.** Cover staged
+- [x] **22. Add adoption, troubleshooting, and migration guides.** Cover staged
   rollout with baselines, tuning thresholds, reviewing suppressions, missing
   external tools, timeouts, partial scans, path/symlink failures, cache issues,
   exit-code diagnosis, schema migration, and upgrade checks. Acceptance: every
