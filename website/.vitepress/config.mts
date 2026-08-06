@@ -54,6 +54,20 @@ export default defineConfig({
             { text: 'CLI Reference', link: '/reference/cli' },
             { text: 'Configuration Reference', link: '/reference/configuration' }
           ]
+        },
+        {
+          text: 'Configuration Fields',
+          items: [
+            { text: 'Input & Paths', link: '/reference/config/input-and-paths' },
+            { text: 'Profiles & Policy', link: '/reference/config/profiles-and-policy' },
+            { text: 'Scanner Definitions', link: '/reference/config/scanners' },
+            { text: 'Git Hooks', link: '/reference/config/hooks' },
+            { text: 'Frontend Policy', link: '/reference/config/frontend' },
+            { text: 'Supply Chain Policy', link: '/reference/config/supply-chain' },
+            { text: 'Governance Policy', link: '/reference/config/governance' },
+            { text: 'Architecture Policy', link: '/reference/config/architecture' },
+            { text: 'Cache Policy', link: '/reference/config/cache' }
+          ]
         }
       ],
       '/guides/': [
