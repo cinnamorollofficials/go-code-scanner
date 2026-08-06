@@ -235,7 +235,7 @@ be delivered as one atomic commit.
   works, invalid combinations show actionable errors, and no user data leaves the
   browser. Commit: `feat(docs): add configuration builder`.
 
-- [ ] **27. Validate builder output against Go configuration behavior.** Create
+- [x] **27. Validate builder output against Go configuration behavior.** Create
   shared fixtures covering presets, edge values, disabled sections, custom
   scanners, and invalid combinations. Test serialized output with Go's strict
   config loader and protect expected JSON with golden tests. Acceptance: every
