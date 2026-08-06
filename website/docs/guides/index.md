@@ -11,3 +11,4 @@ Task-oriented integration and operational playbooks for `security-review`.
 
 - **[Author Guide](/author-guide)**: Content conventions, typography, admonitions, and styling rules for documentation contributors.
 - **[Local & CI Integrations](/guides/ci-integrations)**: Complete setup guide for pre-commit hooks, GitHub Actions, GitLab CI, and SARIF upload.
+- **[Adoption & Troubleshooting](/guides/troubleshooting)**: Gradual rollout strategy, baseline migration, and remediation steps for operational CLI failures.

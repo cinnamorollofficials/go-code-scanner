@@ -78,7 +78,8 @@ export default defineConfig({
           text: 'Guides & Integration',
           items: [
             { text: 'Guides Overview', link: '/guides/' },
-            { text: 'Local & CI Integrations', link: '/guides/ci-integrations' }
+            { text: 'Local & CI Integrations', link: '/guides/ci-integrations' },
+            { text: 'Adoption & Troubleshooting', link: '/guides/troubleshooting' }
           ]
         }
       ]
