@@ -98,7 +98,7 @@ be delivered as one atomic commit.
   CLI behavior on Windows and Unix where syntax differs. Commit:
   `docs(getting-started): publish first-scan guides`.
 
-- [ ] **9. Document scan modes, scope, profiles, and policy.** Cover full,
+- [x] **9. Document scan modes, scope, profiles, and policy.** Cover full,
   changed, and staged discovery; index isolation; client/server/all scope;
   fast/standard/full/frontend profiles; offline profiles; domain thresholds;
   `--fail-on`; and `--new-only`. Include a decision table for choosing modes and
