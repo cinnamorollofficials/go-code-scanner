@@ -228,7 +228,7 @@ be delivered as one atomic commit.
   Acceptance: generated JSON semantics match version-1 overlay/default behavior.
   Commit: `docs(builder): define configuration generator contract`.
 
-- [ ] **26. Implement the client-side configuration builder.** Add progressive,
+- [x] **26. Implement the client-side configuration builder.** Add progressive,
   accessible controls for project basics, scan mode, profiles, policy thresholds,
   frontend settings, external scanners, governance, architecture, and cache.
   Generate copyable/downloadable JSON locally. Acceptance: keyboard-only use
