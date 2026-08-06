@@ -22,6 +22,7 @@ import (
 	commandscanner "github.com/cinnamorollofficials/go-code-scanner/pkg/scanner/command"
 	frontendscanner "github.com/cinnamorollofficials/go-code-scanner/pkg/scanner/frontend"
 	patternscanner "github.com/cinnamorollofficials/go-code-scanner/pkg/scanner/pattern"
+	sqltaintscanner "github.com/cinnamorollofficials/go-code-scanner/pkg/scanner/sqltaint"
 	"github.com/cinnamorollofficials/go-code-scanner/pkg/suppression"
 )
 
@@ -109,16 +110,19 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 	}
 	r := &reviewer{
 		config: cfg,
-		scanners: []registeredScanner{{scanner: patternscanner.New(compiled, cfg.Workers, patternscanner.Limits{
-			MaxFileBytes: cfg.PatternMaxFileBytes, MaxLineBytes: cfg.PatternMaxLineBytes,
-			QualityMaxFileBytes: cfg.QualityMaxFileBytes, QualityMaxLineLength: cfg.QualityMaxLineLength,
-			DependencyAllowlist: cfg.SupplyChain.DependencyAllowlist, DependencyDenylist: cfg.SupplyChain.DependencyDenylist,
-			LicenseAllowlist: cfg.SupplyChain.LicenseAllowlist, LicenseDenylist: cfg.SupplyChain.LicenseDenylist,
-			RequiredFiles:   cfg.Governance.RequiredFiles,
-			RequiredHeaders: headerPolicies,
-			OwnershipFile:   cfg.Governance.OwnershipFile,
-			OwnershipRules:  ownershipPolicies,
-		}), required: true}},
+		scanners: []registeredScanner{
+			{scanner: patternscanner.New(compiled, cfg.Workers, patternscanner.Limits{
+				MaxFileBytes: cfg.PatternMaxFileBytes, MaxLineBytes: cfg.PatternMaxLineBytes,
+				QualityMaxFileBytes: cfg.QualityMaxFileBytes, QualityMaxLineLength: cfg.QualityMaxLineLength,
+				DependencyAllowlist: cfg.SupplyChain.DependencyAllowlist, DependencyDenylist: cfg.SupplyChain.DependencyDenylist,
+				LicenseAllowlist: cfg.SupplyChain.LicenseAllowlist, LicenseDenylist: cfg.SupplyChain.LicenseDenylist,
+				RequiredFiles:   cfg.Governance.RequiredFiles,
+				RequiredHeaders: headerPolicies,
+				OwnershipFile:   cfg.Governance.OwnershipFile,
+				OwnershipRules:  ownershipPolicies,
+			}), required: true},
+			{scanner: sqltaintscanner.New(), required: false},
+		},
 		now:         time.Now,
 		configHash:  configHash,
 		ruleSetHash: ruleSetHash,

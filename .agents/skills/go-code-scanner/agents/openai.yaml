@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go Code Scanner Skill"
+  short_description: "Run security scans, validate configuration, and audit SQL/code vulnerabilities."
+  default_prompt: "Scan the repository for security issues and validate the security configuration."

@@ -1,127 +1,64 @@
-- [ ] Write `threat-model.md` with trust boundaries, data flow, authorization boundaries, and prohibited operations.
-- [ ] Write `troubleshooting.md` in symptom -> checks -> cause -> remediation form.
-- [ ] Write `examples.md` with complete, tested examples only.
-- [ ] Add a table of contents to any reference longer than 100 lines.
-- [ ] Ensure detailed facts appear in one reference only; link instead of duplicating.
+# Go Code Scanner & Agent Skill Implementation TODO
 
-Exit criteria:
+This tracking document outlines the unified TODO backlog for implementing the AI Agent Skill (`.agents/skills/go-code-scanner`) and the Advanced AST & SQL Vulnerability Engine (`pkg/scanner/sqltaint`) for the `go-code-scanner` repository.
 
-- Every factual command and configuration example is traceable to the approved contract or a passing fixture.
-- `SKILL.md` can point directly to each reference without nested reference chains.
+---
 
-### Phase 4 - Implement the skill workflow
+## 1. Core Go Scanner Engine & AST Taint Subsystem
 
-Goal: teach the agent when to read references, when to run scripts, and when to stop.
+### Phase 1.1 - Finding Data Model & Schema Alignment (`pkg/finding/report.go`)
+- [x] Add `DataflowStep` struct (`Source`, `Propagator`, `Sanitizer`, `Sink`) to represent taint paths.
+- [x] Add `Confidence` (`high`, `medium`, `low`) and `Exploitability` (`likely`, `unlikely`, `unknown`) fields.
+- [x] Add `FindingState` (`candidate`, `probable`, `confirmed`, `dismissed_with_evidence`, `fixed_verified`).
+- [x] Ensure JSON (1.0) and SARIF (2.1.0) reporters in `pkg/reporter` serialize dataflow traces safely with secret redaction.
 
-- [ ] Initialize the skill with the official skill initialization script.
-- [ ] Write frontmatter containing only `name` and a comprehensive trigger `description`.
-- [ ] Keep `SKILL.md` procedural and below 500 lines.
-- [ ] Require repository-instruction and dirty-worktree inspection before mutation.
-- [ ] Route the agent based on task type: install, CI, diagnose, migrate, remediate, or review.
-- [ ] Require a brief change plan before editing.
-- [ ] Require the smallest change consistent with repository conventions.
-- [ ] Require relevant test, lint, type-check, build, and SentraSec verification.
-- [ ] Require explicit `not_verified` reporting when verification is unavailable.
-- [ ] Require approval before credentials, production state, permissions, or external uploads are involved.
-- [ ] Reject requests to expose secrets or weaken security policy merely to pass CI.
-- [ ] Define the final handoff format.
-- [ ] Generate `agents/openai.yaml` from the completed skill content.
+### Phase 1.2 - Go AST & SQL Taint Analyzer (`pkg/scanner/sqltaint`)
+- [x] Implement Go AST parser using `go/ast` and `golang.org/x/tools/go/analysis`.
+- [x] Implement intraprocedural string concatenation and variable taint propagation.
+- [x] Implement SQL query template reconstruction & driver hole classification (`value`, `identifier`, `clause`, `unknown`).
+- [x] Implement tracking of prepared-statement states (`raw` -> `prepared` -> `bound` -> `executed`).
+- [x] Implement rules: `SQLI-001`, `SQLI-002`, `SQLI-004` (ORM escape hatch), `SQLI-008` (bind mismatch), and `SQLSAFE-001` (unbounded update/delete).
+- [x] Implement positive/negative Go fixture test suite in `pkg/scanner/sqltaint/sqltaint_test.go`.
+- [x] Register `sqltaint` scanner into `securityreview.go` default reviewers list.
 
-Exit criteria:
+---
 
-- The skill triggers on all positive evaluation prompts and not on unrelated tasks.
-- An agent can locate the appropriate reference and script without guessing.
+## 2. AI Agent Skill Package (`.agents/skills/go-code-scanner/`)
 
-### Phase 5 - Validate and forward-test
+### Phase 2.1 - Script Helpers & Native CLI Integration
+- [x] Implement `scripts/detect-project.ps1`: Detect Go/JS/Python/etc. manifests, package managers, and CI workflows.
+- [x] Implement `scripts/validate-config.ps1`: Validate `security-review.json` via native `security-review config validate`.
+- [x] Implement `scripts/verify-integration.ps1`: Execute offline scan audit or dry-run via `security-review scan`.
 
-Goal: prove the skill generalizes beyond its authoring context.
+### Phase 2.2 - Progressive Reference Files (`references/`)
+- [x] Write `references/integration-contract.md`: Document CLI flags (`--staged`, `--baseline`, `--new-only`, `--ci`) and exit codes.
+- [x] Write `references/configuration.md`: Document configuration fields, domain thresholds, and offline profile policies.
+- [x] Write `references/frameworks.md`: Matrix of supported Go drivers (`database/sql`, `gorm`, `sqlx`, `pgx`) and adapters.
+- [x] Write `references/threat-model.md`: Document non-execution sandbox, read-only guarantees, secret redaction, and local isolation.
+- [x] Write `references/troubleshooting.md`: Diagnostic procedures for common exit codes, missing binaries, or unmanaged Git hook conflicts.
+- [x] Write `references/examples.md`: Complete working examples for local commit gates and GitHub Actions workflows.
 
-- [ ] Run the official skill validator and fix all errors.
-- [ ] Run script unit and fixture tests.
-- [ ] Forward-test each evaluation prompt in a fresh agent context.
-- [ ] Give test agents only the skill, fixture, and realistic user request; do not reveal expected answers.
-- [ ] Capture raw outputs, diffs, logs, and failures.
-- [ ] Check every run against the scorecard.
-- [ ] Fix ambiguous instructions or missing deterministic checks.
-- [ ] Repeat failed scenarios from a clean fixture.
-- [ ] Ask the product/security reviewer for final approval.
+### Phase 2.3 - Skill Workflow & State Machine (`SKILL.md`)
+- [x] Initialize `SKILL.md` with YAML frontmatter (`name: go-code-scanner`, comprehensive trigger description).
+- [x] Implement **Review Mode State Machine**: `PREFLIGHT` -> `INVENTORY` -> `SCAN_PLAN` -> `SCAN` -> `NORMALIZE` -> `TRIAGE` -> `REPORT`.
+- [x] Implement **Remediation Mode State Machine**: `PREFLIGHT` -> `INVENTORY` -> `SCAN_PLAN` -> `SCAN` -> `NORMALIZE` -> `TRIAGE` -> `AUTHORIZE` -> `PATCH` -> `TARGETED_RESCAN` -> `REGRESSION_SCAN` -> `REPORT`.
+- [x] Enforce safety guardrails: Reject exposing secrets, never weaken policy solely to pass CI, report unverified state as `not_verified`.
+- [x] Generate `agents/openai.yaml` from completed `SKILL.md`.
 
-Exit criteria:
+---
 
-- All safety metrics pass with zero violations.
-- Functional metrics meet the MVP targets.
-- The approved primary integration works from a clean fixture.
+## 3. Prioritized Backlog Summary
 
-### Phase 6 - Package and maintain
+### P0 - Core Contracts & Base Integration (Completed)
+- [x] Align plans with actual Go codebase (`cmd/security-review` and `pkg/`).
+- [x] Update `pkg/finding/report.go` with taint trace fields.
+- [x] Create `.agents/skills/go-code-scanner/` structure and helper scripts.
 
-Goal: make releases reproducible and keep the skill aligned with the product.
+### P1 - MVP Release Target (Completed)
+- [x] Complete Go AST SQL Taint scanner (`SQLI-001` through `SQLI-008`).
+- [x] Complete `SKILL.md` and six reference files.
 
-- [ ] Choose the distribution location: repository-owned skill, personal skill, or plugin package.
-- [ ] Add CI checks for skill validation, script tests, fixture tests, and secret scanning.
-- [ ] Pin the compatible SentraSec product/SDK range in the contract reference.
-- [ ] Define an owner for product releases and an owner for security review.
-- [ ] Re-run evaluation when configuration, CLI behavior, authentication, or supported frameworks change.
-- [ ] Track skill version compatibility without placing a changelog inside the skill folder.
-
-Exit criteria:
-
-- Installation and discovery work in a clean Codex environment.
-- Maintenance ownership and release triggers are documented outside the skill package.
-
-## Prioritized TODO backlog
-
-### P0 - Blocks implementation
-
-- [ ] Provide documentation source or URL.
-- [ ] Provide SDK/CLI source and supported version.
-- [ ] Select one MVP framework.
-- [ ] Select one MVP CI provider.
-- [ ] Approve the authentication and data-flow contract.
-- [ ] Provide or create one known-good sanitized fixture.
-
-### P1 - Required for MVP
-
-- [ ] Extract and approve the integration contract.
-- [ ] Create evaluation prompts and expected outcomes.
-- [ ] Implement and test `detect-project.ps1`.
-- [ ] Implement and test `validate-config.ps1`.
-- [ ] Implement and test `verify-integration.ps1`.
-- [ ] Create the six reference files.
-- [ ] Create `SKILL.md` and `agents/openai.yaml`.
-- [ ] Validate the skill package.
-- [ ] Run clean-context forward tests.
-- [ ] Complete product and security review.
-
-### P2 - After MVP
-
-- [ ] Add the second framework.
-- [ ] Add the second CI provider.
-- [ ] Add version migration support.
-- [ ] Add supported remediation recipes.
-- [ ] Add Linux/macOS script equivalents if required by target users.
-- [ ] Add regression cases from real agent failures.
-
-## Recommended ownership
-
-| Workstream | Accountable role |
-| --- | --- |
-| API, SDK, and configuration facts | Product/SDK owner |
-| Threat model and guardrails | Security owner |
-| Scripts and fixtures | Tooling engineer |
-| Skill workflow and references | Agent/AI engineer |
-| Forward-test acceptance | Product + security reviewers |
-
-## Suggested delivery sequence
-
-Assuming one primary implementer and timely product review:
-
-| Stage | Indicative effort | Dependency |
-| --- | ---: | --- |
-| Contract extraction and approval | 1-2 days | Documentation and SDK access |
-| Evaluation cases and fixtures | 1-2 days | Approved primary framework |
-| Scripts and tests | 2-4 days | Approved contract and fixtures |
-| References and `SKILL.md` | 1-2 days | Scripts and contract |
-| Forward-testing and fixes | 2-3 days | Complete candidate skill |
-| Packaging and release checks | 1 day | Acceptance approval |
-
-These are planning estimates, not commitments; missing or contradictory product documentation will extend Phase 0.
+### P2 - Post-MVP Enhancements
+- [ ] Add interprocedural taint analysis across Go package call graphs.
+- [ ] Add HTTP router entry-point reachability (`chi`, `gin`, `fiber`).
+- [ ] Add automated remediation workflows (`security-review scan --fix`).
