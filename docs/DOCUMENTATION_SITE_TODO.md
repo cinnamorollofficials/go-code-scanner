@@ -77,14 +77,14 @@ be delivered as one atomic commit.
 
 ## Phase 2 — Information architecture and core content
 
-- [ ] **6. Implement the site navigation and content conventions.** Configure
+- [x] **6. Implement the site navigation and content conventions.** Configure
   top navigation, sidebar groups, previous/next navigation, breadcrumbs, edit
   links, last-updated metadata, and a 404 page. Add an author guide describing
   titles, descriptions, headings, code examples, admonitions, terminology, and
   link style. Acceptance: every planned top-level section has a stable route and
   placeholder index page. Commit: `docs(site): define information architecture`.
 
-- [ ] **7. Build the product landing page.** Explain the policy-driven commit
+- [x] **7. Build the product landing page.** Explain the policy-driven commit
   gate, six finding domains, offline-first behavior, local/hook/CI workflows, and
   report formats. Add installation and three copyable quick-start paths: local
   scan, staged pre-commit scan, and CI SARIF scan. Acceptance: a new user can
