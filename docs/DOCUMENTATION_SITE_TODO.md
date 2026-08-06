@@ -176,7 +176,7 @@ be delivered as one atomic commit.
   sensitive test fixtures, and the catalog matches the registered default rules.
   Commit: `docs(rules): generate rule catalog`.
 
-- [ ] **19. Generate scanner and adapter compatibility pages.** Document built-in,
+- [x] **19. Generate scanner and adapter compatibility pages.** Document built-in,
   command, and adapter scanners; executable requirements; network behavior;
   workspace support; parser format; missing-tool policy; supported profiles; and
   availability by operating system. Acceptance: every registered adapter is
