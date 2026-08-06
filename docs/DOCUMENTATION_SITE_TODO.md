@@ -221,7 +221,7 @@ be delivered as one atomic commit.
 
 ## Phase 6 — Interactive configuration and release readiness
 
-- [ ] **25. Design the configuration builder contract.** Define supported fields,
+- [x] **25. Design the configuration builder contract.** Define supported fields,
   state model, defaults, presets, serialization rules, URL persistence policy,
   accessibility behavior, and explicit non-goals. The browser must not execute
   scanners, upload repositories, or send configuration data to a server.
