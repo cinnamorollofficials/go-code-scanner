@@ -6,6 +6,9 @@ export default defineConfig({
   base: '/go-code-scanner/',
   cleanUrls: true,
   lastUpdated: true,
+  sitemap: {
+    hostname: 'https://cinnamorollofficials.github.io/go-code-scanner/'
+  },
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/go-code-scanner/favicon.svg' }],
     ['meta', { name: 'theme-color', content: '#10b981' }],
