@@ -153,7 +153,7 @@ be delivered as one atomic commit.
   metadata covers every serialized public configuration field and has a golden
   test. Commit: `feat(docs): expose configuration reference metadata`.
 
-- [ ] **16. Generate the complete configuration reference.** Build a deterministic
+- [x] **16. Generate the complete configuration reference.** Build a deterministic
   Go generator that converts configuration metadata into Markdown tables and
   detail sections. Add `go generate` or an explicit documented command and a CI
   clean-tree check. Acceptance: two runs are byte-identical and CI detects stale
