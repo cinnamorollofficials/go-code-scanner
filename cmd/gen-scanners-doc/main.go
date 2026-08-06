@@ -27,6 +27,7 @@ func main() {
 		{ID: "trivy", Executable: "trivy", Domain: "vulnerabilities", RequiresNetwork: true, ParserFormat: "JSON vulnerability schema", Description: "Comprehensive vulnerability scanner for containers and dependencies."},
 		{ID: "osv-scanner", Executable: "osv-scanner", Domain: "vulnerabilities", RequiresNetwork: true, ParserFormat: "OSV JSON", Description: "Vulnerability scanner using Open Source Vulnerabilities database."},
 		{ID: "semgrep", Executable: "semgrep", Domain: "security", RequiresNetwork: false, ParserFormat: "JSON output", Description: "Multi-language lightweight static analysis engine."},
+		{ID: "sqltaint", Executable: "built-in", Domain: "security", RequiresNetwork: false, ParserFormat: "AST / Dataflow", Description: "Native Go AST and intraprocedural SQL taint analysis engine."},
 		{ID: "eslint", Executable: "eslint", Domain: "frontend", RequiresNetwork: false, ParserFormat: "JSON format", Description: "Pluggable linting utility for JavaScript and TypeScript."},
 		{ID: "tsc", Executable: "tsc", Domain: "frontend", RequiresNetwork: false, ParserFormat: "Compiler text", Description: "TypeScript language compiler type checker."},
 		{ID: "biome", Executable: "biome", Domain: "frontend", RequiresNetwork: false, ParserFormat: "JSON report", Description: "Fast linter and formatter for JavaScript/TypeScript."},

@@ -80,3 +80,16 @@ When installed, committing staged changes triggers:
 ```sh
 security-review scan --mode staged --profile fast
 ```
+
+---
+
+## AI Agent Skill Integration
+
+`go-code-scanner` includes a pre-packaged AI Agent Skill module under `.agents/skills/go-code-scanner/` that enables AI coding assistants (such as Antigravity, Claude, and Codex) to autonomously inspect repositories, run AST & SQL taint analysis, validate configuration, and execute evidence-based remediations.
+
+### Using the Skill with AI Assistants
+
+1. **Automatic Discovery**: AI agents automatically discover the skill under `.agents/skills/go-code-scanner/`.
+2. **Review Mode**: Trigger an offline audit by asking: *"Scan the repository for security findings and validate security configuration"*.
+3. **Remediation Mode**: Trigger targeted fixes by asking: *"Fix the SQL injection vulnerabilities found by security-review"*.
+

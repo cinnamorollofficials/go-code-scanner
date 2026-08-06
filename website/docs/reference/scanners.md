@@ -18,6 +18,7 @@ description: Complete list of built-in scanners, external adapters, network requ
 | `trivy` | `trivy` | `vulnerabilities` | No 🌐 | JSON vulnerability schema | Comprehensive vulnerability scanner for containers and dependencies. |
 | `osv-scanner` | `osv-scanner` | `vulnerabilities` | No 🌐 | OSV JSON | Vulnerability scanner using Open Source Vulnerabilities database. |
 | `semgrep` | `semgrep` | `security` | Yes 🔒 | JSON output | Multi-language lightweight static analysis engine. |
+| `sqltaint` | `built-in` | `security` | Yes 🔒 | AST / Dataflow | Native Go AST and intraprocedural SQL taint analysis engine. |
 | `eslint` | `eslint` | `frontend` | Yes 🔒 | JSON format | Pluggable linting utility for JavaScript and TypeScript. |
 | `tsc` | `tsc` | `frontend` | Yes 🔒 | Compiler text | TypeScript language compiler type checker. |
 | `biome` | `biome` | `frontend` | Yes 🔒 | JSON report | Fast linter and formatter for JavaScript/TypeScript. |
