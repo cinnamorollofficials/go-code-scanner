@@ -192,7 +192,7 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 		}
 		if base == "package.json" && !hasJavaScriptLockfile(knownFiles, filepath.ToSlash(filepath.Dir(relative))) {
 			findings = append(findings, fileFinding("manifest-without-lockfile", finding.SupplyChain, "dependency_lock", finding.High,
-				"JavaScript dependency manifest tidak memiliki lockfile pada directory yang sama", "Commit lockfile package manager untuk resolution dependency yang reproducible", relative, 1))
+				"JavaScript dependency manifest lacks lockfile in the same directory", "Commit package manager lockfile for reproducible dependency resolution", relative, 1))
 		}
 		if base != "dockerfile" && !strings.HasPrefix(base, "dockerfile.") && request.Mode == "full" {
 			if base != "go.mod" && base != "package.json" && base != "package-lock.json" && !isGitHubWorkflow(relative) {
@@ -217,23 +217,23 @@ func (s *Scanner) scanFilePolicies(ctx context.Context, request scanner.Request)
 			text := lineScanner.Text()
 			if (base == "dockerfile" || strings.HasPrefix(base, "dockerfile.")) && strings.EqualFold(strings.TrimSpace(text), "USER root") {
 				findings = append(findings, fileFinding("docker-root-user", finding.Hardening, "container_security", finding.High,
-					"Docker container dikonfigurasi berjalan sebagai root", "Gunakan USER non-root dengan permission minimum", relative, line))
+					"Docker container is configured to run as root", "Use a non-root USER with minimum required permissions", relative, line))
 			}
 			if (base == "dockerfile" || strings.HasPrefix(base, "dockerfile.")) && dockerLatest(text) {
 				findings = append(findings, fileFinding("docker-latest-tag", finding.SupplyChain, "unpinned_dependency", finding.High,
-					"Docker base image menggunakan mutable tag latest", "Pin base image ke digest sha256 atau version tag yang immutable", relative, line))
+					"Docker base image uses mutable tag latest", "Pin base image to sha256 digest or immutable version tag", relative, line))
 			}
 			if base == "go.mod" && localGoReplace(text) {
 				findings = append(findings, fileFinding("go-local-replace", finding.SupplyChain, "unpinned_dependency", finding.High,
-					"go.mod menggunakan replace ke path lokal", "Gunakan module version yang dapat direproduksi atau workspace file yang tidak di-commit", relative, line))
+					"go.mod uses replace directive to a local path", "Use reproducible module versions or uncommitted workspace files", relative, line))
 			}
 			if isGitHubWorkflow(relative) && mutableActionReference(text) {
 				findings = append(findings, fileFinding("github-action-mutable-ref", finding.SupplyChain, "ci_dependency", finding.High,
-					"GitHub Action menggunakan ref yang dapat berubah", "Pin action ke full commit SHA dan catat version tag sebagai komentar", relative, line))
+					"GitHub Action uses a mutable ref", "Pin action to full commit SHA and record version tag in comment", relative, line))
 			}
 			if request.Mode != "full" && strings.Contains(text, "Code generated") && strings.Contains(text, "DO NOT EDIT") {
 				findings = append(findings, fileFinding("generated-file-changed", finding.Quality, "generated_code", finding.Low,
-					"Generated file termasuk dalam perubahan", "Pastikan file dihasilkan ulang dari source generator, bukan diedit manual", relative, line))
+					"Generated file is included in changes", "Ensure file is regenerated from source generator, not edited manually", relative, line))
 				break
 			}
 		}
@@ -358,7 +358,7 @@ func dependencyPolicyFindings(content []byte, path string, limits Limits) []find
 			continue
 		}
 		item := fileFinding("dependency-policy", finding.SupplyChain, "dependency_policy", finding.High,
-			fmt.Sprintf("Dependency %s tidak diizinkan oleh repository policy", name), "Gunakan dependency yang disetujui atau perbarui policy melalui review", path, 1)
+			fmt.Sprintf("Dependency %s is not allowed by repository policy", name), "Use an approved dependency or update policy via review", path, 1)
 		item.Metadata = map[string]string{"dependency": name}
 		result = append(result, item)
 	}
@@ -390,7 +390,7 @@ func licensePolicyFindings(content []byte, path string, limits Limits) []finding
 			continue
 		}
 		item := fileFinding("dependency-license-policy", finding.SupplyChain, "license_policy", finding.High,
-			fmt.Sprintf("Dependency %s menggunakan license %s yang tidak diizinkan", name, pkg.License), "Ganti dependency atau perbarui license policy melalui legal review", path, 1)
+			fmt.Sprintf("Dependency %s uses unapproved license %s", name, pkg.License), "Replace dependency or update license policy via legal review", path, 1)
 		item.Metadata = map[string]string{"dependency": name, "license": pkg.License}
 		result = append(result, item)
 	}
@@ -543,8 +543,8 @@ func unpinnedPackageDependencies(content []byte, path string) []finding.Finding 
 				continue
 			}
 			item := fileFinding("javascript-unpinned-dependency", finding.SupplyChain, "unpinned_dependency", finding.High,
-				fmt.Sprintf("Dependency %s menggunakan version reference yang tidak dikunci (%s)", name, reason),
-				"Pin dependency ke version range yang terkontrol dan commit lockfile", path, 1)
+				fmt.Sprintf("Dependency %s uses unpinned version reference (%s)", name, reason),
+				"Pin dependency to a controlled version range and commit lockfile", path, 1)
 			item.Metadata = map[string]string{"dependency": name, "version": version, "reason": reason}
 			findings = append(findings, item)
 		}

@@ -25,23 +25,23 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 | Rule ID | Severity | Category | Description |
 | :--- | :--- | :--- | :--- |
-| [`mock-token`](#mock-token) | `CRITICAL` | `secret_leak` | Hardcoded mock token ditemukan — hapus sebelum production |
-| [`browser-token-storage`](#browser-token-storage) | `HIGH` | `data_leak` | Token disimpan di localStorage — gunakan HttpOnly Cookie |
-| [`permission-bypass`](#permission-bypass) | `CRITICAL` | `security_misconfiguration` | Permission bypass hardcoded ditemukan |
-| [`weak-secret`](#weak-secret) | `CRITICAL` | `secret_leak` | Default atau weak secret ditemukan |
-| [`frontend-sensitive-log`](#frontend-sensitive-log) | `MEDIUM` | `data_leak` | Log frontend mungkin menampilkan data sensitif |
-| [`backend-sensitive-log`](#backend-sensitive-log) | `MEDIUM` | `data_leak` | Log backend mungkin menampilkan data sensitif |
-| [`sql-string-format`](#sql-string-format) | `HIGH` | `injection` | Potensi SQL injection — gunakan parameterized query |
-| [`hardcoded-credential`](#hardcoded-credential) | `HIGH` | `secret_leak` | Credential hardcoded ditemukan |
-| [`unsafe-inner-html`](#unsafe-inner-html) | `HIGH` | `xss` | dangerouslySetInnerHTML ditemukan — pastikan input disanitasi |
-| [`dynamic-order`](#dynamic-order) | `HIGH` | `injection` | ORDER BY dinamis harus memakai whitelist |
-| [`api-struct-response`](#api-struct-response) | `HIGH` | `data_leak` | Struct sensitif mungkin dikirim langsung ke response |
-| [`sensitive-json-field`](#sensitive-json-field) | `HIGH` | `data_leak` | Field sensitif mungkin terekspos dalam JSON |
-| [`go-shell-command`](#go-shell-command) | `HIGH` | `command_injection` | Shell command interpreter digunakan melalui os/exec |
-| [`go-weak-cryptographic-hash`](#go-weak-cryptographic-hash) | `MEDIUM` | `weak_cryptography` | Algoritma hash kriptografi yang lemah ditemukan |
-| [`go-tainted-file-path`](#go-tainted-file-path) | `HIGH` | `path_traversal` | Input request mungkin digunakan langsung sebagai path file |
-| [`go-weak-random-secret`](#go-weak-random-secret) | `HIGH` | `insecure_randomness` | Nilai keamanan mungkin dibuat menggunakan math/rand |
-| [`javascript-dynamic-eval`](#javascript-dynamic-eval) | `HIGH` | `unsafe_deserialization` | Dynamic eval mungkin mengeksekusi data sebagai kode |
+| [`mock-token`](#mock-token) | `CRITICAL` | `secret_leak` | Hardcoded mock token found — remove before production deployment |
+| [`browser-token-storage`](#browser-token-storage) | `HIGH` | `data_leak` | Token stored in localStorage — vulnerable to XSS token theft |
+| [`permission-bypass`](#permission-bypass) | `CRITICAL` | `security_misconfiguration` | Hardcoded permission bypass found in application logic |
+| [`weak-secret`](#weak-secret) | `CRITICAL` | `secret_leak` | Default or weak secret value found |
+| [`frontend-sensitive-log`](#frontend-sensitive-log) | `MEDIUM` | `data_leak` | Frontend log statement may expose sensitive credentials or PII |
+| [`backend-sensitive-log`](#backend-sensitive-log) | `MEDIUM` | `data_leak` | Backend log statement may expose sensitive credentials or keys |
+| [`sql-string-format`](#sql-string-format) | `HIGH` | `injection` | Potential SQL injection using formatted strings |
+| [`hardcoded-credential`](#hardcoded-credential) | `HIGH` | `secret_leak` | Hardcoded credential or API secret key found |
+| [`unsafe-inner-html`](#unsafe-inner-html) | `HIGH` | `xss` | dangerouslySetInnerHTML used — potential DOM XSS vulnerability |
+| [`dynamic-order`](#dynamic-order) | `HIGH` | `injection` | Dynamic ORDER BY clause built via string formatting |
+| [`api-struct-response`](#api-struct-response) | `HIGH` | `data_leak` | Internal domain struct may be serialized directly into HTTP response |
+| [`sensitive-json-field`](#sensitive-json-field) | `HIGH` | `data_leak` | Sensitive struct field may be exposed in JSON serialization |
+| [`go-shell-command`](#go-shell-command) | `HIGH` | `command_injection` | Shell command interpreter executed via os/exec |
+| [`go-weak-cryptographic-hash`](#go-weak-cryptographic-hash) | `MEDIUM` | `weak_cryptography` | Weak cryptographic hash algorithm (MD5/SHA1) detected |
+| [`go-tainted-file-path`](#go-tainted-file-path) | `HIGH` | `path_traversal` | Untrusted request parameter used directly in file system operation |
+| [`go-weak-random-secret`](#go-weak-random-secret) | `HIGH` | `insecure_randomness` | Security-sensitive value generated using pseudo-random math/rand package |
+| [`javascript-dynamic-eval`](#javascript-dynamic-eval) | `HIGH` | `unsafe_deserialization` | Dynamic eval execution of untrusted input detected |
 
 ### Details & Guidance
 
@@ -51,7 +51,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `CRITICAL`
 - **Category**: `secret_leak`
 
-**Description**: Hardcoded mock token ditemukan — hapus sebelum production
+**Description**: Hardcoded mock token found — remove before production deployment
+
+**Recommendation**: Remove hardcoded mock tokens and load credentials from environment variables or key vaults
 
 ---
 
@@ -61,7 +63,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `data_leak`
 
-**Description**: Token disimpan di localStorage — gunakan HttpOnly Cookie
+**Description**: Token stored in localStorage — vulnerable to XSS token theft
+
+**Recommendation**: Store authentication tokens in HttpOnly, Secure, SameSite cookies instead of localStorage
 
 ---
 
@@ -71,7 +75,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `CRITICAL`
 - **Category**: `security_misconfiguration`
 
-**Description**: Permission bypass hardcoded ditemukan
+**Description**: Hardcoded permission bypass found in application logic
+
+**Recommendation**: Remove permission bypass conditions and enforce strict authorization checks
 
 ---
 
@@ -81,7 +87,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `CRITICAL`
 - **Category**: `secret_leak`
 
-**Description**: Default atau weak secret ditemukan
+**Description**: Default or weak secret value found
+
+**Recommendation**: Replace default/placeholder secrets with cryptographically strong random values from secure configuration
 
 ---
 
@@ -91,7 +99,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `MEDIUM`
 - **Category**: `data_leak`
 
-**Description**: Log frontend mungkin menampilkan data sensitif
+**Description**: Frontend log statement may expose sensitive credentials or PII
+
+**Recommendation**: Sanitize log parameters and remove sensitive tokens or user identifiers from console logs
 
 ---
 
@@ -101,7 +111,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `MEDIUM`
 - **Category**: `data_leak`
 
-**Description**: Log backend mungkin menampilkan data sensitif
+**Description**: Backend log statement may expose sensitive credentials or keys
+
+**Recommendation**: Redact sensitive parameters before writing to application log streams
 
 ---
 
@@ -111,7 +123,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `injection`
 
-**Description**: Potensi SQL injection — gunakan parameterized query
+**Description**: Potential SQL injection using formatted strings
+
+**Recommendation**: Use parameterized queries or prepared statements instead of string formatting
 
 ---
 
@@ -121,7 +135,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `secret_leak`
 
-**Description**: Credential hardcoded ditemukan
+**Description**: Hardcoded credential or API secret key found
+
+**Recommendation**: Extract credentials to environment variables or secret management services
 
 ---
 
@@ -131,7 +147,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `xss`
 
-**Description**: dangerouslySetInnerHTML ditemukan — pastikan input disanitasi
+**Description**: dangerouslySetInnerHTML used — potential DOM XSS vulnerability
+
+**Recommendation**: Sanitize raw HTML using DOMPurify before injecting into the DOM
 
 ---
 
@@ -141,7 +159,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `injection`
 
-**Description**: ORDER BY dinamis harus memakai whitelist
+**Description**: Dynamic ORDER BY clause built via string formatting
+
+**Recommendation**: Validate dynamic column names against an explicit allowlist before building queries
 
 ---
 
@@ -151,7 +171,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `data_leak`
 
-**Description**: Struct sensitif mungkin dikirim langsung ke response
+**Description**: Internal domain struct may be serialized directly into HTTP response
+
+**Recommendation**: Map internal domain entities to explicit response DTOs to avoid leaking sensitive fields
 
 ---
 
@@ -161,7 +183,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `data_leak`
 
-**Description**: Field sensitif mungkin terekspos dalam JSON
+**Description**: Sensitive struct field may be exposed in JSON serialization
+
+**Recommendation**: Use json:"-" struct tag or custom serializer to exclude sensitive attributes
 
 ---
 
@@ -171,9 +195,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `command_injection`
 
-**Description**: Shell command interpreter digunakan melalui os/exec
+**Description**: Shell command interpreter executed via os/exec
 
-**Recommendation**: Jalankan executable secara langsung dengan argument array dan validasi input yang tidak dipercaya
+**Recommendation**: Execute binary commands directly with argument arrays and sanitize untrusted input
 
 ---
 
@@ -183,9 +207,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `MEDIUM`
 - **Category**: `weak_cryptography`
 
-**Description**: Algoritma hash kriptografi yang lemah ditemukan
+**Description**: Weak cryptographic hash algorithm (MD5/SHA1) detected
 
-**Recommendation**: Gunakan SHA-256 atau algoritma yang sesuai; gunakan password KDF untuk password
+**Recommendation**: Use SHA-256 or stronger algorithms; use bcrypt/argon2 for password hashing
 
 ---
 
@@ -195,9 +219,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `path_traversal`
 
-**Description**: Input request mungkin digunakan langsung sebagai path file
+**Description**: Untrusted request parameter used directly in file system operation
 
-**Recommendation**: Normalisasi path, enforce base directory, dan gunakan allowlist identifier
+**Recommendation**: Normalize paths, enforce base directory boundaries, and use allowlisted identifiers
 
 ---
 
@@ -207,9 +231,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `insecure_randomness`
 
-**Description**: Nilai keamanan mungkin dibuat menggunakan math/rand
+**Description**: Security-sensitive value generated using pseudo-random math/rand package
 
-**Recommendation**: Gunakan crypto/rand untuk token, nonce, session identifier, dan secret
+**Recommendation**: Use crypto/rand for generating tokens, nonces, session identifiers, and secret keys
 
 ---
 
@@ -219,9 +243,9 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 - **Severity**: `HIGH`
 - **Category**: `unsafe_deserialization`
 
-**Description**: Dynamic eval mungkin mengeksekusi data sebagai kode
+**Description**: Dynamic eval execution of untrusted input detected
 
-**Recommendation**: Gunakan parser data terstruktur dan validasi schema tanpa evaluasi kode
+**Recommendation**: Use structured data parsers (JSON.parse) and schema validators instead of code evaluation
 
 ---
 
@@ -231,12 +255,12 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 
 | Rule ID | Severity | Category | Description |
 | :--- | :--- | :--- | :--- |
-| [`hardcoded-api-url`](#hardcoded-api-url) | `MEDIUM` | `configuration_leak` | URL API hardcoded — gunakan environment variable |
-| [`tls-insecure-skip-verify`](#tls-insecure-skip-verify) | `HIGH` | `transport_security` | Verifikasi sertifikat TLS dinonaktifkan |
-| [`wildcard-cors-origin`](#wildcard-cors-origin) | `HIGH` | `cors` | Wildcard CORS origin ditemukan |
-| [`go-permissive-file-mode`](#go-permissive-file-mode) | `MEDIUM` | `file_permission` | File atau directory dibuat dengan permission world-writable |
-| [`debug-mode-enabled`](#debug-mode-enabled) | `MEDIUM` | `debug_configuration` | Debug mode tampak diaktifkan secara eksplisit |
-| [`go-insecure-cookie-attribute`](#go-insecure-cookie-attribute) | `HIGH` | `cookie_security` | Cookie memiliki atribut keamanan yang secara eksplisit tidak aman |
+| [`hardcoded-api-url`](#hardcoded-api-url) | `MEDIUM` | `configuration_leak` | Hardcoded localhost API URL found — load dynamically from environment variable |
+| [`tls-insecure-skip-verify`](#tls-insecure-skip-verify) | `HIGH` | `transport_security` | TLS certificate verification is explicitly disabled |
+| [`wildcard-cors-origin`](#wildcard-cors-origin) | `HIGH` | `cors` | Wildcard CORS origin header found in configuration |
+| [`go-permissive-file-mode`](#go-permissive-file-mode) | `MEDIUM` | `file_permission` | File or directory created with permissive world-writable file permissions (0777) |
+| [`debug-mode-enabled`](#debug-mode-enabled) | `MEDIUM` | `debug_configuration` | Debug mode appears to be explicitly enabled in configuration |
+| [`go-insecure-cookie-attribute`](#go-insecure-cookie-attribute) | `HIGH` | `cookie_security` | Cookie configured with explicitly insecure security attributes |
 
 ### Details & Guidance
 
@@ -246,7 +270,9 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 - **Severity**: `MEDIUM`
 - **Category**: `configuration_leak`
 
-**Description**: URL API hardcoded — gunakan environment variable
+**Description**: Hardcoded localhost API URL found — load dynamically from environment variable
+
+**Recommendation**: Configure API endpoints dynamically via environment variables for different environments
 
 ---
 
@@ -256,9 +282,9 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 - **Severity**: `HIGH`
 - **Category**: `transport_security`
 
-**Description**: Verifikasi sertifikat TLS dinonaktifkan
+**Description**: TLS certificate verification is explicitly disabled
 
-**Recommendation**: Aktifkan certificate verification dan konfigurasi trust store yang sesuai
+**Recommendation**: Enable certificate verification and configure valid trust stores
 
 ---
 
@@ -268,9 +294,9 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 - **Severity**: `HIGH`
 - **Category**: `cors`
 
-**Description**: Wildcard CORS origin ditemukan
+**Description**: Wildcard CORS origin header found in configuration
 
-**Recommendation**: Gunakan allowlist origin yang eksplisit untuk environment terkait
+**Recommendation**: Use an explicit CORS origin allowlist tailored for each deployment environment
 
 ---
 
@@ -280,9 +306,9 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 - **Severity**: `MEDIUM`
 - **Category**: `file_permission`
 
-**Description**: File atau directory dibuat dengan permission world-writable
+**Description**: File or directory created with permissive world-writable file permissions (0777)
 
-**Recommendation**: Gunakan permission minimum yang diperlukan, misalnya 0600 atau 0750
+**Recommendation**: Use minimum required file permissions such as 0600 for files or 0750 for directories
 
 ---
 
@@ -292,9 +318,9 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 - **Severity**: `MEDIUM`
 - **Category**: `debug_configuration`
 
-**Description**: Debug mode tampak diaktifkan secara eksplisit
+**Description**: Debug mode appears to be explicitly enabled in configuration
 
-**Recommendation**: Nonaktifkan debug mode pada konfigurasi deployment production
+**Recommendation**: Disable debug mode in production deployment configurations to prevent information disclosure
 
 ---
 
@@ -304,9 +330,9 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 - **Severity**: `HIGH`
 - **Category**: `cookie_security`
 
-**Description**: Cookie memiliki atribut keamanan yang secara eksplisit tidak aman
+**Description**: Cookie configured with explicitly insecure security attributes
 
-**Recommendation**: Aktifkan Secure dan HttpOnly serta gunakan kebijakan SameSite yang sesuai
+**Recommendation**: Enable Secure and HttpOnly flags and set an appropriate SameSite policy for session cookies
 
 ---
 
@@ -316,12 +342,12 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 
 | Rule ID | Severity | Category | Description |
 | :--- | :--- | :--- | :--- |
-| [`go-multipart-memory`](#go-multipart-memory) | `MEDIUM` | `resource_exhaustion` | Pastikan request multipart memiliki batas ukuran |
-| [`go-http-default-server`](#go-http-default-server) | `MEDIUM` | `missing_timeout` | Default HTTP server tidak mengonfigurasi timeout defensif |
-| [`go-unbounded-request-read`](#go-unbounded-request-read) | `MEDIUM` | `resource_exhaustion` | Request body mungkin dibaca tanpa batas ukuran |
-| [`go-discarded-error`](#go-discarded-error) | `MEDIUM` | `error_handling` | Return value error mungkin dibuang secara eksplisit |
-| [`go-process-termination`](#go-process-termination) | `MEDIUM` | `process_termination` | Application path mungkin menghentikan seluruh process |
-| [`go-http-client-without-timeout`](#go-http-client-without-timeout) | `MEDIUM` | `missing_timeout` | HTTP client literal tidak menetapkan timeout keseluruhan |
+| [`go-multipart-memory`](#go-multipart-memory) | `MEDIUM` | `resource_exhaustion` | Ensure multipart request processing configures explicit memory limits |
+| [`go-http-default-server`](#go-http-default-server) | `MEDIUM` | `missing_timeout` | Default HTTP server does not configure defensive timeouts |
+| [`go-unbounded-request-read`](#go-unbounded-request-read) | `MEDIUM` | `resource_exhaustion` | Request body may be read without explicit size limits |
+| [`go-discarded-error`](#go-discarded-error) | `MEDIUM` | `error_handling` | Returned error value is explicitly ignored with blank identifier |
+| [`go-process-termination`](#go-process-termination) | `MEDIUM` | `process_termination` | Application path may terminate entire process unexpectedly |
+| [`go-http-client-without-timeout`](#go-http-client-without-timeout) | `MEDIUM` | `missing_timeout` | HTTP client struct literal does not set an overall request timeout |
 
 ### Details & Guidance
 
@@ -331,7 +357,9 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 - **Severity**: `MEDIUM`
 - **Category**: `resource_exhaustion`
 
-**Description**: Pastikan request multipart memiliki batas ukuran
+**Description**: Ensure multipart request processing configures explicit memory limits
+
+**Recommendation**: Set explicit memory limit with ParseMultipartForm or MaxBytesReader to prevent memory exhaustion
 
 ---
 
@@ -341,9 +369,9 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 - **Severity**: `MEDIUM`
 - **Category**: `missing_timeout`
 
-**Description**: Default HTTP server tidak mengonfigurasi timeout defensif
+**Description**: Default HTTP server does not configure defensive timeouts
 
-**Recommendation**: Gunakan http.Server dengan ReadHeaderTimeout, ReadTimeout, WriteTimeout, dan IdleTimeout
+**Recommendation**: Use custom http.Server with ReadHeaderTimeout, ReadTimeout, WriteTimeout, and IdleTimeout
 
 ---
 
@@ -353,9 +381,9 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 - **Severity**: `MEDIUM`
 - **Category**: `resource_exhaustion`
 
-**Description**: Request body mungkin dibaca tanpa batas ukuran
+**Description**: Request body may be read without explicit size limits
 
-**Recommendation**: Batasi body dengan http.MaxBytesReader atau io.LimitReader sebelum membacanya
+**Recommendation**: Limit request body with http.MaxBytesReader or io.LimitReader before reading into memory
 
 ---
 
@@ -365,9 +393,9 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 - **Severity**: `MEDIUM`
 - **Category**: `error_handling`
 
-**Description**: Return value error mungkin dibuang secara eksplisit
+**Description**: Returned error value is explicitly ignored with blank identifier
 
-**Recommendation**: Periksa dan tangani error, atau dokumentasikan alasan aman untuk mengabaikannya
+**Recommendation**: Check and handle returned errors or document valid reason for ignoring
 
 ---
 
@@ -377,9 +405,9 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 - **Severity**: `MEDIUM`
 - **Category**: `process_termination`
 
-**Description**: Application path mungkin menghentikan seluruh process
+**Description**: Application path may terminate entire process unexpectedly
 
-**Recommendation**: Propagasikan error ke boundary dan lakukan shutdown terkontrol
+**Recommendation**: Propagate errors to request boundaries and perform controlled shutdown instead of calling panic/log.Fatal
 
 ---
 
@@ -389,9 +417,9 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 - **Severity**: `MEDIUM`
 - **Category**: `missing_timeout`
 
-**Description**: HTTP client literal tidak menetapkan timeout keseluruhan
+**Description**: HTTP client struct literal does not set an overall request timeout
 
-**Recommendation**: Tetapkan http.Client.Timeout dan timeout transport yang sesuai
+**Recommendation**: Configure explicit http.Client.Timeout and appropriate transport timeouts
 
 ---
 
@@ -401,11 +429,11 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 
 | Rule ID | Severity | Category | Description |
 | :--- | :--- | :--- | :--- |
-| [`merge-conflict-marker`](#merge-conflict-marker) | `HIGH` | `repository_hygiene` | Unresolved merge-conflict marker ditemukan |
-| [`javascript-debugger`](#javascript-debugger) | `MEDIUM` | `debug_code` | JavaScript debugger statement ditemukan |
-| [`trailing-whitespace`](#trailing-whitespace) | `LOW` | `formatting` | Trailing whitespace ditemukan |
-| [`mixed-indentation`](#mixed-indentation) | `LOW` | `formatting` | Tab dan spasi tercampur pada indentation baris yang sama |
-| [`javascript-console-debug`](#javascript-console-debug) | `LOW` | `debug_code` | Console debug statement mungkin tertinggal |
+| [`merge-conflict-marker`](#merge-conflict-marker) | `HIGH` | `repository_hygiene` | Unresolved merge-conflict marker found |
+| [`javascript-debugger`](#javascript-debugger) | `MEDIUM` | `debug_code` | JavaScript debugger statement found |
+| [`trailing-whitespace`](#trailing-whitespace) | `LOW` | `formatting` | Trailing whitespace found at end of line |
+| [`mixed-indentation`](#mixed-indentation) | `LOW` | `formatting` | Mixed tabs and spaces used for indentation on the same line |
+| [`javascript-console-debug`](#javascript-console-debug) | `LOW` | `debug_code` | Console debug statement left in code |
 
 ### Details & Guidance
 
@@ -415,9 +443,9 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 - **Severity**: `HIGH`
 - **Category**: `repository_hygiene`
 
-**Description**: Unresolved merge-conflict marker ditemukan
+**Description**: Unresolved merge-conflict marker found
 
-**Recommendation**: Selesaikan conflict dan hapus seluruh marker sebelum commit
+**Recommendation**: Resolve merge conflict and remove all markers before committing
 
 ---
 
@@ -427,9 +455,9 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 - **Severity**: `MEDIUM`
 - **Category**: `debug_code`
 
-**Description**: JavaScript debugger statement ditemukan
+**Description**: JavaScript debugger statement found
 
-**Recommendation**: Hapus debugger statement sebelum commit
+**Recommendation**: Remove debugger statement before committing
 
 ---
 
@@ -439,9 +467,9 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 - **Severity**: `LOW`
 - **Category**: `formatting`
 
-**Description**: Trailing whitespace ditemukan
+**Description**: Trailing whitespace found at end of line
 
-**Recommendation**: Hapus whitespace pada akhir baris
+**Recommendation**: Remove trailing whitespace at line end
 
 ---
 
@@ -451,9 +479,9 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 - **Severity**: `LOW`
 - **Category**: `formatting`
 
-**Description**: Tab dan spasi tercampur pada indentation baris yang sama
+**Description**: Mixed tabs and spaces used for indentation on the same line
 
-**Recommendation**: Gunakan satu gaya indentation yang konsisten
+**Recommendation**: Use a consistent indentation style throughout the project
 
 ---
 
@@ -463,9 +491,9 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 - **Severity**: `LOW`
 - **Category**: `debug_code`
 
-**Description**: Console debug statement mungkin tertinggal
+**Description**: Console debug statement left in code
 
-**Recommendation**: Hapus statement debug atau gunakan logger aplikasi dengan level yang sesuai
+**Recommendation**: Remove debug statements or use an application logger with proper log level
 
 ---
 
