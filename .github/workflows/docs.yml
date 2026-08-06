@@ -3,13 +3,7 @@ name: Documentation CI
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'website/**'
-      - '.github/workflows/docs.yml'
   pull_request:
-    paths:
-      - 'website/**'
-      - '.github/workflows/docs.yml'
 
 permissions:
   contents: read
@@ -29,12 +23,23 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
       - name: Set up Node.js
         uses: actions/setup-node@39370e3970a6d050c080091e58771fdb98139a54 # v4.1.0
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'website/package-lock.json'
+
+      - name: Verify generated reference drift
+        run: |
+          go run ./cmd/gen-all-docs/main.go
+          git diff --exit-code
 
       - name: Install documentation dependencies
         working-directory: website
