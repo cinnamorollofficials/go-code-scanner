@@ -242,7 +242,7 @@ be delivered as one atomic commit.
   builder preset passes `config validate` and semantic defaults are documented.
   Commit: `test(docs): verify configuration builder output`.
 
-- [ ] **28. Add documentation version and release integration.** Display the
+- [x] **28. Add documentation version and release integration.** Display the
   documented scanner release, define latest-versus-versioned URL behavior, add
   release notes and migration links, and update the release workflow or checklist
   to publish compatible documentation. Avoid cloning every version unless public
