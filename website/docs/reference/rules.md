@@ -1,11 +1,11 @@
 ---
 title: Rule Catalog
-description: Complete catalog of default built-in security, secret, governance, and quality rules grouped by domain.
+description: Complete catalog of default built-in security, secret, governance, and quality rules with Do's and Don'ts code examples.
 ---
 
 # Built-In Rule Catalog
 
-Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog is organized into functional policy domains.
+Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog includes detailed guidance, recommendations, and **Do's and Don'ts** code examples for each rule.
 
 ## Domain Overview
 
@@ -55,6 +55,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Remove hardcoded mock tokens and load credentials from environment variables or key vaults
 
+##### ❌ Don't (Unsafe)
+
+```go
+const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";
+```
+
+##### ✅ Do (Recommended)
+
+```go
+const AUTH_HEADER = `Bearer ${process.env.AUTH_TOKEN}`;
+```
+
 ---
 
 #### `browser-token-storage`
@@ -66,6 +78,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Token stored in localStorage — vulnerable to XSS token theft
 
 **Recommendation**: Store authentication tokens in HttpOnly, Secure, SameSite cookies instead of localStorage
+
+##### ❌ Don't (Unsafe)
+
+```ts
+localStorage.setItem("access_token", response.token);
+```
+
+##### ✅ Do (Recommended)
+
+```ts
+await fetch("/api/login", { credentials: "include", method: "POST", body });
+```
 
 ---
 
@@ -79,6 +103,25 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Remove permission bypass conditions and enforce strict authorization checks
 
+##### ❌ Don't (Unsafe)
+
+```go
+func CheckPermission(user User) bool {
+    if user.Role == "admin" || bypassPermission {
+        return true
+    }
+    return false
+}
+```
+
+##### ✅ Do (Recommended)
+
+```go
+func CheckPermission(ctx context.Context, user User, resource string) bool {
+    return authzService.CanAccess(ctx, user.ID, resource)
+}
+```
+
 ---
 
 #### `weak-secret`
@@ -90,6 +133,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Default or weak secret value found
 
 **Recommendation**: Replace default/placeholder secrets with cryptographically strong random values from secure configuration
+
+##### ❌ Don't (Unsafe)
+
+```go
+jwtSecret := []byte("change-me-in-production")
+```
+
+##### ✅ Do (Recommended)
+
+```go
+jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))
+```
 
 ---
 
@@ -103,6 +158,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Sanitize log parameters and remove sensitive tokens or user identifiers from console logs
 
+##### ❌ Don't (Unsafe)
+
+```ts
+console.log("User auth failed for password:", password);
+```
+
+##### ✅ Do (Recommended)
+
+```ts
+console.error("User authentication failed", { username });
+```
+
 ---
 
 #### `backend-sensitive-log`
@@ -114,6 +181,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Backend log statement may expose sensitive credentials or keys
 
 **Recommendation**: Redact sensitive parameters before writing to application log streams
+
+##### ❌ Don't (Unsafe)
+
+```go
+log.Printf("Connecting to DB with secret: %s", dbSecret)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+log.Printf("Connecting to DB host: %s", dbHost)
+```
 
 ---
 
@@ -127,6 +206,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Use parameterized queries or prepared statements instead of string formatting
 
+##### ❌ Don't (Unsafe)
+
+```go
+query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+db.Query("SELECT * FROM users WHERE email = $1", userEmail)
+```
+
 ---
 
 #### `hardcoded-credential`
@@ -138,6 +229,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Hardcoded credential or API secret key found
 
 **Recommendation**: Extract credentials to environment variables or secret management services
+
+##### ❌ Don't (Unsafe)
+
+```go
+const apiKey = "synthetic_secret_api_key_12345"
+```
+
+##### ✅ Do (Recommended)
+
+```go
+apiKey := os.Getenv("STRIPE_API_KEY")
+```
 
 ---
 
@@ -151,6 +254,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Sanitize raw HTML using DOMPurify before injecting into the DOM
 
+##### ❌ Don't (Unsafe)
+
+```ts
+<div dangerouslySetInnerHTML={{ __html: userInput }} />
+```
+
+##### ✅ Do (Recommended)
+
+```ts
+<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
+```
+
 ---
 
 #### `dynamic-order`
@@ -162,6 +277,21 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Dynamic ORDER BY clause built via string formatting
 
 **Recommendation**: Validate dynamic column names against an explicit allowlist before building queries
+
+##### ❌ Don't (Unsafe)
+
+```go
+db.Order(fmt.Sprintf("%s ASC", sortColumn))
+```
+
+##### ✅ Do (Recommended)
+
+```go
+allowedColumns := map[string]bool{"created_at": true, "name": true}
+if allowedColumns[sortColumn] {
+    db.Order(sortColumn + " ASC")
+}
+```
 
 ---
 
@@ -175,6 +305,20 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Map internal domain entities to explicit response DTOs to avoid leaking sensitive fields
 
+##### ❌ Don't (Unsafe)
+
+```go
+var user User // Contains HashedPassword, SecretToken
+c.JSON(http.StatusOK, user)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+response := UserResponse{ID: user.ID, Email: user.Email}
+c.JSON(http.StatusOK, response)
+```
+
 ---
 
 #### `sensitive-json-field`
@@ -186,6 +330,24 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Sensitive struct field may be exposed in JSON serialization
 
 **Recommendation**: Use json:"-" struct tag or custom serializer to exclude sensitive attributes
+
+##### ❌ Don't (Unsafe)
+
+```go
+type Account struct {
+    ID           string `json:"id"`
+    PasswordHash string `json:"password_hash"`
+}
+```
+
+##### ✅ Do (Recommended)
+
+```go
+type Account struct {
+    ID           string `json:"id"`
+    PasswordHash string `json:"-"`
+}
+```
 
 ---
 
@@ -199,6 +361,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Execute binary commands directly with argument arrays and sanitize untrusted input
 
+##### ❌ Don't (Unsafe)
+
+```go
+exec.Command("sh", "-c", "ls " + userInput)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+exec.Command("ls", "--", validatedPath)
+```
+
 ---
 
 #### `go-weak-cryptographic-hash`
@@ -210,6 +384,20 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Weak cryptographic hash algorithm (MD5/SHA1) detected
 
 **Recommendation**: Use SHA-256 or stronger algorithms; use bcrypt/argon2 for password hashing
+
+##### ❌ Don't (Unsafe)
+
+```go
+hasher := md5.New()
+hasher.Write([]byte(password))
+```
+
+##### ✅ Do (Recommended)
+
+```go
+hasher := sha256.New()
+hasher.Write([]byte(password))
+```
 
 ---
 
@@ -223,6 +411,21 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Normalize paths, enforce base directory boundaries, and use allowlisted identifiers
 
+##### ❌ Don't (Unsafe)
+
+```go
+filePath := r.URL.Query().Get("file")
+data, _ := os.ReadFile(filePath)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+filename := filepath.Base(r.URL.Query().Get("file"))
+safePath := filepath.Join("/var/app/storage", filename)
+data, _ := os.ReadFile(safePath)
+```
+
 ---
 
 #### `go-weak-random-secret`
@@ -235,6 +438,20 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Use crypto/rand for generating tokens, nonces, session identifiers, and secret keys
 
+##### ❌ Don't (Unsafe)
+
+```go
+sessionToken := fmt.Sprintf("%d", rand.Intn(1000000))
+```
+
+##### ✅ Do (Recommended)
+
+```go
+tokenBytes := make([]byte, 32)
+cryptoRand.Read(tokenBytes)
+sessionToken := hex.EncodeToString(tokenBytes)
+```
+
 ---
 
 #### `javascript-dynamic-eval`
@@ -246,6 +463,18 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 **Description**: Dynamic eval execution of untrusted input detected
 
 **Recommendation**: Use structured data parsers (JSON.parse) and schema validators instead of code evaluation
+
+##### ❌ Don't (Unsafe)
+
+```ts
+const config = eval("(" + jsonString + ")");
+```
+
+##### ✅ Do (Recommended)
+
+```ts
+const config = JSON.parse(jsonString);
+```
 
 ---
 
@@ -274,6 +503,18 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 
 **Recommendation**: Configure API endpoints dynamically via environment variables for different environments
 
+##### ❌ Don't (Unsafe)
+
+```go
+const API_URL = "http://localhost:8080/api/v1";
+```
+
+##### ✅ Do (Recommended)
+
+```go
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
+```
+
 ---
 
 #### `tls-insecure-skip-verify`
@@ -285,6 +526,22 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 **Description**: TLS certificate verification is explicitly disabled
 
 **Recommendation**: Enable certificate verification and configure valid trust stores
+
+##### ❌ Don't (Unsafe)
+
+```go
+tr := &http.Transport{
+    TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+```
+
+##### ✅ Do (Recommended)
+
+```go
+tr := &http.Transport{
+    TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+}
+```
 
 ---
 
@@ -298,6 +555,18 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 
 **Recommendation**: Use an explicit CORS origin allowlist tailored for each deployment environment
 
+##### ❌ Don't (Unsafe)
+
+```go
+c.Header("Access-Control-Allow-Origin", "*")
+```
+
+##### ✅ Do (Recommended)
+
+```go
+c.Header("Access-Control-Allow-Origin", "https://app.example.com")
+```
+
 ---
 
 #### `go-permissive-file-mode`
@@ -309,6 +578,18 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 **Description**: File or directory created with permissive world-writable file permissions (0777)
 
 **Recommendation**: Use minimum required file permissions such as 0600 for files or 0750 for directories
+
+##### ❌ Don't (Unsafe)
+
+```go
+os.WriteFile("config.json", data, 0777)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+os.WriteFile("config.json", data, 0600)
+```
 
 ---
 
@@ -322,6 +603,18 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 
 **Recommendation**: Disable debug mode in production deployment configurations to prevent information disclosure
 
+##### ❌ Don't (Unsafe)
+
+```go
+debug := true
+```
+
+##### ✅ Do (Recommended)
+
+```go
+debug := os.Getenv("APP_ENV") == "development"
+```
+
 ---
 
 #### `go-insecure-cookie-attribute`
@@ -333,6 +626,18 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 **Description**: Cookie configured with explicitly insecure security attributes
 
 **Recommendation**: Enable Secure and HttpOnly flags and set an appropriate SameSite policy for session cookies
+
+##### ❌ Don't (Unsafe)
+
+```go
+cookie := &http.Cookie{Name: "session", Value: token, Secure: false}
+```
+
+##### ✅ Do (Recommended)
+
+```go
+cookie := &http.Cookie{Name: "session", Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode}
+```
 
 ---
 
@@ -361,6 +666,18 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 
 **Recommendation**: Set explicit memory limit with ParseMultipartForm or MaxBytesReader to prevent memory exhaustion
 
+##### ❌ Don't (Unsafe)
+
+```go
+c.Request.ParseMultipartForm(100 << 20) // Unbounded 100MB buffer
+```
+
+##### ✅ Do (Recommended)
+
+```go
+c.Request.ParseMultipartForm(10 << 20) // Controlled 10MB memory limit
+```
+
 ---
 
 #### `go-http-default-server`
@@ -372,6 +689,22 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 **Description**: Default HTTP server does not configure defensive timeouts
 
 **Recommendation**: Use custom http.Server with ReadHeaderTimeout, ReadTimeout, WriteTimeout, and IdleTimeout
+
+##### ❌ Don't (Unsafe)
+
+```go
+http.ListenAndServe(":8080", handler)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+server := &http.Server{
+    Addr: ":8080", Handler: handler,
+    ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second,
+}
+server.ListenAndServe()
+```
 
 ---
 
@@ -385,6 +718,18 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 
 **Recommendation**: Limit request body with http.MaxBytesReader or io.LimitReader before reading into memory
 
+##### ❌ Don't (Unsafe)
+
+```go
+body, err := io.ReadAll(r.Body)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB size limit
+```
+
 ---
 
 #### `go-discarded-error`
@@ -396,6 +741,20 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 **Description**: Returned error value is explicitly ignored with blank identifier
 
 **Recommendation**: Check and handle returned errors or document valid reason for ignoring
+
+##### ❌ Don't (Unsafe)
+
+```go
+_ = db.Close()
+```
+
+##### ✅ Do (Recommended)
+
+```go
+if err := db.Close(); err != nil {
+    log.Printf("Failed to close DB connection: %v", err)
+}
+```
 
 ---
 
@@ -409,6 +768,22 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 
 **Recommendation**: Propagate errors to request boundaries and perform controlled shutdown instead of calling panic/log.Fatal
 
+##### ❌ Don't (Unsafe)
+
+```go
+if err != nil {
+    panic(err)
+}
+```
+
+##### ✅ Do (Recommended)
+
+```go
+if err != nil {
+    return fmt.Errorf("process request: %w", err)
+}
+```
+
 ---
 
 #### `go-http-client-without-timeout`
@@ -420,6 +795,18 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 **Description**: HTTP client struct literal does not set an overall request timeout
 
 **Recommendation**: Configure explicit http.Client.Timeout and appropriate transport timeouts
+
+##### ❌ Don't (Unsafe)
+
+```go
+client := &http.Client{}
+```
+
+##### ✅ Do (Recommended)
+
+```go
+client := &http.Client{Timeout: 10 * time.Second}
+```
 
 ---
 
@@ -447,6 +834,22 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 
 **Recommendation**: Resolve merge conflict and remove all markers before committing
 
+##### ❌ Don't (Unsafe)
+
+```go
+<<<<<<< HEAD
+const apiURL = "http://localhost:8080";
+=======
+const apiURL = "https://api.production.com";
+>>>>>>> main
+```
+
+##### ✅ Do (Recommended)
+
+```go
+const apiURL = process.env.API_URL || "https://api.production.com";
+```
+
 ---
 
 #### `javascript-debugger`
@@ -458,6 +861,23 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 **Description**: JavaScript debugger statement found
 
 **Recommendation**: Remove debugger statement before committing
+
+##### ❌ Don't (Unsafe)
+
+```ts
+function calculateTotal(items: Item[]) {
+  debugger; // Leftover debug statement
+  return items.reduce((acc, item) => acc + item.price, 0);
+}
+```
+
+##### ✅ Do (Recommended)
+
+```ts
+function calculateTotal(items: Item[]) {
+  return items.reduce((acc, item) => acc + item.price, 0);
+}
+```
 
 ---
 
@@ -471,6 +891,18 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 
 **Recommendation**: Remove trailing whitespace at line end
 
+##### ❌ Don't (Unsafe)
+
+```go
+const username = "john_doe";
+```
+
+##### ✅ Do (Recommended)
+
+```go
+const username = "john_doe";
+```
+
 ---
 
 #### `mixed-indentation`
@@ -483,6 +915,22 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 
 **Recommendation**: Use a consistent indentation style throughout the project
 
+##### ❌ Don't (Unsafe)
+
+```go
+func process() {
+	  var x = 10 // Mixed tabs and spaces
+}
+```
+
+##### ✅ Do (Recommended)
+
+```go
+func process() {
+	var x = 10 // Consistent tab indentation
+}
+```
+
 ---
 
 #### `javascript-console-debug`
@@ -494,6 +942,22 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 **Description**: Console debug statement left in code
 
 **Recommendation**: Remove debug statements or use an application logger with proper log level
+
+##### ❌ Don't (Unsafe)
+
+```ts
+function handleLogin(user: User) {
+  console.log("User logged in:", user);
+}
+```
+
+##### ✅ Do (Recommended)
+
+```ts
+function handleLogin(user: User) {
+  logger.info("User logged in", { userId: user.id });
+}
+```
 
 ---
 
@@ -520,6 +984,18 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 
 **Recommendation**: Remove the PII field or log a non-reversible, access-controlled reference identifier
 
+##### ❌ Don't (Unsafe)
+
+```go
+log.Printf("User registered with email: %s, phone: %s", email, phone)
+```
+
+##### ✅ Do (Recommended)
+
+```go
+log.Printf("User registered with ID: %s", userID)
+```
+
 ---
 
 #### `privacy-pii-url`
@@ -531,6 +1007,18 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 **Description**: Personally identifiable information may be placed in a URL query string
 
 **Recommendation**: Transmit sensitive fields in an authenticated request body and avoid retaining them in URLs or access logs
+
+##### ❌ Don't (Unsafe)
+
+```go
+urlParams.append("email", userEmail);
+```
+
+##### ✅ Do (Recommended)
+
+```go
+// Transmit sensitive parameters in authenticated POST request body
+```
 
 ---
 
@@ -544,6 +1032,18 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 
 **Recommendation**: Use clearly synthetic, reserved test data and keep production-derived records out of the repository
 
+##### ❌ Don't (Unsafe)
+
+```json
+{"email": "real_person_1985@gmail.com", "ssn": "123-45-6789"}
+```
+
+##### ✅ Do (Recommended)
+
+```json
+{"email": "user@example.com", "ssn": "000-00-0000"}
+```
+
 ---
 
 #### `privacy-sensitive-response`
@@ -555,6 +1055,18 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 **Description**: Response construction may expose a sensitive personal field
 
 **Recommendation**: Map the response through an explicit allowlisted DTO and omit sensitive fields
+
+##### ❌ Don't (Unsafe)
+
+```go
+res.json({ id: user.id, email: user.email, ssn: user.ssn });
+```
+
+##### ✅ Do (Recommended)
+
+```go
+res.json({ id: user.id, email: user.email });
+```
 
 ---
 

@@ -27,6 +27,8 @@ type Rule struct {
 	Fixable        bool             `json:"fixable,omitempty"`
 	Extensions     []string         `json:"extensions,omitempty"`
 	Enabled        *bool            `json:"enabled,omitempty"`
+	UnsafeExample  string           `json:"unsafe_example,omitempty"`
+	SafeExample    string           `json:"safe_example,omitempty"`
 }
 
 type Set struct {

@@ -10,6 +10,8 @@ func DefaultSecurity() []Rule {
 			Severity: finding.Critical, Domain: finding.Security, Category: "secret_leak",
 			Description:    "Hardcoded mock token found — remove before production deployment",
 			Recommendation: "Remove hardcoded mock tokens and load credentials from environment variables or key vaults",
+			UnsafeExample:  `const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";`,
+			SafeExample:    `const AUTH_HEADER = ` + "`" + `Bearer ${process.env.AUTH_TOKEN}` + "`" + `;`,
 		},
 		{
 			ID: "browser-token-storage", Pattern: `localStorage\.(setItem|getItem)\(['\"]?(access_token|refresh_token|token)`,
@@ -17,18 +19,31 @@ func DefaultSecurity() []Rule {
 			Description:    "Token stored in localStorage — vulnerable to XSS token theft",
 			Recommendation: "Store authentication tokens in HttpOnly, Secure, SameSite cookies instead of localStorage",
 			Extensions:     []string{".ts", ".tsx", ".js", ".jsx"},
+			UnsafeExample:  `localStorage.setItem("access_token", response.token);`,
+			SafeExample:    `await fetch("/api/login", { credentials: "include", method: "POST", body });`,
 		},
 		{
 			ID: "permission-bypass", Pattern: `SHOP_.*return true|bypass.*permission|permission.*bypass`,
 			Severity: finding.Critical, Domain: finding.Security, Category: "security_misconfiguration",
 			Description:    "Hardcoded permission bypass found in application logic",
 			Recommendation: "Remove permission bypass conditions and enforce strict authorization checks",
+			UnsafeExample: `func CheckPermission(user User) bool {
+    if user.Role == "admin" || bypassPermission {
+        return true
+    }
+    return false
+}`,
+			SafeExample: `func CheckPermission(ctx context.Context, user User, resource string) bool {
+    return authzService.CanAccess(ctx, user.ID, resource)
+}`,
 		},
 		{
 			ID: "weak-secret", Pattern: `change-me-in-production|your_super_secret|your_secret_key_here`,
 			Severity: finding.Critical, Domain: finding.Security, Category: "secret_leak",
 			Description:    "Default or weak secret value found",
 			Recommendation: "Replace default/placeholder secrets with cryptographically strong random values from secure configuration",
+			UnsafeExample:  `jwtSecret := []byte("change-me-in-production")`,
+			SafeExample:    `jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))`,
 		},
 		{
 			ID: "frontend-sensitive-log", Pattern: `console\.(log|debug|info|error).*\b(token|password|secret|permission|user_id|tenant)`,
@@ -36,6 +51,8 @@ func DefaultSecurity() []Rule {
 			Description:    "Frontend log statement may expose sensitive credentials or PII",
 			Recommendation: "Sanitize log parameters and remove sensitive tokens or user identifiers from console logs",
 			Extensions:     []string{".ts", ".tsx", ".js", ".jsx"},
+			UnsafeExample:  `console.log("User auth failed for password:", password);`,
+			SafeExample:    `console.error("User authentication failed", { username });`,
 		},
 		{
 			ID: "backend-sensitive-log", Pattern: `fmt\.Print.*(token|password|secret|key|DatabaseURL)|log\.(Info|Debug|Warn).*\b(password|secret|token|key)\b`,
@@ -43,6 +60,8 @@ func DefaultSecurity() []Rule {
 			Description:    "Backend log statement may expose sensitive credentials or keys",
 			Recommendation: "Redact sensitive parameters before writing to application log streams",
 			Extensions:     []string{".go"},
+			UnsafeExample:  `log.Printf("Connecting to DB with secret: %s", dbSecret)`,
+			SafeExample:    `log.Printf("Connecting to DB host: %s", dbHost)`,
 		},
 		{
 			ID: "sql-string-format", Pattern: `fmt\.Sprintf.*\b(SELECT|INSERT|UPDATE|DELETE|WHERE)\b`,
@@ -50,12 +69,16 @@ func DefaultSecurity() []Rule {
 			Description:    "Potential SQL injection using formatted strings",
 			Recommendation: "Use parameterized queries or prepared statements instead of string formatting",
 			Extensions:     []string{".go"},
+			UnsafeExample:  `query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)`,
+			SafeExample:    `db.Query("SELECT * FROM users WHERE email = $1", userEmail)`,
 		},
 		{
 			ID: "hardcoded-credential", Pattern: `(password|passwd|pwd|secret|api_key)\s*[:=]\s*['\"][^'\"]{6,}['\"]`,
 			Severity: finding.High, Domain: finding.Security, Category: "secret_leak",
 			Description:    "Hardcoded credential or API secret key found",
 			Recommendation: "Extract credentials to environment variables or secret management services",
+			UnsafeExample:  `const apiKey = "synthetic_secret_api_key_12345"`,
+			SafeExample:    `apiKey := os.Getenv("STRIPE_API_KEY")`,
 		},
 		{
 			ID: "unsafe-inner-html", Pattern: `dangerouslySetInnerHTML\s*=\s*\{`,
@@ -63,6 +86,8 @@ func DefaultSecurity() []Rule {
 			Description:    "dangerouslySetInnerHTML used — potential DOM XSS vulnerability",
 			Recommendation: "Sanitize raw HTML using DOMPurify before injecting into the DOM",
 			Extensions:     []string{".ts", ".tsx", ".js", ".jsx"},
+			UnsafeExample:  `<div dangerouslySetInnerHTML={{ __html: userInput }} />`,
+			SafeExample:    `<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />`,
 		},
 		{
 			ID: "dynamic-order", Pattern: `\.Order\(.*fmt\.Sprintf`,
@@ -70,6 +95,11 @@ func DefaultSecurity() []Rule {
 			Description:    "Dynamic ORDER BY clause built via string formatting",
 			Recommendation: "Validate dynamic column names against an explicit allowlist before building queries",
 			Extensions:     []string{".go"},
+			UnsafeExample:  `db.Order(fmt.Sprintf("%s ASC", sortColumn))`,
+			SafeExample: `allowedColumns := map[string]bool{"created_at": true, "name": true}
+if allowedColumns[sortColumn] {
+    db.Order(sortColumn + " ASC")
+}`,
 		},
 		{
 			ID: "api-struct-response", Pattern: `c\.JSON\(.*,\s*\*?(user|account|member|staff|karyawan)\b`,
@@ -77,6 +107,10 @@ func DefaultSecurity() []Rule {
 			Description:    "Internal domain struct may be serialized directly into HTTP response",
 			Recommendation: "Map internal domain entities to explicit response DTOs to avoid leaking sensitive fields",
 			Extensions:     []string{".go"},
+			UnsafeExample: `var user User // Contains HashedPassword, SecretToken
+c.JSON(http.StatusOK, user)`,
+			SafeExample: `response := UserResponse{ID: user.ID, Email: user.Email}
+c.JSON(http.StatusOK, response)`,
 		},
 		{
 			ID: "sensitive-json-field", Pattern: `(Password|PasswordHash|Hash|SecretKey|ApiKey)\s+\w+.*json:\"[^-]`,
@@ -84,6 +118,14 @@ func DefaultSecurity() []Rule {
 			Description:    "Sensitive struct field may be exposed in JSON serialization",
 			Recommendation: "Use json:\"-\" struct tag or custom serializer to exclude sensitive attributes",
 			Extensions:     []string{".go"},
+			UnsafeExample: `type Account struct {
+    ID           string ` + "`json:\"id\"`" + `
+    PasswordHash string ` + "`json:\"password_hash\"`" + `
+}`,
+			SafeExample: `type Account struct {
+    ID           string ` + "`json:\"id\"`" + `
+    PasswordHash string ` + "`json:\"-\"`" + `
+}`,
 		},
 		{
 			ID: "go-shell-command", Pattern: `exec\.Command(Context)?\([^)]*['\"](sh|bash)['\"]\s*,\s*['\"]-c['\"]`,
@@ -91,6 +133,8 @@ func DefaultSecurity() []Rule {
 			Description:    "Shell command interpreter executed via os/exec",
 			Recommendation: "Execute binary commands directly with argument arrays and sanitize untrusted input",
 			Extensions:     []string{".go"},
+			UnsafeExample:  `exec.Command("sh", "-c", "ls " + userInput)`,
+			SafeExample:    `exec.Command("ls", "--", validatedPath)`,
 		},
 		{
 			ID: "go-weak-cryptographic-hash", Pattern: `(md5|sha1)\.(New|Sum)\(`,
@@ -98,6 +142,10 @@ func DefaultSecurity() []Rule {
 			Description:    "Weak cryptographic hash algorithm (MD5/SHA1) detected",
 			Recommendation: "Use SHA-256 or stronger algorithms; use bcrypt/argon2 for password hashing",
 			Extensions:     []string{".go"},
+			UnsafeExample: `hasher := md5.New()
+hasher.Write([]byte(password))`,
+			SafeExample: `hasher := sha256.New()
+hasher.Write([]byte(password))`,
 		},
 		{
 			ID: "go-tainted-file-path", Pattern: `os\.(Open|OpenFile|ReadFile|WriteFile|Remove)\([^)]*(r\.URL\.Query|r\.FormValue|c\.Param)\(`,
@@ -105,6 +153,11 @@ func DefaultSecurity() []Rule {
 			Description:    "Untrusted request parameter used directly in file system operation",
 			Recommendation: "Normalize paths, enforce base directory boundaries, and use allowlisted identifiers",
 			Extensions:     []string{".go"},
+			UnsafeExample: `filePath := r.URL.Query().Get("file")
+data, _ := os.ReadFile(filePath)`,
+			SafeExample: `filename := filepath.Base(r.URL.Query().Get("file"))
+safePath := filepath.Join("/var/app/storage", filename)
+data, _ := os.ReadFile(safePath)`,
 		},
 		{
 			ID: "go-weak-random-secret", Pattern: `(?i)(token|secret|nonce|session).{0,40}\brand\.(Int|Intn|Read|Uint32|Uint64)\(`,
@@ -112,6 +165,10 @@ func DefaultSecurity() []Rule {
 			Description:    "Security-sensitive value generated using pseudo-random math/rand package",
 			Recommendation: "Use crypto/rand for generating tokens, nonces, session identifiers, and secret keys",
 			Extensions:     []string{".go"},
+			UnsafeExample:  `sessionToken := fmt.Sprintf("%d", rand.Intn(1000000))`,
+			SafeExample: `tokenBytes := make([]byte, 32)
+cryptoRand.Read(tokenBytes)
+sessionToken := hex.EncodeToString(tokenBytes)`,
 		},
 		{
 			ID: "javascript-dynamic-eval", Pattern: `\beval\s*\([^)]*[A-Za-z_$]`,
@@ -119,6 +176,8 @@ func DefaultSecurity() []Rule {
 			Description:    "Dynamic eval execution of untrusted input detected",
 			Recommendation: "Use structured data parsers (JSON.parse) and schema validators instead of code evaluation",
 			Extensions:     []string{".ts", ".tsx", ".js", ".jsx"},
+			UnsafeExample:  `const config = eval("(" + jsonString + ")");`,
+			SafeExample:    `const config = JSON.parse(jsonString);`,
 		},
 	}
 }

@@ -11,6 +11,8 @@ func DefaultGovernance() []Rule {
 			Description:    "Logging statement may expose personally identifiable information",
 			Recommendation: "Remove the PII field or log a non-reversible, access-controlled reference identifier",
 			Tags:           []string{"pii", "privacy", "sensitive"},
+			UnsafeExample:  `log.Printf("User registered with email: %s, phone: %s", email, phone)`,
+			SafeExample:    `log.Printf("User registered with ID: %s", userID)`,
 		},
 		{
 			ID: "privacy-pii-url", Pattern: `(Query\(\)\.(Add|Set)|URLSearchParams.*\.(append|set))\s*\(\s*['"](email|phone|ssn|national_?id|date_?of_?birth)['"]`,
@@ -18,6 +20,8 @@ func DefaultGovernance() []Rule {
 			Description:    "Personally identifiable information may be placed in a URL query string",
 			Recommendation: "Transmit sensitive fields in an authenticated request body and avoid retaining them in URLs or access logs",
 			Tags:           []string{"pii", "privacy", "sensitive"},
+			UnsafeExample:  `urlParams.append("email", userEmail);`,
+			SafeExample:    `// Transmit sensitive parameters in authenticated POST request body`,
 		},
 		{
 			ID: "privacy-pii-fixture", Pattern: `['"]?(email|phone|ssn|national_?id|date_?of_?birth)['"]?\s*:\s*['"][^'"$<{]{3,}['"]`,
@@ -25,6 +29,8 @@ func DefaultGovernance() []Rule {
 			Description:    "Fixture may contain a literal personally identifiable value",
 			Recommendation: "Use clearly synthetic, reserved test data and keep production-derived records out of the repository",
 			Tags:           []string{"pii", "privacy", "sensitive"}, Extensions: []string{".json", ".yaml", ".yml", ".js", ".ts"},
+			UnsafeExample:  `{"email": "real_person_1985@gmail.com", "ssn": "123-45-6789"}`,
+			SafeExample:    `{"email": "user@example.com", "ssn": "000-00-0000"}`,
 		},
 		{
 			ID: "privacy-sensitive-response", Pattern: `(c\.JSON|json\.NewEncoder\([^)]*\)\.Encode|res\.json)\s*\([^\n]*(password|ssn|national_?id|date_?of_?birth)`,
@@ -32,6 +38,8 @@ func DefaultGovernance() []Rule {
 			Description:    "Response construction may expose a sensitive personal field",
 			Recommendation: "Map the response through an explicit allowlisted DTO and omit sensitive fields",
 			Tags:           []string{"pii", "privacy", "sensitive"}, Extensions: []string{".go", ".js", ".ts", ".tsx", ".jsx"},
+			UnsafeExample:  `res.json({ id: user.id, email: user.email, ssn: user.ssn });`,
+			SafeExample:    `res.json({ id: user.id, email: user.email });`,
 		},
 	}
 }

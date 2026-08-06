@@ -17,6 +17,25 @@ type DomainInfo struct {
 	Description string
 }
 
+func detectLanguage(exts []string) string {
+	if len(exts) == 0 {
+		return "go"
+	}
+	for _, ext := range exts {
+		switch ext {
+		case ".go":
+			return "go"
+		case ".ts", ".tsx", ".js", ".jsx":
+			return "ts"
+		case ".json":
+			return "json"
+		case ".yaml", ".yml":
+			return "yaml"
+		}
+	}
+	return "text"
+}
+
 func main() {
 	allRules := rules.Default()
 
@@ -57,11 +76,11 @@ func main() {
 	var buf bytes.Buffer
 	buf.WriteString("---\n")
 	buf.WriteString("title: Rule Catalog\n")
-	buf.WriteString("description: Complete catalog of default built-in security, secret, governance, and quality rules grouped by domain.\n")
+	buf.WriteString("description: Complete catalog of default built-in security, secret, governance, and quality rules with Do's and Don'ts code examples.\n")
 	buf.WriteString("---\n\n")
 
 	buf.WriteString("# Built-In Rule Catalog\n\n")
-	buf.WriteString("Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog is organized into functional policy domains.\n\n")
+	buf.WriteString("Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog includes detailed guidance, recommendations, and **Do's and Don'ts** code examples for each rule.\n\n")
 
 	// Domain Overview Table
 	buf.WriteString("## Domain Overview\n\n")
@@ -104,6 +123,17 @@ func main() {
 			if r.Recommendation != "" {
 				buf.WriteString(fmt.Sprintf("**Recommendation**: %s\n\n", r.Recommendation))
 			}
+
+			lang := detectLanguage(r.Extensions)
+
+			if r.UnsafeExample != "" || r.SafeExample != "" {
+				buf.WriteString("##### ❌ Don't (Unsafe)\n\n")
+				buf.WriteString(fmt.Sprintf("```%s\n%s\n```\n\n", lang, strings.TrimSpace(r.UnsafeExample)))
+
+				buf.WriteString("##### ✅ Do (Recommended)\n\n")
+				buf.WriteString(fmt.Sprintf("```%s\n%s\n```\n\n", lang, strings.TrimSpace(r.SafeExample)))
+			}
+
 			buf.WriteString("---\n\n")
 		}
 	}
@@ -119,5 +149,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Successfully generated grouped rule catalog at %s (%d rules across %d domains)\n", targetPath, len(allRules), len(domains))
+	fmt.Printf("Successfully generated grouped rule catalog with code examples at %s (%d rules across %d domains)\n", targetPath, len(allRules), len(domains))
 }
