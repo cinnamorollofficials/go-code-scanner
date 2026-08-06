@@ -41,7 +41,8 @@ export default defineConfig({
             { text: 'Features Overview', link: '/features/' },
             { text: 'Scan Execution & Policy', link: '/features/scan-execution-and-policy' },
             { text: 'Reports & Finding Lifecycle', link: '/features/reports-and-finding-lifecycle' },
-            { text: 'Developer Workflow Features', link: '/features/developer-workflow-features' }
+            { text: 'Developer Workflow Features', link: '/features/developer-workflow-features' },
+            { text: 'Frontend & Client Scanning', link: '/features/client-scanning' }
           ]
         }
       ],
