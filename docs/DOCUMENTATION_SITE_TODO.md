@@ -169,7 +169,7 @@ be delivered as one atomic commit.
   public command and flag appears once and generation is deterministic.
   Commit: `docs(cli): generate command reference`.
 
-- [ ] **18. Generate the rule catalog.** Expose safe rule metadata including ID,
+- [x] **18. Generate the rule catalog.** Expose safe rule metadata including ID,
   title, domain, severity, description, recommendation, supported scope, explain
   text, and fix availability. Generate index and detail pages with filters encoded
   in static data. Acceptance: rule IDs are unique, no detection pattern leaks
