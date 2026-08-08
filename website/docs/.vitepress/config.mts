@@ -44,7 +44,7 @@ function sidebarDocs() {
 export default defineConfig({
   title: 'Go Code Scanner',
   description: 'Policy-driven, offline-first security analysis CLI',
-  base: '/go-code-scanner/',
+  base: process.env.VITEPRESS_BASE || '/go-code-scanner/',
   cleanUrls: true,
   lastUpdated: true,
   sitemap: {

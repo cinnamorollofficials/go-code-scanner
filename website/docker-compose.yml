@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITEPRESS_BASE: "/"
+    container_name: go-code-scanner-website
+    restart: unless-stopped
+    ports:
+      - "80:80"
