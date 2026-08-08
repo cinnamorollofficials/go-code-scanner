@@ -3,6 +3,9 @@
 # ==========================================
 FROM node:20-alpine AS builder
 
+# Install git (required by VitePress for lastUpdated timestamp feature)
+RUN apk add --no-cache git
+
 WORKDIR /app
 
 # Copy dependency manifests

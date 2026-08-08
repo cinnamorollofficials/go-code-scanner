@@ -1,6 +1,5 @@
 node_modules
 docs/.vitepress/dist
 docs/.vitepress/cache
-.git
 .gitignore
 README.md
