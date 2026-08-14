@@ -121,11 +121,16 @@ func New(cfg config.Config, options ...Option) (Reviewer, error) {
 				OwnershipFile:   cfg.Governance.OwnershipFile,
 				OwnershipRules:  ownershipPolicies,
 			}), required: true},
-			{scanner: sqltaintscanner.New(), required: false},
 		},
 		now:         time.Now,
 		configHash:  configHash,
 		ruleSetHash: ruleSetHash,
+	}
+	if sc, ok := cfg.Scanners["sqltaint"]; ok && sc.Enabled {
+		r.scanners = append(r.scanners, registeredScanner{
+			scanner:  sqltaintscanner.New(),
+			required: sc.Required,
+		})
 	}
 	if len(cfg.Architecture.Layers) > 0 || cfg.Architecture.DetectCycles {
 		layers := make([]architecturescanner.Layer, len(cfg.Architecture.Layers))

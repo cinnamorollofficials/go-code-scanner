@@ -18,6 +18,9 @@
       "type": "command",
       "command": ["custom-analyzer", "--format=json"],
       "domain": "security",
+      "severity": "HIGH",
+      "category": "security",
+      "description": "Custom analyzer for repository-specific security checks",
       "timeout": "45s"
     }
   }

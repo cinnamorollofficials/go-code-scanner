@@ -643,6 +643,8 @@ func (c *Config) validateFrontend() error {
 		"vanilla":   true,
 		"react":     true,
 		"next":      true,
+		"nextjs":    true,
+		"next.js":   true,
 		"vue":       true,
 		"nuxt":      true,
 		"svelte":    true,
@@ -665,6 +667,9 @@ func (c *Config) validateFrontend() error {
 		seenFW := make(map[string]struct{}, len(c.Frontend.Frameworks))
 		for i, fw := range c.Frontend.Frameworks {
 			fwLower := strings.ToLower(strings.TrimSpace(fw))
+			if fwLower == "nextjs" || fwLower == "next.js" {
+				fwLower = "next"
+			}
 			if !supportedFW[fwLower] {
 				return fmt.Errorf("frontend.frameworks[%d]: unsupported framework %q", i, fw)
 			}

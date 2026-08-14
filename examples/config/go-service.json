@@ -22,7 +22,7 @@
       { "name": "pkg", "paths": ["pkg/*"] }
     ],
     "forbidden_dependencies": [
-      { "from": "pkg/*", "to": "cmd/*" }
+      { "from": "pkg", "to": "cmd" }
     ]
   }
 }
