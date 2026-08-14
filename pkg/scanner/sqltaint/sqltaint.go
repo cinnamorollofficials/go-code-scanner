@@ -322,7 +322,7 @@ func createSQLIFinding(relPath string, line int, method string, tpl *SQLTemplate
 		FindingState:   finding.FindingConfirmed,
 		Description:    fmt.Sprintf("Untrusted value concatenated or formatted into executable SQL at %s()", method),
 		Recommendation: "Use parameterized queries ($1, ?, :name) instead of string concatenation or fmt.Sprintf",
-		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLI-001.md",
+		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqli-001",
 		Location:       finding.Location{File: relPath, Line: line},
 		Dataflow:       dataflow,
 	}
@@ -342,7 +342,7 @@ func createIdentifierSQLIFinding(relPath string, line int, method string, tpl *S
 		FindingState:   finding.FindingConfirmed,
 		Description:    fmt.Sprintf("Untrusted table, column, or identifier dynamically interpolated into SQL at %s()", method),
 		Recommendation: "Validate SQL identifiers against an explicit allow-list of known safe column/table names before interpolation",
-		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLI-002.md",
+		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqli-002",
 		Location:       finding.Location{File: relPath, Line: line},
 		Dataflow:       dataflow,
 	}
@@ -362,7 +362,7 @@ func createORMIFinding(relPath string, line int, method string, tpl *SQLTemplate
 		FindingState:   finding.FindingConfirmed,
 		Description:    fmt.Sprintf("Unsafe raw ORM escape hatch called with dynamic or concatenated string at %s()", method),
 		Recommendation: "Pass parameters as separate arguments to ORM clauses (e.g. db.Where(\"name = ?\", val)) rather than dynamic string formatting",
-		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLI-004.md",
+		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqli-004",
 		Location:       finding.Location{File: relPath, Line: line},
 		Dataflow:       dataflow,
 	}
@@ -381,7 +381,7 @@ func createBindMismatchFinding(relPath string, line int, method string, expected
 		FindingState:   finding.FindingConfirmed,
 		Description:    fmt.Sprintf("SQL placeholder count mismatch at %s(): query specifies %d placeholders but %d parameters were passed", method, expected, actual),
 		Recommendation: "Ensure the number of bind placeholders ($1, ?) matches the count of passed query arguments exactly",
-		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLI-008.md",
+		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqli-008",
 		Location:       finding.Location{File: relPath, Line: line},
 	}
 }
@@ -399,7 +399,7 @@ func createUnboundedQueryFinding(relPath string, line int, method string) findin
 		FindingState:   finding.FindingConfirmed,
 		Description:    fmt.Sprintf("Unbounded UPDATE or DELETE query without a WHERE clause at %s()", method),
 		Recommendation: "Always specify a WHERE clause or explicit target filter to prevent accidental table-wide mutation",
-		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLSAFE-001.md",
+		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqlsafe-001",
 		Location:       finding.Location{File: relPath, Line: line},
 	}
 }
