@@ -17,6 +17,7 @@ function sidebarDocs() {
         { text: 'Scan Execution & Policy', link: '/features/scan-execution-and-policy' },
         { text: 'Reports & Finding Lifecycle', link: '/features/reports-and-finding-lifecycle' },
         { text: 'How It Works & Reproduce Findings', link: '/features/analysis-and-reproduction' },
+        { text: 'AST & SQL Taint Analysis', link: '/features/sql-taint-analysis' },
         { text: 'Developer Workflow Features', link: '/features/developer-workflow-features' },
         { text: 'Frontend & Client Scanning', link: '/features/client-scanning' }
       ]

@@ -11,9 +11,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 | Domain | Icon | Total Rules | Scope & Focus |
 | :--- | :---: | :---: | :--- |
-| **Security Rules** | 🔒 | 17 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
+| **Security Rules** | 🔒 | 21 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
 | **Hardening Rules** | 🛡️ | 6 | Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings. |
-| **Reliability Rules** | ⚡ | 6 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
+| **Reliability Rules** | ⚡ | 7 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
 | **Quality Rules** | 🧹 | 5 | Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements. |
 | **Governance Rules** | 📜 | 4 | Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints. |
 
@@ -42,6 +42,10 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 | [`go-tainted-file-path`](#go-tainted-file-path) | `HIGH` | `path_traversal` | Untrusted request parameter used directly in file system operation |
 | [`go-weak-random-secret`](#go-weak-random-secret) | `HIGH` | `insecure_randomness` | Security-sensitive value generated using pseudo-random math/rand package |
 | [`javascript-dynamic-eval`](#javascript-dynamic-eval) | `HIGH` | `unsafe_deserialization` | Dynamic eval execution of untrusted input detected |
+| [`SQLI-001`](#SQLI-001) | `HIGH` | `sql-injection` | Untrusted value concatenated or formatted into executable SQL at database driver sink |
+| [`SQLI-002`](#SQLI-002) | `HIGH` | `sql-injection` | Untrusted table, column, or identifier dynamically interpolated into SQL |
+| [`SQLI-004`](#SQLI-004) | `HIGH` | `orm-escape-hatch` | Unsafe raw ORM escape hatch called with dynamic or concatenated string |
+| [`SQLI-008`](#SQLI-008) | `MEDIUM` | `bind-mismatch` | SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed |
 
 ### Details & Guidance
 
@@ -609,6 +613,117 @@ const config = JSON.parse(jsonString);
 
 ---
 
+#### `SQLI-001`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Untrusted value concatenated or formatted into executable SQL at database driver sink
+
+**Recommendation**: Use parameterized queries ($1, ?, :name) instead of string concatenation or fmt.Sprintf
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go (database/sql)]
+// ❌ Don't (Unsafe)
+query := "SELECT * FROM users WHERE id = " + id
+row := db.QueryRow(query)
+
+// ✅ Do (Recommended)
+query := "SELECT * FROM users WHERE id = $1"
+row := db.QueryRow(query, id)
+```
+
+:::
+
+---
+
+#### `SQLI-002`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Untrusted table, column, or identifier dynamically interpolated into SQL
+
+**Recommendation**: Validate SQL identifiers against an explicit allow-list of known safe column/table names before interpolation
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+query := fmt.Sprintf("SELECT * FROM %s WHERE active = 1", tableName)
+rows, err := db.Query(query)
+
+// ✅ Do (Recommended)
+allowed := map[string]string{"users": "users", "admins": "admins"}
+table, ok := allowed[tableName]
+if !ok { return nil, errors.New("invalid table") }
+query := fmt.Sprintf("SELECT * FROM %s WHERE active = 1", table)
+rows, err := db.Query(query)
+```
+
+:::
+
+---
+
+#### `SQLI-004`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `orm-escape-hatch`
+
+**Description**: Unsafe raw ORM escape hatch called with dynamic or concatenated string
+
+**Recommendation**: Pass parameters as separate arguments to ORM clauses (e.g. db.Where("name = ?", val)) rather than dynamic string formatting
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go (GORM)]
+// ❌ Don't (Unsafe)
+db.Where(fmt.Sprintf("role = '%s'", role)).Find(&users)
+
+// ✅ Do (Recommended)
+db.Where("role = ?", role).Find(&users)
+```
+
+:::
+
+---
+
+#### `SQLI-008`
+
+- **Domain**: `security`
+- **Severity**: `MEDIUM`
+- **Category**: `bind-mismatch`
+
+**Description**: SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed
+
+**Recommendation**: Ensure the number of bind placeholders ($1, ?) matches the count of passed query arguments exactly
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id)
+
+// ✅ Do (Recommended)
+db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id, tenantID)
+```
+
+:::
+
+---
+
 ## 🛡️ Hardening Rules
 
 Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings.
@@ -772,6 +887,7 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 | [`go-discarded-error`](#go-discarded-error) | `MEDIUM` | `error_handling` | Returned error value is explicitly ignored with blank identifier |
 | [`go-process-termination`](#go-process-termination) | `MEDIUM` | `process_termination` | Application path may terminate entire process unexpectedly |
 | [`go-http-client-without-timeout`](#go-http-client-without-timeout) | `MEDIUM` | `missing_timeout` | HTTP client struct literal does not set an overall request timeout |
+| [`SQLSAFE-001`](#SQLSAFE-001) | `HIGH` | `destructive-query` | Unbounded UPDATE or DELETE query without a WHERE clause |
 
 ### Details & Guidance
 
@@ -914,6 +1030,32 @@ client := &http.Client{}
 // ✅ Do (Recommended)
 client := &http.Client{Timeout: 10 * time.Second}
 ```
+
+---
+
+#### `SQLSAFE-001`
+
+- **Domain**: `reliability`
+- **Severity**: `HIGH`
+- **Category**: `destructive-query`
+
+**Description**: Unbounded UPDATE or DELETE query without a WHERE clause
+
+**Recommendation**: Always specify a WHERE clause or explicit target filter to prevent accidental table-wide mutation
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+db.Exec("DELETE FROM users")
+
+// ✅ Do (Recommended)
+db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)
+```
+
+:::
 
 ---
 

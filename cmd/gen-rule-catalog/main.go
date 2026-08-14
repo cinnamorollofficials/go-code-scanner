@@ -48,6 +48,77 @@ func commentPrefix(lang string) string {
 func main() {
 	allRules := rules.Default()
 
+	// Append Native AST SQL Taint Rules
+	allRules = append(allRules, []rules.Rule{
+		{
+			ID: "SQLI-001", Severity: finding.High, Domain: finding.Security, Category: "sql-injection",
+			Description:    "Untrusted value concatenated or formatted into executable SQL at database driver sink",
+			Recommendation: "Use parameterized queries ($1, ?, :name) instead of string concatenation or fmt.Sprintf",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go (database/sql)",
+					Unsafe: `query := "SELECT * FROM users WHERE id = " + id
+row := db.QueryRow(query)`,
+					Safe: `query := "SELECT * FROM users WHERE id = $1"
+row := db.QueryRow(query, id)`,
+				},
+			},
+		},
+		{
+			ID: "SQLI-002", Severity: finding.High, Domain: finding.Security, Category: "sql-injection",
+			Description:    "Untrusted table, column, or identifier dynamically interpolated into SQL",
+			Recommendation: "Validate SQL identifiers against an explicit allow-list of known safe column/table names before interpolation",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `query := fmt.Sprintf("SELECT * FROM %s WHERE active = 1", tableName)
+rows, err := db.Query(query)`,
+					Safe: `allowed := map[string]string{"users": "users", "admins": "admins"}
+table, ok := allowed[tableName]
+if !ok { return nil, errors.New("invalid table") }
+query := fmt.Sprintf("SELECT * FROM %s WHERE active = 1", table)
+rows, err := db.Query(query)`,
+				},
+			},
+		},
+		{
+			ID: "SQLI-004", Severity: finding.High, Domain: finding.Security, Category: "orm-escape-hatch",
+			Description:    "Unsafe raw ORM escape hatch called with dynamic or concatenated string",
+			Recommendation: "Pass parameters as separate arguments to ORM clauses (e.g. db.Where(\"name = ?\", val)) rather than dynamic string formatting",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go (GORM)",
+					Unsafe: `db.Where(fmt.Sprintf("role = '%s'", role)).Find(&users)`,
+					Safe: `db.Where("role = ?", role).Find(&users)`,
+				},
+			},
+		},
+		{
+			ID: "SQLI-008", Severity: finding.Medium, Domain: finding.Security, Category: "bind-mismatch",
+			Description:    "SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed",
+			Recommendation: "Ensure the number of bind placeholders ($1, ?) matches the count of passed query arguments exactly",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id)`,
+					Safe: `db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id, tenantID)`,
+				},
+			},
+		},
+		{
+			ID: "SQLSAFE-001", Severity: finding.High, Domain: finding.Reliability, Category: "destructive-query",
+			Description:    "Unbounded UPDATE or DELETE query without a WHERE clause",
+			Recommendation: "Always specify a WHERE clause or explicit target filter to prevent accidental table-wide mutation",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `db.Exec("DELETE FROM users")`,
+					Safe: `db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)`,
+				},
+			},
+		},
+	}...)
+
 	domains := []DomainInfo{
 		{
 			Domain:      finding.Security,
