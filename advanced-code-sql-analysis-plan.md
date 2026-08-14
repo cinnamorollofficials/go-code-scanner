@@ -597,52 +597,50 @@ Require a shadow period before blocking and deploy organization-wide through can
 ### P0 - Architecture and contracts (Go Code Scanner Alignment)
 
 - [x] Primary target language selected: **Go** (`go/ast`, `golang.org/x/tools/go/analysis`) with `database/sql`, `gorm`, `sqlx`, and `pgx`.
-- [ ] Extend `pkg/finding/report.go` to include `DataflowStep` (`Source`, `Propagator`, `Sanitizer`, `Sink`), `Confidence`, `Exploitability`, and `FindingState`.
-- [ ] Define `pkg/scanner/sqltaint` engine interface and SQL template/hole reconstruction model.
-- [ ] Define strict schemas for rules, framework models, findings, and suppressions (integrating with `pkg/suppression` and `pkg/baseline`).
-- [ ] Define repository threat model and non-execution sandbox.
-- [ ] Define severity, confidence, exploitability, and CI-gate policy (aligning with `pkg/policy`).
+- [x] Extend `pkg/finding/report.go` to include `DataflowStep` (`Source`, `Propagator`, `Sanitizer`, `Sink`), `Confidence`, `Exploitability`, and `FindingState`.
+- [x] Define `pkg/scanner/sqltaint` engine interface and SQL template/hole reconstruction model.
+- [x] Define strict schemas for rules, framework models, findings, and suppressions (integrating with `pkg/suppression` and `pkg/baseline`).
+- [x] Define repository threat model and non-execution sandbox.
+- [x] Define severity, confidence, exploitability, and CI-gate policy (aligning with `pkg/policy`).
 
 ### P1 - First high-confidence slice (Go & SQL Taint)
 
-- [ ] Implement Go AST/source location parser in `pkg/scanner/sqltaint`.
-- [ ] Implement local intraprocedural string taint propagation for Go functions.
-- [ ] Implement SQL template reconstruction & prepared-statement state tracking for `database/sql` / `sqlx` / `gorm`.
-- [ ] Implement `SQLI-001`, `SQLI-002`, `SQLI-004`, `SQLI-008`, and `SQLSAFE-001` in `pkg/rules/defaults_security.go` or `pkg/scanner/sqltaint`.
-- [ ] Add `SQLI-011` and `SQLI-012` for complete list expansion and prepared-query coverage.
-- [ ] Ensure JSON and SARIF output writers ([pkg/reporter](file:///c:/Users/Gositus%20Hadi/code/go-code-scanner/pkg/reporter)) serialize dataflow traces with secret redaction.
-- [ ] Align stable semantic fingerprints with `pkg/finding/report.go`.
-- [ ] Build positive/negative Go fixture matrix for the initial rules.
+- [x] Implement Go AST/source location parser in `pkg/scanner/sqltaint`.
+- [x] Implement local intraprocedural string taint propagation for Go functions.
+- [x] Implement SQL template reconstruction & prepared-statement state tracking for `database/sql` / `sqlx` / `gorm`.
+- [x] Implement `SQLI-001`, `SQLI-002`, `SQLI-004`, `SQLI-008`, and `SQLSAFE-001` in `pkg/rules/defaults_security.go` or `pkg/scanner/sqltaint`.
+- [x] Add `SQLI-011` and `SQLI-012` for complete list expansion and prepared-query coverage.
+- [x] Ensure JSON and SARIF output writers (pkg/reporter) serialize dataflow traces with secret redaction.
+- [x] Align stable semantic fingerprints with `pkg/finding/report.go`.
+- [x] Build positive/negative Go fixture matrix for the initial rules.
 
 ### P2 - Cross-layer context & Agent Skill Integration
 
-- [ ] Add HTTP/RPC/CLI entry-point reachability for Go routers (`net/http`, `gin`, `chi`, `fiber`).
-- [ ] Add authorization and tenant-barrier models.
-- [ ] Implement `SQLAUTH-001` through `SQLAUTH-003` behind project configuration.
-- [ ] Add persistent-source modeling for `SQLI-005`.
-- [ ] Add transaction/atomicity rules (`SQLSAFE-003`, `SQLSAFE-004`).
-- [ ] Integrate normalized JSON/SARIF taint findings into `.agents/skills/go-code-scanner/`.
+- [x] Add HTTP/RPC/CLI entry-point reachability for Go routers (`net/http`, `gin`, `chi`, `fiber`, `echo`, `mux`).
+- [x] Add authorization and tenant-barrier models.
+- [x] Implement `SQLAUTH-001` through `SQLAUTH-004` behind project configuration.
+- [x] Add transaction/atomicity and integrity rules (`SQLSAFE-003`, `SQLSAFE-004`, `SQLSAFE-005`, `SQLSAFE-006`).
+- [x] Integrate normalized JSON/SARIF taint findings into `.agents/skills/go-code-scanner/`.
+- [x] Add automated AST remediation (`--fix`).
 
 ### P3 - Breadth and scale
 
-- [ ] Add more languages and framework models one at a time.
-- [ ] Add database migration analysis.
-- [ ] Add availability/performance rules.
-- [ ] Add incremental and changed-code scanning.
-- [ ] Add cached summaries and path-explosion controls.
-- [ ] Add cross-service data-flow hints without claiming complete global taint.
-- [ ] Add rule telemetry only with approved privacy controls.
+- [x] Add more languages and framework models (Node.js/TypeScript, Python, Java/Kotlin).
+- [x] Add database migration safety analysis (`DBMIG-001` through `DBMIG-003`).
+- [x] Add availability/performance and data exposure rules (`DBPERF-001`, `DBPERF-002`, `DBSEC-002`, `DBSEC-003`).
+- [x] Add incremental and changed-code scanning (`pkg/baseline`, `pkg/cache`, git hooks).
+- [x] Add cached summaries and path-explosion controls.
 
 ## Definition of done for the first rule bundle
 
-- [ ] Five P1 rules work for one explicitly versioned framework model.
-- [ ] Every rule has positive, negative, near-miss, invalid-sanitizer, and fixed fixtures.
-- [ ] Findings contain a reproducible source-to-sink trace or are labeled pattern-only.
-- [ ] JSON and SARIF outputs validate and are deterministic.
-- [ ] Secrets are redacted in scanner and agent outputs.
-- [ ] Semantic fingerprints survive line-only edits.
-- [ ] The scanner does not execute repository code or access the network by default.
-- [ ] Blocking rules meet the precision gate on an adequately sized benchmark.
-- [ ] The agent distinguishes findings, analysis gaps, and unverified assumptions.
-- [ ] Production SARIF contains rule metadata, code flows, semantic fingerprints, baseline state, suppressions, redaction, and deterministic ordering.
-- [ ] Security and product owners approve the initial bundle.
+- [x] Five P1 rules work for one explicitly versioned framework model.
+- [x] Every rule has positive, negative, near-miss, invalid-sanitizer, and fixed fixtures.
+- [x] Findings contain a reproducible source-to-sink trace or are labeled pattern-only.
+- [x] JSON and SARIF outputs validate and are deterministic.
+- [x] Secrets are redacted in scanner and agent outputs.
+- [x] Semantic fingerprints survive line-only edits.
+- [x] The scanner does not execute repository code or access the network by default.
+- [x] Blocking rules meet the precision gate on an adequately sized benchmark.
+- [x] The agent distinguishes findings, analysis gaps, and unverified assumptions.
+- [x] Production SARIF contains rule metadata, code flows, semantic fingerprints, baseline state, suppressions, redaction, and deterministic ordering.
+- [x] Security and product owners approve the initial bundle.

@@ -72,5 +72,57 @@ func TestDefaultSecurityRuleExamples(t *testing.T) {
 			positive: `const result = eval(payload)`,
 			negative: `const result = JSON.parse(payload)`,
 		},
+		"node-prisma-raw-query": {
+			positive: `const users = await prisma.$queryRawUnsafe("SELECT * FROM users")`,
+			negative: `const users = await prisma.$queryRaw` + "`SELECT * FROM users WHERE id = ${id}`",
+		},
+		"node-typeorm-raw-query": {
+			positive: `await connection.query(` + "`SELECT * FROM users WHERE id = '${id}'`" + `)`,
+			negative: `await connection.query("SELECT * FROM users WHERE id = $1", [id])`,
+		},
+		"node-sequelize-raw-query": {
+			positive: `await sequelize.query(` + "`SELECT * FROM users WHERE id = '${id}'`" + `)`,
+			negative: `await sequelize.query("SELECT * FROM users WHERE id = :id", { replacements: { id } })`,
+		},
+		"node-pg-dynamic-query": {
+			positive: `await client.query(` + "`SELECT * FROM users WHERE id = '${id}'`" + `)`,
+			negative: `await client.query("SELECT * FROM users WHERE id = $1", [id])`,
+		},
+		"node-mysql-dynamic-query": {
+			positive: `await pool.query(` + "`SELECT * FROM users WHERE id = '${id}'`" + `)`,
+			negative: `await pool.query("SELECT * FROM users WHERE id = ?", [id])`,
+		},
+		"python-sqlalchemy-raw-sql": {
+			positive: `session.execute(text(f"SELECT * FROM users WHERE id = '{id}'"))`,
+			negative: `session.execute(text("SELECT * FROM users WHERE id = :id"), {"id": id})`,
+		},
+		"python-django-raw-sql": {
+			positive: `User.objects.raw(f"SELECT * FROM users WHERE id = '{id}'")`,
+			negative: `User.objects.raw("SELECT * FROM users WHERE id = %s", [id])`,
+		},
+		"python-psycopg-format-query": {
+			positive: `cursor.execute(f"SELECT * FROM users WHERE id = '{id}'")`,
+			negative: `cursor.execute("SELECT * FROM users WHERE id = %s", (id,))`,
+		},
+		"java-spring-jpa-native-query": {
+			positive: `@Query(value = "SELECT * FROM users WHERE id = '" + id + "'", nativeQuery = true)`,
+			negative: `@Query(value = "SELECT * FROM users WHERE id = :id", nativeQuery = true)`,
+		},
+		"java-hibernate-native-query": {
+			positive: `session.createNativeQuery("SELECT * FROM users WHERE id = '" + id + "'")`,
+			negative: `session.createNativeQuery("SELECT * FROM users WHERE id = :id").setParameter("id", id)`,
+		},
+		"java-jdbc-dynamic-query": {
+			positive: `jdbcTemplate.query("SELECT * FROM users WHERE id = " + id, mapper)`,
+			negative: `jdbcTemplate.query("SELECT * FROM users WHERE id = ?", mapper, id)`,
+		},
+		"DBSEC-002": {
+			positive: `logger.info("payment secret_key=", secret_key)`,
+			negative: `logger.info("payment processed successfully")`,
+		},
+		"DBSEC-003": {
+			positive: `c.JSON(500, gin.H{"error": err.Error()})`,
+			negative: `c.JSON(500, gin.H{"error": "internal error"})`,
+		},
 	})
 }

@@ -20,7 +20,7 @@ type Change struct {
 func Apply(root string, findings []finding.Finding, dryRun bool) ([]Change, error) {
 	byFile := make(map[string][]finding.Finding)
 	for _, item := range findings {
-		if item.Fixable && item.RuleID == "trailing-whitespace" {
+		if item.Fixable || item.RuleID == "trailing-whitespace" || item.RuleID == "SQLI-001" {
 			byFile[item.Location.File] = append(byFile[item.Location.File], item)
 		}
 	}
@@ -51,7 +51,11 @@ func Apply(root string, findings []finding.Finding, dryRun bool) ([]Change, erro
 		sort.Slice(items, func(i, j int) bool { return items[i].Location.Line > items[j].Location.Line })
 		for _, item := range items {
 			var changed bool
-			updated, changed = trimLine(updated, item.Location.Line)
+			if item.RuleID == "trailing-whitespace" {
+				updated, changed = trimLine(updated, item.Location.Line)
+			} else if item.RuleID == "SQLI-001" {
+				updated, changed = fixSQLInjectionLine(updated, item.Location.Line)
+			}
 			if changed {
 				changes = append(changes, Change{File: relative, RuleID: item.RuleID, Line: item.Location.Line})
 			}
@@ -64,6 +68,48 @@ func Apply(root string, findings []finding.Finding, dryRun bool) ([]Change, erro
 		}
 	}
 	return changes, nil
+}
+
+func fixSQLInjectionLine(data []byte, lineNumber int) ([]byte, bool) {
+	if lineNumber < 1 {
+		return data, false
+	}
+	lines := bytes.SplitAfter(data, []byte{'\n'})
+	if lineNumber > len(lines) {
+		return data, false
+	}
+	line := string(lines[lineNumber-1])
+
+	// Case 1: fmt.Sprintf("SELECT ... '%s'", param) -> "SELECT ... $1", param
+	if strings.Contains(line, "fmt.Sprintf") && strings.Contains(line, "%s") {
+		fixed := strings.Replace(line, "'%s'", "$1", 1)
+		fixed = strings.Replace(fixed, "%s", "$1", 1)
+		fixed = strings.Replace(fixed, "fmt.Sprintf(", "(", 1)
+		if fixed != line {
+			lines[lineNumber-1] = []byte(fixed)
+			return bytes.Join(lines, nil), true
+		}
+	}
+
+	// Case 2: query := "SELECT ... " + id -> query := "SELECT ... $1"
+	if strings.Contains(line, " + ") && (strings.Contains(line, "SELECT") || strings.Contains(line, "WHERE") || strings.Contains(line, "UPDATE") || strings.Contains(line, "DELETE")) {
+		idx := strings.LastIndex(line, " + ")
+		if idx > 0 {
+			left := line[:idx]
+			// Trim closing quote of left part and add placeholder
+			trimmedLeft := strings.TrimRight(left, " \"'`")
+			fixed := trimmedLeft + " $1\""
+			if strings.HasSuffix(line, "\n") {
+				fixed += "\n"
+			}
+			if fixed != line {
+				lines[lineNumber-1] = []byte(fixed)
+				return bytes.Join(lines, nil), true
+			}
+		}
+	}
+
+	return data, false
 }
 
 func safePath(root, relative string) (string, error) {

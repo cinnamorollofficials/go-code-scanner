@@ -139,3 +139,140 @@ func unsafeDelete(db *sql.DB) {
 		t.Errorf("got %d SQLSAFE-001 findings, want 1", got)
 	}
 }
+
+func TestInterproceduralAndRules(t *testing.T) {
+	codeHandler := `package main
+
+import (
+	"database/sql"
+	"net/http"
+)
+
+type GinContext struct{}
+func (c *GinContext) Param(key string) string { return "123" }
+
+func UserHandler(c *GinContext, repo *UserRepo) {
+	id := c.Param("id")
+	repo.FindUserUnsafe(id)
+}
+`
+
+	codeRepo := `package main
+
+import (
+	"database/sql"
+)
+
+type UserRepo struct {
+	db *sql.DB
+}
+
+func (r *UserRepo) FindUserUnsafe(userID string) {
+	query := "SELECT * FROM users WHERE id = " + userID
+	r.db.Query(query)
+}
+
+func GetTenantAccountsUnsafe(db *sql.DB) {
+	db.Query("SELECT * FROM accounts WHERE status = 'active'")
+}
+
+func GetOrderUnscopedUnsafe(db *sql.DB, id string) {
+	db.Query("SELECT * FROM orders WHERE id = $1", id)
+}
+
+func RawBypassAuthUnsafe(db *sql.DB) {
+	db.Raw("SELECT * FROM users")
+}
+
+func RLSBypassUnsafe(db *sql.DB) {
+	db.Exec("SET ROLE postgres")
+}
+
+func NonAtomicBalanceUnsafe(db *sql.DB, id string) {
+	var bal int
+	db.QueryRow("SELECT balance FROM accounts WHERE id = $1", id).Scan(&bal)
+	bal += 50
+	db.Exec("UPDATE accounts SET balance = $1 WHERE id = $2", bal, id)
+}
+
+func TxEscapeUnsafe(tx *sql.Tx, db *sql.DB) {
+	db.Exec("DELETE FROM logs WHERE id = 1")
+}
+
+func LogicPrecedenceUnsafe(db *sql.DB) {
+	db.Query("SELECT * FROM orders WHERE tenant_id = 1 AND status = 'active' OR is_admin = true")
+}
+
+func SoftDeleteBypassUnsafe(db *sql.DB) {
+	db.Query("SELECT * FROM users WHERE status = 'active'")
+}
+
+func UnboundedQueryUnsafe(db *sql.DB) {
+	db.Query("SELECT * FROM events WHERE created_at > 1000")
+}
+
+func NPlusOneLoopUnsafe(db *sql.DB, userIDs []string) {
+	for _, id := range userIDs {
+		db.QueryRow("SELECT * FROM profiles WHERE id = $1", id)
+	}
+}
+
+func ErrorLeakedToResponseUnsafe(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	_, err := db.Query("SELECT 1")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+}
+`
+
+	s := New()
+	req := scanner.Request{
+		Sources: []scanner.Source{
+			{
+				Path: "handler.go",
+				Open: func(ctx context.Context) (io.ReadCloser, error) {
+					return io.NopCloser(strings.NewReader(codeHandler)), nil
+				},
+			},
+			{
+				Path: "repo.go",
+				Open: func(ctx context.Context) (io.ReadCloser, error) {
+					return io.NopCloser(strings.NewReader(codeRepo)), nil
+				},
+			},
+		},
+	}
+
+	res := s.Scan(context.Background(), req)
+	if res.State != finding.ScannerFindings {
+		t.Fatalf("got state %v, want ScannerFindings", res.State)
+	}
+
+	foundRules := make(map[string]int)
+	for _, f := range res.Findings {
+		foundRules[f.RuleID]++
+	}
+
+	expectedRules := []string{
+		"SQLI-001",
+		"SQLAUTH-001",
+		"SQLAUTH-002",
+		"SQLAUTH-003",
+		"SQLAUTH-004",
+		"SQLSAFE-003",
+		"SQLSAFE-004",
+		"SQLSAFE-005",
+		"SQLSAFE-006",
+		"DBPERF-001",
+		"DBPERF-002",
+		"DBSEC-003",
+	}
+
+	for _, ruleID := range expectedRules {
+		if foundRules[ruleID] == 0 {
+			t.Errorf("expected rule %s to trigger, findings: %v", ruleID, res.Findings)
+		}
+	}
+}
+
+

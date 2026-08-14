@@ -1,6 +1,11 @@
 package sqltaint
 
-import "github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
+import (
+	"go/ast"
+	"go/token"
+
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
+)
 
 type HoleContext string
 
@@ -36,10 +41,10 @@ type Hole struct {
 type TemplateKind string
 
 const (
-	KindRawConcatenation TemplateKind = "raw_concatenation"
+	KindRawConcatenation  TemplateKind = "raw_concatenation"
 	KindPreparedStatement TemplateKind = "prepared_statement"
-	KindBoundParam       TemplateKind = "bound_parameterized"
-	KindORMBuilder       TemplateKind = "orm_builder"
+	KindBoundParam        TemplateKind = "bound_parameterized"
+	KindORMBuilder        TemplateKind = "orm_builder"
 )
 
 type TemplateSegment struct {
@@ -63,3 +68,35 @@ func (t SQLTemplate) HasUntrustedHole() bool {
 	}
 	return false
 }
+
+// FunctionSummary captures metadata for interprocedural analysis across functions
+type FunctionSummary struct {
+	Name         string
+	ReceiverType string
+	File         string
+	Line         int
+	Params       []string
+	Returns      []ast.Expr
+	Decl         *ast.FuncDecl
+	Fset         *token.FileSet
+	IsHTTPHandler bool
+	RouterType   string // "gin", "echo", "chi", "fiber", "mux", "net/http"
+}
+
+// CallGraphEdge represents a function call from caller to callee
+type CallGraphEdge struct {
+	CallerFile string
+	CallerFunc string
+	CalleeFunc string
+	CallExpr   *ast.CallExpr
+	Line       int
+}
+
+// PackageAnalysisContext holds the multi-file ASTs and call graph
+type PackageAnalysisContext struct {
+	Files      map[string]*ast.File
+	FileSets   map[string]*token.FileSet
+	Functions  map[string]*FunctionSummary
+	CallEdges  []CallGraphEdge
+}
+

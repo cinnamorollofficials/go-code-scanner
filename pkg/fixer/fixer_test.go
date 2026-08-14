@@ -3,6 +3,7 @@ package fixer
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cinnamorollofficials/go-code-scanner/pkg/finding"
@@ -66,3 +67,26 @@ func TestApplyRejectsSymlink(t *testing.T) {
 		t.Fatal("expected symlink rejection")
 	}
 }
+
+func TestApplySQLInjectionFix(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "repo.go")
+	original := []byte("package repo\n\nfunc findUser(id string) string {\n\tquery := \"SELECT * FROM users WHERE id = \" + id\n\treturn query\n}\n")
+	if err := os.WriteFile(path, original, 0o640); err != nil {
+		t.Fatal(err)
+	}
+
+	findings := []finding.Finding{
+		{RuleID: "SQLI-001", Fixable: true, Location: finding.Location{File: "repo.go", Line: 4}},
+	}
+	changes, err := Apply(root, findings, false)
+	if err != nil || len(changes) != 1 {
+		t.Fatalf("apply changes=%v err=%v", changes, err)
+	}
+
+	updated, _ := os.ReadFile(path)
+	if !strings.Contains(string(updated), "$1") {
+		t.Fatalf("expected $1 in fixed content, got: %s", string(updated))
+	}
+}
+

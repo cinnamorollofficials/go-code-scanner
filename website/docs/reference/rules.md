@@ -11,9 +11,9 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 | Domain | Icon | Total Rules | Scope & Focus |
 | :--- | :---: | :---: | :--- |
-| **Security Rules** | 🔒 | 23 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
+| **Security Rules** | 🔒 | 40 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
 | **Hardening Rules** | 🛡️ | 6 | Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings. |
-| **Reliability Rules** | ⚡ | 7 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
+| **Reliability Rules** | ⚡ | 16 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
 | **Quality Rules** | 🧹 | 5 | Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements. |
 | **Governance Rules** | 📜 | 4 | Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints. |
 
@@ -42,12 +42,29 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 | [`go-tainted-file-path`](#go-tainted-file-path) | `HIGH` | `path_traversal` | Untrusted request parameter used directly in file system operation |
 | [`go-weak-random-secret`](#go-weak-random-secret) | `HIGH` | `insecure_randomness` | Security-sensitive value generated using pseudo-random math/rand package |
 | [`javascript-dynamic-eval`](#javascript-dynamic-eval) | `HIGH` | `unsafe_deserialization` | Dynamic eval execution of untrusted input detected |
+| [`node-prisma-raw-query`](#node-prisma-raw-query) | `HIGH` | `sql-injection` | Prisma raw unsafe query executed with potentially untrusted dynamic string |
+| [`node-typeorm-raw-query`](#node-typeorm-raw-query) | `HIGH` | `sql-injection` | TypeORM raw query with dynamic string interpolation |
+| [`node-sequelize-raw-query`](#node-sequelize-raw-query) | `HIGH` | `sql-injection` | Sequelize raw query executed with template string interpolation |
+| [`node-pg-dynamic-query`](#node-pg-dynamic-query) | `HIGH` | `sql-injection` | node-postgres query executed with template string interpolation |
+| [`node-mysql-dynamic-query`](#node-mysql-dynamic-query) | `HIGH` | `sql-injection` | mysql2 query executed with dynamic template string interpolation |
+| [`python-sqlalchemy-raw-sql`](#python-sqlalchemy-raw-sql) | `HIGH` | `sql-injection` | SQLAlchemy raw text expression formatted with dynamic Python f-string or format() |
+| [`python-django-raw-sql`](#python-django-raw-sql) | `HIGH` | `sql-injection` | Django raw SQL query constructed with f-string or unsafe .extra() clause |
+| [`python-psycopg-format-query`](#python-psycopg-format-query) | `HIGH` | `sql-injection` | psycopg database cursor executed with Python string formatting instead of query parameters |
+| [`java-spring-jpa-native-query`](#java-spring-jpa-native-query) | `HIGH` | `sql-injection` | Spring Data JPA native query built via string concatenation |
+| [`java-hibernate-native-query`](#java-hibernate-native-query) | `HIGH` | `sql-injection` | Hibernate createNativeQuery executed with dynamic string concatenation |
+| [`java-jdbc-dynamic-query`](#java-jdbc-dynamic-query) | `HIGH` | `sql-injection` | Spring JdbcTemplate executed with concatenated SQL string |
+| [`DBSEC-002`](#DBSEC-002) | `HIGH` | `data_leak` | Sensitive credentials or PII fields logged to application tracing stream |
+| [`DBSEC-003`](#DBSEC-003) | `HIGH` | `information_exposure` | Internal database driver error exposed directly in HTTP client response |
 | [`SQLI-001`](#SQLI-001) | `HIGH` | `sql-injection` | Untrusted value concatenated or formatted into executable SQL at database driver sink |
 | [`SQLI-002`](#SQLI-002) | `HIGH` | `sql-injection` | Untrusted table, column, or identifier dynamically interpolated into SQL |
 | [`SQLI-004`](#SQLI-004) | `HIGH` | `orm-escape-hatch` | Unsafe raw ORM escape hatch called with dynamic or concatenated string |
 | [`SQLI-008`](#SQLI-008) | `MEDIUM` | `bind-mismatch` | SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed |
 | [`SQLI-011`](#SQLI-011) | `HIGH` | `list-expansion` | Unsafe list or IN clause expansion using strings.Join or manual string interpolation |
 | [`SQLI-012`](#SQLI-012) | `HIGH` | `prepared-statement` | Tainted SQL query template passed into statement preparation method db.Prepare() |
+| [`SQLAUTH-001`](#SQLAUTH-001) | `HIGH` | `multi-tenant-isolation` | Multi-tenant entity queried without tenant_id or organization_id scoping constraint |
+| [`SQLAUTH-002`](#SQLAUTH-002) | `HIGH` | `authorization-idor` | Sensitive resource queried solely by object ID without user ownership scoping (IDOR risk) |
+| [`SQLAUTH-003`](#SQLAUTH-003) | `HIGH` | `raw-query-bypass` | Raw query bypasses standard ORM authorization scopes and permission filters |
+| [`SQLAUTH-004`](#SQLAUTH-004) | `HIGH` | `rls-misconfiguration` | Database query assumes Row-Level Security but explicitly switches to superuser or bypass role |
 
 ### Details & Guidance
 
@@ -615,6 +632,292 @@ const config = JSON.parse(jsonString);
 
 ---
 
+#### `node-prisma-raw-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Prisma raw unsafe query executed with potentially untrusted dynamic string
+
+**Recommendation**: Use prisma.$queryRaw with tagged template literals (parameterized) instead of unsafe variants
+
+##### Code Example (Don't vs Do)
+
+```ts
+// ❌ Don't (Unsafe)
+const users = await prisma.$queryRawUnsafe(`SELECT * FROM users WHERE id = '${id}'`);
+
+// ✅ Do (Recommended)
+const users = await prisma.$queryRaw`SELECT * FROM users WHERE id = ${id}`;
+```
+
+---
+
+#### `node-typeorm-raw-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: TypeORM raw query with dynamic string interpolation
+
+**Recommendation**: Pass parameters as the second argument array to query() rather than template interpolation
+
+##### Code Example (Don't vs Do)
+
+```ts
+// ❌ Don't (Unsafe)
+await connection.query(`SELECT * FROM users WHERE email = '${email}'`);
+
+// ✅ Do (Recommended)
+await connection.query("SELECT * FROM users WHERE email = $1", [email]);
+```
+
+---
+
+#### `node-sequelize-raw-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Sequelize raw query executed with template string interpolation
+
+**Recommendation**: Use replacements or bind options in sequelize.query for safe parameter binding
+
+##### Code Example (Don't vs Do)
+
+```ts
+// ❌ Don't (Unsafe)
+await sequelize.query(`SELECT * FROM users WHERE status = '${status}'`);
+
+// ✅ Do (Recommended)
+await sequelize.query("SELECT * FROM users WHERE status = :status", { replacements: { status } });
+```
+
+---
+
+#### `node-pg-dynamic-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: node-postgres query executed with template string interpolation
+
+**Recommendation**: Use parameterized query format ($1, $2) and pass values in the values parameter array
+
+##### Code Example (Don't vs Do)
+
+```ts
+// ❌ Don't (Unsafe)
+await client.query(`SELECT * FROM accounts WHERE id = '${id}'`);
+
+// ✅ Do (Recommended)
+await client.query("SELECT * FROM accounts WHERE id = $1", [id]);
+```
+
+---
+
+#### `node-mysql-dynamic-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: mysql2 query executed with dynamic template string interpolation
+
+**Recommendation**: Use query placeholders (?) and pass arguments in the parameter array
+
+##### Code Example (Don't vs Do)
+
+```ts
+// ❌ Don't (Unsafe)
+await pool.query(`SELECT * FROM products WHERE category = '${category}'`);
+
+// ✅ Do (Recommended)
+await pool.query("SELECT * FROM products WHERE category = ?", [category]);
+```
+
+---
+
+#### `python-sqlalchemy-raw-sql`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: SQLAlchemy raw text expression formatted with dynamic Python f-string or format()
+
+**Recommendation**: Use bound parameters (:param_name) with session.execute(text("..."), {"param_name": val})
+
+##### Code Example (Don't vs Do)
+
+```text
+// ❌ Don't (Unsafe)
+session.execute(text(f"SELECT * FROM users WHERE username = '{username}'"))
+
+// ✅ Do (Recommended)
+session.execute(text("SELECT * FROM users WHERE username = :u"), {"u": username})
+```
+
+---
+
+#### `python-django-raw-sql`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Django raw SQL query constructed with f-string or unsafe .extra() clause
+
+**Recommendation**: Pass parameters as params list to Model.objects.raw(query, [params]) or use standard ORM filters
+
+##### Code Example (Don't vs Do)
+
+```text
+// ❌ Don't (Unsafe)
+User.objects.raw(f"SELECT * FROM auth_user WHERE username = '{username}'")
+
+// ✅ Do (Recommended)
+User.objects.raw("SELECT * FROM auth_user WHERE username = %s", [username])
+```
+
+---
+
+#### `python-psycopg-format-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: psycopg database cursor executed with Python string formatting instead of query parameters
+
+**Recommendation**: Pass query parameters as the second tuple argument to cursor.execute(query, (param,))
+
+##### Code Example (Don't vs Do)
+
+```text
+// ❌ Don't (Unsafe)
+cursor.execute(f"SELECT * FROM items WHERE owner_id = '{owner_id}'")
+
+// ✅ Do (Recommended)
+cursor.execute("SELECT * FROM items WHERE owner_id = %s", (owner_id,))
+```
+
+---
+
+#### `java-spring-jpa-native-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Spring Data JPA native query built via string concatenation
+
+**Recommendation**: Use named parameters (:param) or positional parameters (?1) in native @Query annotations
+
+##### Code Example (Don't vs Do)
+
+```text
+// ❌ Don't (Unsafe)
+@Query(value = "SELECT * FROM users WHERE role = '" + ROLE + "'", nativeQuery = true)
+
+// ✅ Do (Recommended)
+@Query(value = "SELECT * FROM users WHERE role = :role", nativeQuery = true)
+```
+
+---
+
+#### `java-hibernate-native-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Hibernate createNativeQuery executed with dynamic string concatenation
+
+**Recommendation**: Use parameterized placeholders and bind parameters via query.setParameter()
+
+##### Code Example (Don't vs Do)
+
+```text
+// ❌ Don't (Unsafe)
+session.createNativeQuery("SELECT * FROM orders WHERE status = '" + status + "'")
+
+// ✅ Do (Recommended)
+session.createNativeQuery("SELECT * FROM orders WHERE status = :status").setParameter("status", status)
+```
+
+---
+
+#### `java-jdbc-dynamic-query`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `sql-injection`
+
+**Description**: Spring JdbcTemplate executed with concatenated SQL string
+
+**Recommendation**: Pass query parameters as separate Object[] or varargs to jdbcTemplate
+
+##### Code Example (Don't vs Do)
+
+```text
+// ❌ Don't (Unsafe)
+jdbcTemplate.query("SELECT * FROM users WHERE id = " + id, rowMapper)
+
+// ✅ Do (Recommended)
+jdbcTemplate.query("SELECT * FROM users WHERE id = ?", rowMapper, id)
+```
+
+---
+
+#### `DBSEC-002`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `data_leak`
+
+**Description**: Sensitive credentials or PII fields logged to application tracing stream
+
+**Recommendation**: Redact credentials, tokens, and payment card details before writing to log sinks
+
+##### Code Example (Don't vs Do)
+
+```go
+// ❌ Don't (Unsafe)
+logger.info("Processing payment for card:", cardToken, secretKey);
+
+// ✅ Do (Recommended)
+logger.info("Processing payment for transaction ID:", transactionId);
+```
+
+---
+
+#### `DBSEC-003`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `information_exposure`
+
+**Description**: Internal database driver error exposed directly in HTTP client response
+
+**Recommendation**: Log the internal database error securely on the server and return a sanitized, generic error message to the client
+
+##### Code Example (Don't vs Do)
+
+```go
+// ❌ Don't (Unsafe)
+c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+// ✅ Do (Recommended)
+c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal server error occurred"})
+```
+
+---
+
 #### `SQLI-001`
 
 - **Domain**: `security`
@@ -776,6 +1079,120 @@ stmt, err := db.Prepare("SELECT * FROM users WHERE status = " + filter)
 // ✅ Do (Recommended)
 stmt, err := db.Prepare("SELECT * FROM users WHERE status = $1")
 rows, err := stmt.Query(filter)
+```
+
+:::
+
+---
+
+#### `SQLAUTH-001`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `multi-tenant-isolation`
+
+**Description**: Multi-tenant entity queried without tenant_id or organization_id scoping constraint
+
+**Recommendation**: Enforce explicit tenant_id or organization_id filtering on all multi-tenant queries to prevent cross-tenant data access
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+func getAccounts(db *sql.DB) (*sql.Rows, error) {
+    return db.Query("SELECT * FROM accounts WHERE status = 'active'")
+}
+
+// ✅ Do (Recommended)
+func getAccounts(db *sql.DB, tenantID string) (*sql.Rows, error) {
+    return db.Query("SELECT * FROM accounts WHERE tenant_id = $1 AND status = 'active'", tenantID)
+}
+```
+
+:::
+
+---
+
+#### `SQLAUTH-002`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `authorization-idor`
+
+**Description**: Sensitive resource queried solely by object ID without user ownership scoping (IDOR risk)
+
+**Recommendation**: Scope entity lookups by both the object ID and authenticated user/account ID
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+func getOrder(db *sql.DB, orderID string) (*sql.Row, error) {
+    return db.QueryRow("SELECT * FROM orders WHERE id = $1", orderID), nil
+}
+
+// ✅ Do (Recommended)
+func getOrder(db *sql.DB, orderID, userID string) (*sql.Row, error) {
+    return db.QueryRow("SELECT * FROM orders WHERE id = $1 AND user_id = $2", orderID, userID), nil
+}
+```
+
+:::
+
+---
+
+#### `SQLAUTH-003`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `raw-query-bypass`
+
+**Description**: Raw query bypasses standard ORM authorization scopes and permission filters
+
+**Recommendation**: Ensure raw queries replicate all security barriers, role restrictions, and tenant scopes provided by ORM repositories
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+db.Raw("SELECT * FROM users")
+
+// ✅ Do (Recommended)
+db.Raw("SELECT * FROM users WHERE organization_id = ? AND role <= ?", orgID, maxRole)
+```
+
+:::
+
+---
+
+#### `SQLAUTH-004`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `rls-misconfiguration`
+
+**Description**: Database query assumes Row-Level Security but explicitly switches to superuser or bypass role
+
+**Recommendation**: Connect and execute application queries using least-privilege non-superuser roles to enforce database Row-Level Security
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+db.Exec("SET ROLE postgres")
+db.Query("SELECT * FROM sensitive_documents")
+
+// ✅ Do (Recommended)
+db.Exec("SET LOCAL app.current_tenant_id = $1", tenantID)
+db.Query("SELECT * FROM sensitive_documents")
 ```
 
 :::
@@ -945,7 +1362,16 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 | [`go-discarded-error`](#go-discarded-error) | `MEDIUM` | `error_handling` | Returned error value is explicitly ignored with blank identifier |
 | [`go-process-termination`](#go-process-termination) | `MEDIUM` | `process_termination` | Application path may terminate entire process unexpectedly |
 | [`go-http-client-without-timeout`](#go-http-client-without-timeout) | `MEDIUM` | `missing_timeout` | HTTP client struct literal does not set an overall request timeout |
+| [`DBMIG-001`](#DBMIG-001) | `HIGH` | `destructive-migration` | Destructive schema migration detected without guarded rollout or deprecation phase |
+| [`DBMIG-002`](#DBMIG-002) | `MEDIUM` | `migration-safety` | Database migration file lacks reversible rollback instructions |
+| [`DBMIG-003`](#DBMIG-003) | `MEDIUM` | `schema-integrity` | Security-sensitive key column defined in table definition |
+| [`DBPERF-001`](#DBPERF-001) | `MEDIUM` | `query-performance` | Public dataset queried without an explicit LIMIT or pagination boundary |
+| [`DBPERF-002`](#DBPERF-002) | `HIGH` | `n-plus-one` | Database query executed inside loop (N+1 query anti-pattern) |
 | [`SQLSAFE-001`](#SQLSAFE-001) | `HIGH` | `destructive-query` | Unbounded UPDATE or DELETE query without a WHERE clause |
+| [`SQLSAFE-003`](#SQLSAFE-003) | `HIGH` | `concurrency-hazard` | Non-atomic read-modify-write pattern detected on balance/inventory field without row locking |
+| [`SQLSAFE-004`](#SQLSAFE-004) | `HIGH` | `transaction-loss` | Database operation executes on global connection pool escaping active transaction boundary |
+| [`SQLSAFE-005`](#SQLSAFE-005) | `HIGH` | `logic-operator-precedence` | Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence |
+| [`SQLSAFE-006`](#SQLSAFE-006) | `MEDIUM` | `soft-delete-bypass` | Raw query omits deleted_at IS NULL condition on soft-deletable entity table |
 
 ### Details & Guidance
 
@@ -1091,6 +1517,118 @@ client := &http.Client{Timeout: 10 * time.Second}
 
 ---
 
+#### `DBMIG-001`
+
+- **Domain**: `reliability`
+- **Severity**: `HIGH`
+- **Category**: `destructive-migration`
+
+**Description**: Destructive schema migration detected without guarded rollout or deprecation phase
+
+**Recommendation**: Follow the expand-contract migration pattern and avoid immediate column/table drops in live environments
+
+##### Code Example (Don't vs Do)
+
+```go
+// ❌ Don't (Unsafe)
+ALTER TABLE users DROP COLUMN phone_number;
+
+// ✅ Do (Recommended)
+-- Phase 1: Mark column deprecated in application code; Phase 2: Drop after code deployment
+```
+
+---
+
+#### `DBMIG-002`
+
+- **Domain**: `reliability`
+- **Severity**: `MEDIUM`
+- **Category**: `migration-safety`
+
+**Description**: Database migration file lacks reversible rollback instructions
+
+**Recommendation**: Always provide corresponding down migrations or automated rollback scripts for disaster recovery
+
+##### Code Example (Don't vs Do)
+
+```go
+// ❌ Don't (Unsafe)
+-- no-down: Irreversible migration
+
+// ✅ Do (Recommended)
+-- Provide matching down.sql migration with schema restore steps
+```
+
+---
+
+#### `DBMIG-003`
+
+- **Domain**: `reliability`
+- **Severity**: `MEDIUM`
+- **Category**: `schema-integrity`
+
+**Description**: Security-sensitive key column defined in table definition
+
+**Recommendation**: Enforce explicit FOREIGN KEY, UNIQUE, or CHECK constraints on tenant and account scoping columns
+
+##### Code Example (Don't vs Do)
+
+```text
+// ❌ Don't (Unsafe)
+CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID);
+
+// ✅ Do (Recommended)
+CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE);
+```
+
+---
+
+#### `DBPERF-001`
+
+- **Domain**: `reliability`
+- **Severity**: `MEDIUM`
+- **Category**: `query-performance`
+
+**Description**: Public dataset queried without an explicit LIMIT or pagination boundary
+
+**Recommendation**: Always enforce LIMIT and OFFSET / cursor pagination to prevent unbounded memory allocation and DB stalls
+
+##### Code Example (Don't vs Do)
+
+```go
+// ❌ Don't (Unsafe)
+db.Query("SELECT * FROM events WHERE created_at > $1", startTime)
+
+// ✅ Do (Recommended)
+db.Query("SELECT * FROM events WHERE created_at > $1 ORDER BY id ASC LIMIT 100", startTime)
+```
+
+---
+
+#### `DBPERF-002`
+
+- **Domain**: `reliability`
+- **Severity**: `HIGH`
+- **Category**: `n-plus-one`
+
+**Description**: Database query executed inside loop (N+1 query anti-pattern)
+
+**Recommendation**: Batch queries using WHERE id IN (...) or JOINs to fetch data in a single roundtrip
+
+##### Code Example (Don't vs Do)
+
+```go
+// ❌ Don't (Unsafe)
+for _, userID := range userIDs {
+    db.QueryRow("SELECT * FROM profiles WHERE user_id = $1", userID)
+}
+
+// ✅ Do (Recommended)
+db.Query("SELECT * FROM profiles WHERE user_id IN ($1, $2, ...)", userIDs)
+```
+
+---
+
 #### `SQLSAFE-001`
 
 - **Domain**: `reliability`
@@ -1111,6 +1649,126 @@ db.Exec("DELETE FROM users")
 
 // ✅ Do (Recommended)
 db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)
+```
+
+:::
+
+---
+
+#### `SQLSAFE-003`
+
+- **Domain**: `reliability`
+- **Severity**: `HIGH`
+- **Category**: `concurrency-hazard`
+
+**Description**: Non-atomic read-modify-write pattern detected on balance/inventory field without row locking
+
+**Recommendation**: Use SELECT ... FOR UPDATE within a transaction or perform atomic SQL mutations
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+var balance int
+db.QueryRow("SELECT balance FROM accounts WHERE id = $1", id).Scan(&balance)
+balance += 100
+db.Exec("UPDATE accounts SET balance = $1 WHERE id = $2", balance, id)
+
+// ✅ Do (Recommended)
+tx, _ := db.Begin()
+var balance int
+tx.QueryRow("SELECT balance FROM accounts WHERE id = $1 FOR UPDATE", id).Scan(&balance)
+balance += 100
+tx.Exec("UPDATE accounts SET balance = $1 WHERE id = $2", balance, id)
+tx.Commit()
+```
+
+:::
+
+---
+
+#### `SQLSAFE-004`
+
+- **Domain**: `reliability`
+- **Severity**: `HIGH`
+- **Category**: `transaction-loss`
+
+**Description**: Database operation executes on global connection pool escaping active transaction boundary
+
+**Recommendation**: Execute queries using the active transaction handle (tx) to guarantee atomic rollback on error
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+func Transfer(tx *sql.Tx, from, to string, amount int) error {
+    db.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
+    tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)
+    return nil
+}
+
+// ✅ Do (Recommended)
+func Transfer(tx *sql.Tx, from, to string, amount int) error {
+    tx.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
+    tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)
+    return nil
+}
+```
+
+:::
+
+---
+
+#### `SQLSAFE-005`
+
+- **Domain**: `reliability`
+- **Severity**: `HIGH`
+- **Category**: `logic-operator-precedence`
+
+**Description**: Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence
+
+**Recommendation**: Explicitly group logical expressions with parentheses to avoid inadvertent filter bypass or tenant leakage
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+query := "SELECT * FROM orders WHERE tenant_id = $1 AND status = 'active' OR is_admin = true"
+
+// ✅ Do (Recommended)
+query := "SELECT * FROM orders WHERE tenant_id = $1 AND (status = 'active' OR is_admin = true)"
+```
+
+:::
+
+---
+
+#### `SQLSAFE-006`
+
+- **Domain**: `reliability`
+- **Severity**: `MEDIUM`
+- **Category**: `soft-delete-bypass`
+
+**Description**: Raw query omits deleted_at IS NULL condition on soft-deletable entity table
+
+**Recommendation**: Include 'deleted_at IS NULL' in WHERE clauses when querying tables that use soft deletion
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+db.Query("SELECT * FROM users WHERE email = $1", email)
+
+// ✅ Do (Recommended)
+db.Query("SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL", email)
 ```
 
 :::

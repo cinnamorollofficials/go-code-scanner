@@ -141,7 +141,129 @@ rows, err := stmt.Query(filter)`,
 				{
 					Language: "go", Label: "Go",
 					Unsafe: `db.Exec("DELETE FROM users")`,
-					Safe: `db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)`,
+					Safe:   `db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)`,
+				},
+			},
+		},
+		{
+			ID: "SQLAUTH-001", Severity: finding.High, Domain: finding.Security, Category: "multi-tenant-isolation",
+			Description:    "Multi-tenant entity queried without tenant_id or organization_id scoping constraint",
+			Recommendation: "Enforce explicit tenant_id or organization_id filtering on all multi-tenant queries to prevent cross-tenant data access",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `func getAccounts(db *sql.DB) (*sql.Rows, error) {
+    return db.Query("SELECT * FROM accounts WHERE status = 'active'")
+}`,
+					Safe: `func getAccounts(db *sql.DB, tenantID string) (*sql.Rows, error) {
+    return db.Query("SELECT * FROM accounts WHERE tenant_id = $1 AND status = 'active'", tenantID)
+}`,
+				},
+			},
+		},
+		{
+			ID: "SQLAUTH-002", Severity: finding.High, Domain: finding.Security, Category: "authorization-idor",
+			Description:    "Sensitive resource queried solely by object ID without user ownership scoping (IDOR risk)",
+			Recommendation: "Scope entity lookups by both the object ID and authenticated user/account ID",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `func getOrder(db *sql.DB, orderID string) (*sql.Row, error) {
+    return db.QueryRow("SELECT * FROM orders WHERE id = $1", orderID), nil
+}`,
+					Safe: `func getOrder(db *sql.DB, orderID, userID string) (*sql.Row, error) {
+    return db.QueryRow("SELECT * FROM orders WHERE id = $1 AND user_id = $2", orderID, userID), nil
+}`,
+				},
+			},
+		},
+		{
+			ID: "SQLAUTH-003", Severity: finding.High, Domain: finding.Security, Category: "raw-query-bypass",
+			Description:    "Raw query bypasses standard ORM authorization scopes and permission filters",
+			Recommendation: "Ensure raw queries replicate all security barriers, role restrictions, and tenant scopes provided by ORM repositories",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `db.Raw("SELECT * FROM users")`,
+					Safe:   `db.Raw("SELECT * FROM users WHERE organization_id = ? AND role <= ?", orgID, maxRole)`,
+				},
+			},
+		},
+		{
+			ID: "SQLAUTH-004", Severity: finding.High, Domain: finding.Security, Category: "rls-misconfiguration",
+			Description:    "Database query assumes Row-Level Security but explicitly switches to superuser or bypass role",
+			Recommendation: "Connect and execute application queries using least-privilege non-superuser roles to enforce database Row-Level Security",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `db.Exec("SET ROLE postgres")
+db.Query("SELECT * FROM sensitive_documents")`,
+					Safe: `db.Exec("SET LOCAL app.current_tenant_id = $1", tenantID)
+db.Query("SELECT * FROM sensitive_documents")`,
+				},
+			},
+		},
+		{
+			ID: "SQLSAFE-003", Severity: finding.High, Domain: finding.Reliability, Category: "concurrency-hazard",
+			Description:    "Non-atomic read-modify-write pattern detected on balance/inventory field without row locking",
+			Recommendation: "Use SELECT ... FOR UPDATE within a transaction or perform atomic SQL mutations",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `var balance int
+db.QueryRow("SELECT balance FROM accounts WHERE id = $1", id).Scan(&balance)
+balance += 100
+db.Exec("UPDATE accounts SET balance = $1 WHERE id = $2", balance, id)`,
+					Safe: `tx, _ := db.Begin()
+var balance int
+tx.QueryRow("SELECT balance FROM accounts WHERE id = $1 FOR UPDATE", id).Scan(&balance)
+balance += 100
+tx.Exec("UPDATE accounts SET balance = $1 WHERE id = $2", balance, id)
+tx.Commit()`,
+				},
+			},
+		},
+		{
+			ID: "SQLSAFE-004", Severity: finding.High, Domain: finding.Reliability, Category: "transaction-loss",
+			Description:    "Database operation executes on global connection pool escaping active transaction boundary",
+			Recommendation: "Execute queries using the active transaction handle (tx) to guarantee atomic rollback on error",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `func Transfer(tx *sql.Tx, from, to string, amount int) error {
+    db.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
+    tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)
+    return nil
+}`,
+					Safe: `func Transfer(tx *sql.Tx, from, to string, amount int) error {
+    tx.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
+    tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)
+    return nil
+}`,
+				},
+			},
+		},
+		{
+			ID: "SQLSAFE-005", Severity: finding.High, Domain: finding.Reliability, Category: "logic-operator-precedence",
+			Description:    "Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence",
+			Recommendation: "Explicitly group logical expressions with parentheses to avoid inadvertent filter bypass or tenant leakage",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `query := "SELECT * FROM orders WHERE tenant_id = $1 AND status = 'active' OR is_admin = true"`,
+					Safe:   `query := "SELECT * FROM orders WHERE tenant_id = $1 AND (status = 'active' OR is_admin = true)"`,
+				},
+			},
+		},
+		{
+			ID: "SQLSAFE-006", Severity: finding.Medium, Domain: finding.Reliability, Category: "soft-delete-bypass",
+			Description:    "Raw query omits deleted_at IS NULL condition on soft-deletable entity table",
+			Recommendation: "Include 'deleted_at IS NULL' in WHERE clauses when querying tables that use soft deletion",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `db.Query("SELECT * FROM users WHERE email = $1", email)`,
+					Safe:   `db.Query("SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL", email)`,
 				},
 			},
 		},
