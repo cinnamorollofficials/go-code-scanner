@@ -16,6 +16,8 @@ func TestSQLTaintScannerComprehensive(t *testing.T) {
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
+	"strings"
 )
 
 type ORM struct{}
@@ -41,6 +43,22 @@ func unsafeORMWhere(orm *ORM, role string) {
 
 func unsafeBindMismatch(db *sql.DB, id string) {
 	db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id)
+}
+
+func unsafeListExpansion(db *sql.DB, ids []string) {
+	query := fmt.Sprintf("SELECT * FROM users WHERE id IN (%s)", strings.Join(ids, ","))
+	db.Query(query)
+}
+
+func unsafePreparedTemplate(db *sql.DB, filter string) {
+	stmt, err := db.Prepare("SELECT * FROM users WHERE status = " + filter)
+	_ = stmt
+	_ = err
+}
+
+func httpHandlerSink(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	userID := r.URL.Query().Get("id")
+	db.Query(fmt.Sprintf("SELECT * FROM profiles WHERE user_id = '%s'", userID))
 }
 
 func safeParameterized(db *sql.DB, id string) {
@@ -86,9 +104,9 @@ func unsafeDelete(db *sql.DB) {
 		}
 	}
 
-	// SQLI-001 (unsafeConcatenation + unsafeSprintf) -> 2
-	if got := foundRules["SQLI-001"]; got != 2 {
-		t.Errorf("got %d SQLI-001 findings, want 2", got)
+	// SQLI-001 (unsafeConcatenation + unsafeSprintf + httpHandlerSink) -> 3
+	if got := foundRules["SQLI-001"]; got != 3 {
+		t.Errorf("got %d SQLI-001 findings, want 3", got)
 	}
 
 	// SQLI-002 (unsafeIdentifier) -> 1
@@ -104,6 +122,16 @@ func unsafeDelete(db *sql.DB) {
 	// SQLI-008 (unsafeBindMismatch) -> 1
 	if got := foundRules["SQLI-008"]; got != 1 {
 		t.Errorf("got %d SQLI-008 findings, want 1", got)
+	}
+
+	// SQLI-011 (unsafeListExpansion) -> 1
+	if got := foundRules["SQLI-011"]; got != 1 {
+		t.Errorf("got %d SQLI-011 findings, want 1", got)
+	}
+
+	// SQLI-012 (unsafePreparedTemplate) -> 1
+	if got := foundRules["SQLI-012"]; got != 1 {
+		t.Errorf("got %d SQLI-012 findings, want 1", got)
 	}
 
 	// SQLSAFE-001 (unsafeDelete) -> 1

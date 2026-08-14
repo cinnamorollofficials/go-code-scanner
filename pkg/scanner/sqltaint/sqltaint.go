@@ -76,7 +76,7 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 			continue
 		}
 
-		fileFindings := analyzeAST(fset, src.Path, fileAST)
+		fileFindings := analyzeFile(fset, src.Path, fileAST)
 		findings = append(findings, fileFindings...)
 	}
 
@@ -87,74 +87,130 @@ func (s *Scanner) Scan(ctx context.Context, req scanner.Request) scanner.Result 
 	}
 }
 
-func analyzeAST(fset *token.FileSet, relPath string, node *ast.File) []finding.Finding {
+func analyzeFile(fset *token.FileSet, relPath string, node *ast.File) []finding.Finding {
 	var findings []finding.Finding
 
-	ast.Inspect(node, func(n ast.Node) bool {
-		call, ok := n.(*ast.CallExpr)
-		if !ok {
-			return true
+	for _, decl := range node.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Body == nil {
+			continue
 		}
 
-		funName, selectorName := extractCallNames(call)
-		if funName == "" && selectorName == "" {
-			return true
-		}
-
-		// 1. Detect ORM escape hatches (SQLI-004) e.g. db.Where(), db.Raw(), db.Order(), db.Having()
-		if isORMSinkMethod(selectorName) {
-			if len(call.Args) > 0 {
-				arg0 := call.Args[0]
-				if tpl := reconstructSQLTemplate(fset, relPath, arg0); tpl != nil && tpl.HasUntrustedHole() {
-					pos := fset.Position(call.Pos())
-					f := createORMIFinding(relPath, pos.Line, selectorName, tpl)
-					findings = append(findings, f)
-					return true
+		// 1. Build intraprocedural variable assignment map
+		vMap := make(map[string]ast.Expr)
+		ast.Inspect(fn.Body, func(n ast.Node) bool {
+			if assign, ok := n.(*ast.AssignStmt); ok {
+				for i, lhs := range assign.Lhs {
+					if id, ok := lhs.(*ast.Ident); ok && i < len(assign.Rhs) {
+						vMap[id.Name] = assign.Rhs[i]
+					}
 				}
 			}
-		}
+			return true
+		})
 
-		// 2. Detect Standard DB Sinks (SQLI-001, SQLI-002, SQLI-008)
-		if isDBSinkMethod(selectorName) {
-			if len(call.Args) > 0 {
-				arg0 := call.Args[0]
+		// 2. Inspect AST nodes within the function
+		ast.Inspect(fn.Body, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
 
-				// Check placeholder mismatch (SQLI-008) on constant query strings
-				if strLit, ok := arg0.(*ast.BasicLit); ok && strLit.Kind == token.STRING {
-					expectedPlaceholders := countPlaceholders(strLit.Value)
-					actualArgs := len(call.Args) - 1
-					if expectedPlaceholders > 0 && expectedPlaceholders != actualArgs {
+			funName, selectorName := extractCallNames(call)
+			if funName == "" && selectorName == "" {
+				return true
+			}
+
+			// A. Detect Prepared Statement Sinks (SQLI-012: Tainted Prepared Query Template)
+			if isPrepareMethod(selectorName) {
+				if len(call.Args) > 0 {
+					arg0 := call.Args[0]
+					if tpl := reconstructSQLTemplate(fset, relPath, arg0, vMap, 0); tpl != nil && tpl.HasUntrustedHole() {
 						pos := fset.Position(call.Pos())
-						f := createBindMismatchFinding(relPath, pos.Line, selectorName, expectedPlaceholders, actualArgs)
+						f := createTaintedPrepareFinding(relPath, pos.Line, selectorName, tpl)
 						findings = append(findings, f)
-					}
-				}
-
-				// Check SQL injection (SQLI-001 or SQLI-002)
-				if tpl := reconstructSQLTemplate(fset, relPath, arg0); tpl != nil && tpl.HasUntrustedHole() {
-					pos := fset.Position(call.Pos())
-					if hasIdentifierHole(tpl) {
-						f := createIdentifierSQLIFinding(relPath, pos.Line, selectorName, tpl)
-						findings = append(findings, f)
-					} else {
-						f := createSQLIFinding(relPath, pos.Line, selectorName, tpl)
-						findings = append(findings, f)
+						return true
 					}
 				}
 			}
-		}
 
-		// 3. Detect SQLSAFE-001: Unbounded Update/Delete without WHERE
-		if isUnboundedDeleteOrUpdate(selectorName, call) {
-			pos := fset.Position(call.Pos())
-			f := createUnboundedQueryFinding(relPath, pos.Line, selectorName)
-			findings = append(findings, f)
-		}
+			// B. Detect ORM escape hatches (SQLI-004) e.g. db.Where(), db.Raw(), db.Order(), db.Having()
+			if isORMSinkMethod(selectorName) {
+				if len(call.Args) > 0 {
+					arg0 := call.Args[0]
+					if tpl := reconstructSQLTemplate(fset, relPath, arg0, vMap, 0); tpl != nil && tpl.HasUntrustedHole() {
+						pos := fset.Position(call.Pos())
+						if hasListExpansionHole(tpl) {
+							f := createListExpansionFinding(relPath, pos.Line, selectorName, tpl)
+							findings = append(findings, f)
+						} else {
+							f := createORMIFinding(relPath, pos.Line, selectorName, tpl)
+							findings = append(findings, f)
+						}
+						return true
+					}
+				}
+			}
 
-		return true
-	})
+			// C. Detect Standard DB Sinks (SQLI-001, SQLI-002, SQLI-008, SQLI-011)
+			if isDBSinkMethod(selectorName) {
+				if len(call.Args) > 0 {
+					arg0 := call.Args[0]
+
+					// Check placeholder mismatch (SQLI-008) on constant query strings
+					resolvedArg := resolveExpr(arg0, vMap)
+					if strLit, ok := resolvedArg.(*ast.BasicLit); ok && strLit.Kind == token.STRING {
+						expectedPlaceholders := countPlaceholders(strLit.Value)
+						actualArgs := len(call.Args) - 1
+						if expectedPlaceholders > 0 && expectedPlaceholders != actualArgs {
+							pos := fset.Position(call.Pos())
+							f := createBindMismatchFinding(relPath, pos.Line, selectorName, expectedPlaceholders, actualArgs)
+							findings = append(findings, f)
+						}
+					}
+
+					// Check SQL injection (SQLI-001, SQLI-002, or SQLI-011)
+					if tpl := reconstructSQLTemplate(fset, relPath, arg0, vMap, 0); tpl != nil && tpl.HasUntrustedHole() {
+						pos := fset.Position(call.Pos())
+						if hasListExpansionHole(tpl) {
+							f := createListExpansionFinding(relPath, pos.Line, selectorName, tpl)
+							findings = append(findings, f)
+						} else if hasIdentifierHole(tpl) {
+							f := createIdentifierSQLIFinding(relPath, pos.Line, selectorName, tpl)
+							findings = append(findings, f)
+						} else {
+							f := createSQLIFinding(relPath, pos.Line, selectorName, tpl)
+							findings = append(findings, f)
+						}
+					}
+				}
+			}
+
+			// D. Detect SQLSAFE-001: Unbounded Update/Delete without WHERE
+			if isUnboundedDeleteOrUpdate(selectorName, call, vMap) {
+				pos := fset.Position(call.Pos())
+				f := createUnboundedQueryFinding(relPath, pos.Line, selectorName)
+				findings = append(findings, f)
+			}
+
+			return true
+		})
+	}
 
 	return findings
+}
+
+func resolveExpr(expr ast.Expr, vMap map[string]ast.Expr) ast.Expr {
+	if id, ok := expr.(*ast.Ident); ok {
+		if target, found := vMap[id.Name]; found {
+			return target
+		}
+	}
+	return expr
+}
+
+func isPrepareMethod(name string) bool {
+	return name == "Prepare" || name == "PrepareContext"
 }
 
 func isDBSinkMethod(name string) bool {
@@ -175,10 +231,11 @@ func isORMSinkMethod(name string) bool {
 	}
 }
 
-func isUnboundedDeleteOrUpdate(name string, call *ast.CallExpr) bool {
+func isUnboundedDeleteOrUpdate(name string, call *ast.CallExpr, vMap map[string]ast.Expr) bool {
 	if name == "Delete" || name == "Update" || name == "Exec" || name == "ExecContext" {
 		if len(call.Args) > 0 {
-			if strLit, ok := call.Args[0].(*ast.BasicLit); ok && strLit.Kind == token.STRING {
+			resolved := resolveExpr(call.Args[0], vMap)
+			if strLit, ok := resolved.(*ast.BasicLit); ok && strLit.Kind == token.STRING {
 				upper := strings.ToUpper(strLit.Value)
 				if (strings.Contains(upper, "DELETE FROM") || strings.Contains(upper, "UPDATE ")) && !strings.Contains(upper, "WHERE") {
 					return true
@@ -202,7 +259,11 @@ func extractCallNames(call *ast.CallExpr) (funName string, selectorName string) 
 	return "", ""
 }
 
-func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) *SQLTemplate {
+func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr, vMap map[string]ast.Expr, depth int) *SQLTemplate {
+	if depth > 8 {
+		return nil
+	}
+
 	tpl := &SQLTemplate{
 		Kind: KindRawConcatenation,
 	}
@@ -213,8 +274,8 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 	switch e := expr.(type) {
 	case *ast.BinaryExpr:
 		if e.Op == token.ADD {
-			leftTpl := reconstructSQLTemplate(fset, relPath, e.X)
-			rightTpl := reconstructSQLTemplate(fset, relPath, e.Y)
+			leftTpl := reconstructSQLTemplate(fset, relPath, e.X, vMap, depth+1)
+			rightTpl := reconstructSQLTemplate(fset, relPath, e.Y, vMap, depth+1)
 			if leftTpl != nil && rightTpl != nil {
 				tpl.Segments = append(leftTpl.Segments, rightTpl.Segments...)
 				tpl.RawText = leftTpl.RawText + " + " + rightTpl.RawText
@@ -230,8 +291,29 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 			return tpl
 		}
 	case *ast.CallExpr:
-		// fmt.Sprintf("SELECT ... %s", var)
-		if fun, sel := extractCallNames(e); fun == "fmt" && sel == "Sprintf" {
+		fun, sel := extractCallNames(e)
+
+		// Check strings.Join(slice, ",") inside query
+		if (fun == "strings" && sel == "Join") || sel == "Join" {
+			argPos := fset.Position(e.Pos())
+			hole := &Hole{
+				Context:    HoleContextListExpansion,
+				Trust:      TrustUntrusted,
+				Expression: "strings.Join",
+				SourceStep: &finding.DataflowStep{
+					Type:        finding.StepSource,
+					Location:    finding.Location{File: relPath, Line: argPos.Line},
+					Label:       "strings.Join(...) expansion",
+					Explanation: "Slice joined as comma-separated values into dynamic SQL IN clause",
+				},
+			}
+			tpl.Segments = []TemplateSegment{{IsConst: false, Hole: hole}}
+			tpl.RawText = "strings.Join(...)"
+			return tpl
+		}
+
+		// Check fmt.Sprintf("SELECT ... %s", var)
+		if fun == "fmt" && sel == "Sprintf" {
 			if len(e.Args) > 0 {
 				if fmtStr, ok := e.Args[0].(*ast.BasicLit); ok && fmtStr.Kind == token.STRING {
 					tpl.RawText = fmtStr.Value
@@ -243,13 +325,19 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 						strings.Contains(upperFmt, "UPDATE %S") ||
 						strings.Contains(upperFmt, "JOIN %S") ||
 						strings.Contains(upperFmt, "ORDER BY %S")
+					isListExp := strings.Contains(upperFmt, "IN (%S)") || strings.Contains(upperFmt, "IN(%S)")
 
 					for _, arg := range e.Args[1:] {
 						argPos := fset.Position(arg.Pos())
 						ctxKind := HoleContextValue
-						if isIdentifier {
+						if isListExp {
+							ctxKind = HoleContextListExpansion
+						} else if isIdentifier {
 							ctxKind = HoleContextIdentifier
 						}
+
+						sourceLabel, sourceExpl := detectSourceOrigin(arg, "Dynamic argument formatted into SQL query template")
+
 						hole := &Hole{
 							Context:    ctxKind,
 							Trust:      TrustUntrusted,
@@ -257,8 +345,8 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 							SourceStep: &finding.DataflowStep{
 								Type:        finding.StepSource,
 								Location:    finding.Location{File: relPath, Line: argPos.Line},
-								Label:       fmt.Sprintf("%v", arg),
-								Explanation: "Dynamic argument formatted into SQL query template",
+								Label:       sourceLabel,
+								Explanation: sourceExpl,
 							},
 						}
 						tpl.Segments = append(tpl.Segments, TemplateSegment{IsConst: false, Hole: hole})
@@ -268,7 +356,14 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 			}
 		}
 	case *ast.Ident:
-		// Variable expression passed directly into query
+		// Check if local variable resolves to an RHS expression
+		if rhs, found := vMap[e.Name]; found {
+			if subTpl := reconstructSQLTemplate(fset, relPath, rhs, vMap, depth+1); subTpl != nil {
+				return subTpl
+			}
+		}
+
+		// Fallback: variable passed as parameter
 		tpl.RawText = e.Name
 		hole := &Hole{
 			Context:    HoleContextValue,
@@ -288,9 +383,31 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 	return nil
 }
 
+func detectSourceOrigin(expr ast.Expr, fallbackExplanation string) (label string, explanation string) {
+	if call, ok := expr.(*ast.CallExpr); ok {
+		fun, sel := extractCallNames(call)
+		if sel == "Get" || sel == "Query" || sel == "FormValue" || sel == "Param" || sel == "URLParam" {
+			return fmt.Sprintf("HTTP Parameter (%s.%s)", fun, sel), "Untrusted HTTP request parameter flowing into SQL sink"
+		}
+		if (fun == "strings" && sel == "Join") || sel == "Join" {
+			return "strings.Join", "Slice elements joined as raw SQL fragment"
+		}
+	}
+	return fmt.Sprintf("%v", expr), fallbackExplanation
+}
+
 func hasIdentifierHole(tpl *SQLTemplate) bool {
 	for _, seg := range tpl.Segments {
 		if seg.Hole != nil && seg.Hole.Context == HoleContextIdentifier {
+			return true
+		}
+	}
+	return false
+}
+
+func hasListExpansionHole(tpl *SQLTemplate) bool {
+	for _, seg := range tpl.Segments {
+		if seg.Hole != nil && seg.Hole.Context == HoleContextListExpansion {
 			return true
 		}
 	}
@@ -383,6 +500,46 @@ func createBindMismatchFinding(relPath string, line int, method string, expected
 		Recommendation: "Ensure the number of bind placeholders ($1, ?) matches the count of passed query arguments exactly",
 		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqli-008",
 		Location:       finding.Location{File: relPath, Line: line},
+	}
+}
+
+func createListExpansionFinding(relPath string, line int, method string, tpl *SQLTemplate) finding.Finding {
+	dataflow := buildDataflow(tpl, relPath, line, method)
+	return finding.Finding{
+		ID:             fmt.Sprintf("SQLI-011-%s-%d", filepath.Base(relPath), line),
+		RuleID:         "SQLI-011",
+		Tool:           "sqltaint",
+		Domain:         finding.Security,
+		Category:       "list-expansion",
+		Severity:       finding.High,
+		Confidence:     finding.ConfidenceHigh,
+		Exploitability: finding.ExploitabilityLikely,
+		FindingState:   finding.FindingConfirmed,
+		Description:    fmt.Sprintf("Unsafe list or IN clause expansion using strings.Join or manual string interpolation at %s()", method),
+		Recommendation: "Use sqlx.In or generate parameterized bind variable lists (?, ?, ...) for slice queries",
+		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqli-011",
+		Location:       finding.Location{File: relPath, Line: line},
+		Dataflow:       dataflow,
+	}
+}
+
+func createTaintedPrepareFinding(relPath string, line int, method string, tpl *SQLTemplate) finding.Finding {
+	dataflow := buildDataflow(tpl, relPath, line, method)
+	return finding.Finding{
+		ID:             fmt.Sprintf("SQLI-012-%s-%d", filepath.Base(relPath), line),
+		RuleID:         "SQLI-012",
+		Tool:           "sqltaint",
+		Domain:         finding.Security,
+		Category:       "prepared-statement",
+		Severity:       finding.High,
+		Confidence:     finding.ConfidenceHigh,
+		Exploitability: finding.ExploitabilityLikely,
+		FindingState:   finding.FindingConfirmed,
+		Description:    fmt.Sprintf("Tainted SQL query template passed into statement preparation method %s()", method),
+		Recommendation: "Keep the SQL query string passed to db.Prepare strictly constant and bind dynamic values via stmt.Query / stmt.Exec",
+		Documentation:  "https://cinnamorollofficials.github.io/go-code-scanner/reference/rules#sqli-012",
+		Location:       finding.Location{File: relPath, Line: line},
+		Dataflow:       dataflow,
 	}
 }
 
