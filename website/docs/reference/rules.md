@@ -11,7 +11,7 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 | Domain | Icon | Total Rules | Scope & Focus |
 | :--- | :---: | :---: | :--- |
-| **Security Rules** | 🔒 | 21 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
+| **Security Rules** | 🔒 | 23 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
 | **Hardening Rules** | 🛡️ | 6 | Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings. |
 | **Reliability Rules** | ⚡ | 7 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
 | **Quality Rules** | 🧹 | 5 | Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements. |
@@ -46,6 +46,8 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 | [`SQLI-002`](#SQLI-002) | `HIGH` | `sql-injection` | Untrusted table, column, or identifier dynamically interpolated into SQL |
 | [`SQLI-004`](#SQLI-004) | `HIGH` | `orm-escape-hatch` | Unsafe raw ORM escape hatch called with dynamic or concatenated string |
 | [`SQLI-008`](#SQLI-008) | `MEDIUM` | `bind-mismatch` | SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed |
+| [`SQLI-011`](#SQLI-011) | `HIGH` | `list-expansion` | Unsafe list or IN clause expansion using strings.Join or manual string interpolation |
+| [`SQLI-012`](#SQLI-012) | `HIGH` | `prepared-statement` | Tainted SQL query template passed into statement preparation method db.Prepare() |
 
 ### Details & Guidance
 
@@ -718,6 +720,62 @@ db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id)
 
 // ✅ Do (Recommended)
 db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id, tenantID)
+```
+
+:::
+
+---
+
+#### `SQLI-011`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `list-expansion`
+
+**Description**: Unsafe list or IN clause expansion using strings.Join or manual string interpolation
+
+**Recommendation**: Use sqlx.In or generate parameterized bind variable lists (?, ?, ...) for slice queries
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+query := fmt.Sprintf("SELECT * FROM users WHERE id IN (%s)", strings.Join(ids, ","))
+rows, err := db.Query(query)
+
+// ✅ Do (Recommended)
+query, args, err := sqlx.In("SELECT * FROM users WHERE id IN (?)", ids)
+query = db.Rebind(query)
+rows, err := db.Query(query, args...)
+```
+
+:::
+
+---
+
+#### `SQLI-012`
+
+- **Domain**: `security`
+- **Severity**: `HIGH`
+- **Category**: `prepared-statement`
+
+**Description**: Tainted SQL query template passed into statement preparation method db.Prepare()
+
+**Recommendation**: Keep the SQL query string passed to db.Prepare strictly constant and bind dynamic values via stmt.Query / stmt.Exec
+
+##### Code Examples (Don't vs Do)
+
+::: code-group
+
+```go [Go]
+// ❌ Don't (Unsafe)
+stmt, err := db.Prepare("SELECT * FROM users WHERE status = " + filter)
+
+// ✅ Do (Recommended)
+stmt, err := db.Prepare("SELECT * FROM users WHERE status = $1")
+rows, err := stmt.Query(filter)
 ```
 
 :::

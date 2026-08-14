@@ -127,7 +127,57 @@ func getTenantUser(db *sql.DB, userID, tenantID string) (*sql.Row, error) {
 
 ---
 
-### 5. `SQLSAFE-001`: Unbounded UPDATE or DELETE
+### 5. `SQLI-011`: Unsafe List or `IN` Clause Expansion
+
+Triggered when slice arrays are formatted into dynamic comma-separated strings inside an SQL `IN (...)` clause rather than expanding parameters safely.
+
+::: code-group
+```go [❌ Don't (Unsafe)]
+func getUsersInGroups(db *sql.DB, groupIDs []string) (*sql.Rows, error) {
+    // ❌ UNSAFE: String joining slice into raw SQL fragment
+    query := fmt.Sprintf("SELECT * FROM users WHERE group_id IN (%s)", strings.Join(groupIDs, ","))
+    return db.Query(query)
+}
+```
+
+```go [✅ Do (Safe)]
+func getUsersInGroups(db *sqlx.DB, groupIDs []string) (*sql.Rows, error) {
+    // ✅ SAFE: Slice expansion via sqlx.In binding
+    query, args, err := sqlx.In("SELECT * FROM users WHERE group_id IN (?)", groupIDs)
+    if err != nil {
+        return nil, err
+    }
+    return db.Query(db.Rebind(query), args...)
+}
+```
+:::
+
+---
+
+### 6. `SQLI-012`: Tainted Prepared-Statement Template
+
+Triggered when dynamic string concatenation is passed to statement preparation methods (`db.Prepare`, `db.PrepareContext`), causing taint to be permanently baked into the prepared query before execution.
+
+::: code-group
+```go [❌ Don't (Unsafe)]
+func prepareFilterQuery(db *sql.DB, statusFilter string) (*sql.Stmt, error) {
+    // ❌ UNSAFE: Dynamic variable concatenated before db.Prepare
+    return db.Prepare("SELECT * FROM users WHERE status = " + statusFilter)
+}
+```
+
+```go [✅ Do (Safe)]
+func prepareFilterQuery(db *sql.DB) (*sql.Stmt, error) {
+    // ✅ SAFE: Static query template prepared once, dynamic argument passed to Query()
+    stmt, err := db.Prepare("SELECT * FROM users WHERE status = $1")
+    return stmt, err
+}
+```
+:::
+
+---
+
+### 7. `SQLSAFE-001`: Unbounded UPDATE or DELETE
 
 Triggered when an `UPDATE` or `DELETE` SQL statement is constructed without a `WHERE` clause or bounding filter, preventing catastrophic table-wide data modification.
 

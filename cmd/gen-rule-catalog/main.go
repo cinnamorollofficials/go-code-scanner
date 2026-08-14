@@ -106,6 +106,34 @@ rows, err := db.Query(query)`,
 			},
 		},
 		{
+			ID: "SQLI-011", Severity: finding.High, Domain: finding.Security, Category: "list-expansion",
+			Description:    "Unsafe list or IN clause expansion using strings.Join or manual string interpolation",
+			Recommendation: "Use sqlx.In or generate parameterized bind variable lists (?, ?, ...) for slice queries",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `query := fmt.Sprintf("SELECT * FROM users WHERE id IN (%s)", strings.Join(ids, ","))
+rows, err := db.Query(query)`,
+					Safe: `query, args, err := sqlx.In("SELECT * FROM users WHERE id IN (?)", ids)
+query = db.Rebind(query)
+rows, err := db.Query(query, args...)`,
+				},
+			},
+		},
+		{
+			ID: "SQLI-012", Severity: finding.High, Domain: finding.Security, Category: "prepared-statement",
+			Description:    "Tainted SQL query template passed into statement preparation method db.Prepare()",
+			Recommendation: "Keep the SQL query string passed to db.Prepare strictly constant and bind dynamic values via stmt.Query / stmt.Exec",
+			Examples: []rules.CodeExample{
+				{
+					Language: "go", Label: "Go",
+					Unsafe: `stmt, err := db.Prepare("SELECT * FROM users WHERE status = " + filter)`,
+					Safe: `stmt, err := db.Prepare("SELECT * FROM users WHERE status = $1")
+rows, err := stmt.Query(filter)`,
+				},
+			},
+		},
+		{
 			ID: "SQLSAFE-001", Severity: finding.High, Domain: finding.Reliability, Category: "destructive-query",
 			Description:    "Unbounded UPDATE or DELETE query without a WHERE clause",
 			Recommendation: "Always specify a WHERE clause or explicit target filter to prevent accidental table-wide mutation",
