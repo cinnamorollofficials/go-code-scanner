@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"io"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -100,19 +101,50 @@ func analyzeAST(fset *token.FileSet, relPath string, node *ast.File) []finding.F
 			return true
 		}
 
-		// Detect DB sinks: Query, Exec, QueryRow, Raw, Where
-		if isDBSinkMethod(selectorName) {
+		// 1. Detect ORM escape hatches (SQLI-004) e.g. db.Where(), db.Raw(), db.Order(), db.Having()
+		if isORMSinkMethod(selectorName) {
 			if len(call.Args) > 0 {
 				arg0 := call.Args[0]
 				if tpl := reconstructSQLTemplate(fset, relPath, arg0); tpl != nil && tpl.HasUntrustedHole() {
 					pos := fset.Position(call.Pos())
-					f := createSQLIFinding(relPath, pos.Line, selectorName, tpl)
+					f := createORMIFinding(relPath, pos.Line, selectorName, tpl)
 					findings = append(findings, f)
+					return true
 				}
 			}
 		}
 
-		// Detect SQLSAFE-001: Unbounded Update/Delete without WHERE
+		// 2. Detect Standard DB Sinks (SQLI-001, SQLI-002, SQLI-008)
+		if isDBSinkMethod(selectorName) {
+			if len(call.Args) > 0 {
+				arg0 := call.Args[0]
+
+				// Check placeholder mismatch (SQLI-008) on constant query strings
+				if strLit, ok := arg0.(*ast.BasicLit); ok && strLit.Kind == token.STRING {
+					expectedPlaceholders := countPlaceholders(strLit.Value)
+					actualArgs := len(call.Args) - 1
+					if expectedPlaceholders > 0 && expectedPlaceholders != actualArgs {
+						pos := fset.Position(call.Pos())
+						f := createBindMismatchFinding(relPath, pos.Line, selectorName, expectedPlaceholders, actualArgs)
+						findings = append(findings, f)
+					}
+				}
+
+				// Check SQL injection (SQLI-001 or SQLI-002)
+				if tpl := reconstructSQLTemplate(fset, relPath, arg0); tpl != nil && tpl.HasUntrustedHole() {
+					pos := fset.Position(call.Pos())
+					if hasIdentifierHole(tpl) {
+						f := createIdentifierSQLIFinding(relPath, pos.Line, selectorName, tpl)
+						findings = append(findings, f)
+					} else {
+						f := createSQLIFinding(relPath, pos.Line, selectorName, tpl)
+						findings = append(findings, f)
+					}
+				}
+			}
+		}
+
+		// 3. Detect SQLSAFE-001: Unbounded Update/Delete without WHERE
 		if isUnboundedDeleteOrUpdate(selectorName, call) {
 			pos := fset.Position(call.Pos())
 			f := createUnboundedQueryFinding(relPath, pos.Line, selectorName)
@@ -127,7 +159,16 @@ func analyzeAST(fset *token.FileSet, relPath string, node *ast.File) []finding.F
 
 func isDBSinkMethod(name string) bool {
 	switch name {
-	case "Query", "QueryRow", "Exec", "ExecContext", "QueryContext", "QueryRowContext", "Raw", "ExecRaw":
+	case "Query", "QueryRow", "Exec", "ExecContext", "QueryContext", "QueryRowContext", "Select", "Get", "NamedExec", "NamedQuery":
+		return true
+	default:
+		return false
+	}
+}
+
+func isORMSinkMethod(name string) bool {
+	switch name {
+	case "Raw", "Where", "Order", "Having", "Group", "Not", "Or":
 		return true
 	default:
 		return false
@@ -135,7 +176,7 @@ func isDBSinkMethod(name string) bool {
 }
 
 func isUnboundedDeleteOrUpdate(name string, call *ast.CallExpr) bool {
-	if name == "Delete" || name == "Update" || name == "Exec" {
+	if name == "Delete" || name == "Update" || name == "Exec" || name == "ExecContext" {
 		if len(call.Args) > 0 {
 			if strLit, ok := call.Args[0].(*ast.BasicLit); ok && strLit.Kind == token.STRING {
 				upper := strings.ToUpper(strLit.Value)
@@ -195,17 +236,29 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 				if fmtStr, ok := e.Args[0].(*ast.BasicLit); ok && fmtStr.Kind == token.STRING {
 					tpl.RawText = fmtStr.Value
 					tpl.Segments = append(tpl.Segments, TemplateSegment{IsConst: true, Text: fmtStr.Value})
+					upperFmt := strings.ToUpper(fmtStr.Value)
+					isIdentifier := strings.Contains(upperFmt, "FROM %S") ||
+						strings.Contains(upperFmt, "INTO %S") ||
+						strings.Contains(upperFmt, "TABLE %S") ||
+						strings.Contains(upperFmt, "UPDATE %S") ||
+						strings.Contains(upperFmt, "JOIN %S") ||
+						strings.Contains(upperFmt, "ORDER BY %S")
+
 					for _, arg := range e.Args[1:] {
 						argPos := fset.Position(arg.Pos())
+						ctxKind := HoleContextValue
+						if isIdentifier {
+							ctxKind = HoleContextIdentifier
+						}
 						hole := &Hole{
-							Context:    HoleContextValue,
+							Context:    ctxKind,
 							Trust:      TrustUntrusted,
 							Expression: fmt.Sprintf("%v", arg),
 							SourceStep: &finding.DataflowStep{
 								Type:        finding.StepSource,
 								Location:    finding.Location{File: relPath, Line: argPos.Line},
-								Label:       "Format argument",
-								Explanation: "Dynamic variable formatted into SQL query template",
+								Label:       fmt.Sprintf("%v", arg),
+								Explanation: "Dynamic argument formatted into SQL query template",
 							},
 						}
 						tpl.Segments = append(tpl.Segments, TemplateSegment{IsConst: false, Hole: hole})
@@ -215,7 +268,7 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 			}
 		}
 	case *ast.Ident:
-		// Variable expression passed into query
+		// Variable expression passed directly into query
 		tpl.RawText = e.Name
 		hole := &Hole{
 			Context:    HoleContextValue,
@@ -235,20 +288,28 @@ func reconstructSQLTemplate(fset *token.FileSet, relPath string, expr ast.Expr) 
 	return nil
 }
 
-func createSQLIFinding(relPath string, line int, method string, tpl *SQLTemplate) finding.Finding {
-	dataflow := []finding.DataflowStep{}
+func hasIdentifierHole(tpl *SQLTemplate) bool {
 	for _, seg := range tpl.Segments {
-		if seg.Hole != nil && seg.Hole.SourceStep != nil {
-			dataflow = append(dataflow, *seg.Hole.SourceStep)
+		if seg.Hole != nil && seg.Hole.Context == HoleContextIdentifier {
+			return true
 		}
 	}
-	dataflow = append(dataflow, finding.DataflowStep{
-		Type:        finding.StepSink,
-		Location:    finding.Location{File: relPath, Line: line},
-		Label:       method + "(query)",
-		Explanation: "Dynamic SQL template executed at database driver sink",
-	})
+	return false
+}
 
+var postgresParamRegex = regexp.MustCompile(`\$[0-9]+`)
+
+func countPlaceholders(query string) int {
+	qMarks := strings.Count(query, "?")
+	if qMarks > 0 {
+		return qMarks
+	}
+	matches := postgresParamRegex.FindAllString(query, -1)
+	return len(matches)
+}
+
+func createSQLIFinding(relPath string, line int, method string, tpl *SQLTemplate) finding.Finding {
+	dataflow := buildDataflow(tpl, relPath, line, method)
 	return finding.Finding{
 		ID:             fmt.Sprintf("SQLI-001-%s-%d", filepath.Base(relPath), line),
 		RuleID:         "SQLI-001",
@@ -267,6 +328,64 @@ func createSQLIFinding(relPath string, line int, method string, tpl *SQLTemplate
 	}
 }
 
+func createIdentifierSQLIFinding(relPath string, line int, method string, tpl *SQLTemplate) finding.Finding {
+	dataflow := buildDataflow(tpl, relPath, line, method)
+	return finding.Finding{
+		ID:             fmt.Sprintf("SQLI-002-%s-%d", filepath.Base(relPath), line),
+		RuleID:         "SQLI-002",
+		Tool:           "sqltaint",
+		Domain:         finding.Security,
+		Category:       "sql-injection",
+		Severity:       finding.High,
+		Confidence:     finding.ConfidenceHigh,
+		Exploitability: finding.ExploitabilityLikely,
+		FindingState:   finding.FindingConfirmed,
+		Description:    fmt.Sprintf("Untrusted table, column, or identifier dynamically interpolated into SQL at %s()", method),
+		Recommendation: "Validate SQL identifiers against an explicit allow-list of known safe column/table names before interpolation",
+		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLI-002.md",
+		Location:       finding.Location{File: relPath, Line: line},
+		Dataflow:       dataflow,
+	}
+}
+
+func createORMIFinding(relPath string, line int, method string, tpl *SQLTemplate) finding.Finding {
+	dataflow := buildDataflow(tpl, relPath, line, method)
+	return finding.Finding{
+		ID:             fmt.Sprintf("SQLI-004-%s-%d", filepath.Base(relPath), line),
+		RuleID:         "SQLI-004",
+		Tool:           "sqltaint",
+		Domain:         finding.Security,
+		Category:       "orm-escape-hatch",
+		Severity:       finding.High,
+		Confidence:     finding.ConfidenceHigh,
+		Exploitability: finding.ExploitabilityLikely,
+		FindingState:   finding.FindingConfirmed,
+		Description:    fmt.Sprintf("Unsafe raw ORM escape hatch called with dynamic or concatenated string at %s()", method),
+		Recommendation: "Pass parameters as separate arguments to ORM clauses (e.g. db.Where(\"name = ?\", val)) rather than dynamic string formatting",
+		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLI-004.md",
+		Location:       finding.Location{File: relPath, Line: line},
+		Dataflow:       dataflow,
+	}
+}
+
+func createBindMismatchFinding(relPath string, line int, method string, expected int, actual int) finding.Finding {
+	return finding.Finding{
+		ID:             fmt.Sprintf("SQLI-008-%s-%d", filepath.Base(relPath), line),
+		RuleID:         "SQLI-008",
+		Tool:           "sqltaint",
+		Domain:         finding.Security,
+		Category:       "bind-mismatch",
+		Severity:       finding.Medium,
+		Confidence:     finding.ConfidenceHigh,
+		Exploitability: finding.ExploitabilityUnlikely,
+		FindingState:   finding.FindingConfirmed,
+		Description:    fmt.Sprintf("SQL placeholder count mismatch at %s(): query specifies %d placeholders but %d parameters were passed", method, expected, actual),
+		Recommendation: "Ensure the number of bind placeholders ($1, ?) matches the count of passed query arguments exactly",
+		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLI-008.md",
+		Location:       finding.Location{File: relPath, Line: line},
+	}
+}
+
 func createUnboundedQueryFinding(relPath string, line int, method string) finding.Finding {
 	return finding.Finding{
 		ID:             fmt.Sprintf("SQLSAFE-001-%s-%d", filepath.Base(relPath), line),
@@ -280,6 +399,23 @@ func createUnboundedQueryFinding(relPath string, line int, method string) findin
 		FindingState:   finding.FindingConfirmed,
 		Description:    fmt.Sprintf("Unbounded UPDATE or DELETE query without a WHERE clause at %s()", method),
 		Recommendation: "Always specify a WHERE clause or explicit target filter to prevent accidental table-wide mutation",
+		Documentation:  "https://github.com/cinnamorollofficials/go-code-scanner/blob/main/docs/rules/SQLSAFE-001.md",
 		Location:       finding.Location{File: relPath, Line: line},
 	}
+}
+
+func buildDataflow(tpl *SQLTemplate, relPath string, line int, method string) []finding.DataflowStep {
+	dataflow := []finding.DataflowStep{}
+	for _, seg := range tpl.Segments {
+		if seg.Hole != nil && seg.Hole.SourceStep != nil {
+			dataflow = append(dataflow, *seg.Hole.SourceStep)
+		}
+	}
+	dataflow = append(dataflow, finding.DataflowStep{
+		Type:        finding.StepSink,
+		Location:    finding.Location{File: relPath, Line: line},
+		Label:       method + "(query)",
+		Explanation: "Dynamic SQL template executed at database driver/ORM sink",
+	})
+	return dataflow
 }

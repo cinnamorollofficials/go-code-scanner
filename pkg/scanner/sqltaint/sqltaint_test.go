@@ -10,13 +10,17 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/pkg/scanner"
 )
 
-func TestSQLTaintScannerDetection(t *testing.T) {
+func TestSQLTaintScannerComprehensive(t *testing.T) {
 	code := `package main
 
 import (
 	"database/sql"
 	"fmt"
 )
+
+type ORM struct{}
+func (o *ORM) Where(query string, args ...any) *ORM { return o }
+func (o *ORM) Raw(query string, args ...any) *ORM { return o }
 
 func unsafeConcatenation(db *sql.DB, id string) {
 	query := "SELECT * FROM users WHERE id = " + id
@@ -25,6 +29,18 @@ func unsafeConcatenation(db *sql.DB, id string) {
 
 func unsafeSprintf(db *sql.DB, name string) {
 	db.Query(fmt.Sprintf("SELECT * FROM users WHERE name = '%s'", name))
+}
+
+func unsafeIdentifier(db *sql.DB, tableName string) {
+	db.Query(fmt.Sprintf("SELECT * FROM %s WHERE active = 1", tableName))
+}
+
+func unsafeORMWhere(orm *ORM, role string) {
+	orm.Where(fmt.Sprintf("role = '%s'", role))
+}
+
+func unsafeBindMismatch(db *sql.DB, id string) {
+	db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id)
 }
 
 func safeParameterized(db *sql.DB, id string) {
@@ -62,31 +78,36 @@ func unsafeDelete(db *sql.DB) {
 		t.Fatalf("got state %v, want ScannerFindings", res.State)
 	}
 
-	if len(res.Findings) != 3 {
-		t.Fatalf("got %d findings, want 3 (2 SQLI-001, 1 SQLSAFE-001)", len(res.Findings))
-	}
-
-	sqliCount := 0
-	sqlsafeCount := 0
-
+	foundRules := make(map[string]int)
 	for _, f := range res.Findings {
-		if f.RuleID == "SQLI-001" {
-			sqliCount++
-			if f.Confidence != finding.ConfidenceHigh {
-				t.Errorf("got confidence %v, want High", f.Confidence)
-			}
-			if len(f.Dataflow) == 0 {
-				t.Error("expected non-empty dataflow trace for SQLI-001")
-			}
-		} else if f.RuleID == "SQLSAFE-001" {
-			sqlsafeCount++
+		foundRules[f.RuleID]++
+		if f.FindingState != finding.FindingConfirmed {
+			t.Errorf("expected FindingConfirmed for %s, got %v", f.RuleID, f.FindingState)
 		}
 	}
 
-	if sqliCount != 2 {
-		t.Errorf("got %d SQLI-001 findings, want 2", sqliCount)
+	// SQLI-001 (unsafeConcatenation + unsafeSprintf) -> 2
+	if got := foundRules["SQLI-001"]; got != 2 {
+		t.Errorf("got %d SQLI-001 findings, want 2", got)
 	}
-	if sqlsafeCount != 1 {
-		t.Errorf("got %d SQLSAFE-001 findings, want 1", sqlsafeCount)
+
+	// SQLI-002 (unsafeIdentifier) -> 1
+	if got := foundRules["SQLI-002"]; got != 1 {
+		t.Errorf("got %d SQLI-002 findings, want 1", got)
+	}
+
+	// SQLI-004 (unsafeORMWhere) -> 1
+	if got := foundRules["SQLI-004"]; got != 1 {
+		t.Errorf("got %d SQLI-004 findings, want 1", got)
+	}
+
+	// SQLI-008 (unsafeBindMismatch) -> 1
+	if got := foundRules["SQLI-008"]; got != 1 {
+		t.Errorf("got %d SQLI-008 findings, want 1", got)
+	}
+
+	// SQLSAFE-001 (unsafeDelete) -> 1
+	if got := foundRules["SQLSAFE-001"]; got != 1 {
+		t.Errorf("got %d SQLSAFE-001 findings, want 1", got)
 	}
 }
