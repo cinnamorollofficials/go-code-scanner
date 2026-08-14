@@ -42,17 +42,20 @@ function sidebarDocs() {
   ]
 }
 
+const base = process.env.VITEPRESS_BASE || '/go-code-scanner/'
+const basePrefix = base === '/' ? '' : base.replace(/\/$/, '')
+
 export default defineConfig({
   title: 'Go Code Scanner',
   description: 'Policy-driven, offline-first security analysis CLI',
-  base: process.env.VITEPRESS_BASE || '/go-code-scanner/',
+  base,
   cleanUrls: true,
   lastUpdated: true,
   sitemap: {
     hostname: 'https://cinnamorollofficials.github.io/go-code-scanner/'
   },
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/go-code-scanner/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${basePrefix}/favicon.svg` }],
     ['meta', { name: 'theme-color', content: '#10b981' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Go Code Scanner' }],
