@@ -25,7 +25,7 @@ const dashboardTemplate = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Semgrep Dashboard — Go Code Scanner</title>
+  <title>Semgrep — Go Code Scanner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -89,8 +89,8 @@ const dashboardTemplate = `<!DOCTYPE html>
 
     /* 1. Left Dark Navigation */
     .dark-sidebar {
-      width: 210px;
-      min-width: 210px;
+      width: 215px;
+      min-width: 215px;
       background-color: var(--bg-dark-nav);
       color: var(--text-dark-nav);
       display: flex;
@@ -194,6 +194,53 @@ const dashboardTemplate = `<!DOCTYPE html>
       border-radius: 10px;
     }
 
+    /* Submenu Tree Styles */
+    .submenu-wrapper {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      margin-left: 20px;
+      padding-left: 12px;
+      border-left: 1.5px solid #374151;
+      margin-top: 4px;
+      margin-bottom: 6px;
+      gap: 2px;
+    }
+
+    .submenu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: #9ca3af;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .submenu-item:hover {
+      background-color: var(--bg-dark-nav-hover);
+      color: #ffffff;
+    }
+
+    .submenu-item.active {
+      background-color: #273043;
+      color: #ffffff;
+      font-weight: 600;
+      border: 1.5px solid #0284c7;
+      box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.2);
+    }
+
+    .submenu-item.active-clean {
+      background-color: var(--bg-dark-active);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
     .dark-sidebar-bottom {
       padding: 12px 8px;
       border-top: 1px solid rgba(255, 255, 255, 0.07);
@@ -226,9 +273,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       overflow: hidden;
     }
 
-    /* ========================================================
-       DASHBOARD VIEW STYLES (MATCHING SEMGREP SCREENSHOT)
-       ======================================================== */
+    /* VIEW 1: DASHBOARD ANALYTICS */
     .dashboard-viewport {
       flex: 1;
       height: 100vh;
@@ -257,7 +302,6 @@ const dashboardTemplate = `<!DOCTYPE html>
       color: var(--text-muted);
     }
 
-    /* Noise Reduction Card */
     .noise-reduction-card {
       background: #ffffff;
       border: 1px solid var(--border-color);
@@ -284,7 +328,6 @@ const dashboardTemplate = `<!DOCTYPE html>
       display: inline-flex;
     }
 
-    /* Funnel Ribbon Stream Graphic */
     .funnel-container {
       width: 100%;
       height: 120px;
@@ -340,17 +383,8 @@ const dashboardTemplate = `<!DOCTYPE html>
       color: #059669;
     }
 
-    /* Reporting Summary Section */
-    .reporting-summary-section {
-      margin-bottom: 24px;
-    }
-
-    .section-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 14px;
-    }
+    .reporting-summary-section { margin-bottom: 24px; }
+    .section-title { font-size: 1.15rem; font-weight: 700; color: #111827; margin-bottom: 14px; }
 
     .reporting-toolbar {
       display: flex;
@@ -403,9 +437,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       position: relative;
       transition: background 0.2s;
     }
-    .switch-pill.active {
-      background: var(--semgrep-blue);
-    }
+    .switch-pill.active { background: var(--semgrep-blue); }
     .switch-thumb {
       width: 14px;
       height: 14px;
@@ -417,9 +449,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       transition: transform 0.2s;
       box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
-    .switch-pill.active .switch-thumb {
-      transform: translateX(16px);
-    }
+    .switch-pill.active .switch-thumb { transform: translateX(16px); }
 
     .btn-all-filters {
       background: #edf5ff;
@@ -431,7 +461,6 @@ const dashboardTemplate = `<!DOCTYPE html>
       font-weight: 600;
       cursor: pointer;
     }
-    .btn-all-filters:hover { background: #e0eeff; }
 
     .download-link {
       color: var(--semgrep-blue);
@@ -443,9 +472,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       gap: 4px;
       cursor: pointer;
     }
-    .download-link:hover { text-decoration: underline; }
 
-    /* Production Backlog Card */
     .production-backlog-card {
       background: #ffffff;
       border: 1px solid var(--border-color);
@@ -454,12 +481,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     }
 
-    .backlog-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 20px;
-    }
+    .backlog-title { font-size: 1.05rem; font-weight: 700; color: #111827; margin-bottom: 20px; }
 
     .backlog-kpi-row {
       display: grid;
@@ -468,35 +490,10 @@ const dashboardTemplate = `<!DOCTYPE html>
       margin-bottom: 28px;
     }
 
-    .backlog-kpi-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .backlog-kpi-num {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #111827;
-      letter-spacing: -0.02em;
-    }
-
-    .backlog-kpi-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #6b7280;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .backlog-kpi-trend {
-      font-size: 11.5px;
-      margin-top: 4px;
-      font-weight: 500;
-    }
+    .backlog-kpi-item { display: flex; flex-direction: column; gap: 2px; }
+    .backlog-kpi-num { font-size: 1.75rem; font-weight: 700; color: #111827; letter-spacing: -0.02em; }
+    .backlog-kpi-label { font-size: 11px; font-weight: 700; color: #6b7280; letter-spacing: 0.04em; text-transform: uppercase; }
+    .backlog-kpi-trend { font-size: 11.5px; margin-top: 4px; font-weight: 500; }
     .backlog-kpi-trend.green { color: #059669; }
     .backlog-kpi-trend.red { color: #dc2626; }
 
@@ -508,34 +505,12 @@ const dashboardTemplate = `<!DOCTYPE html>
       border-top: 1px solid #f3f4f6;
     }
 
-    .chart-box-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
+    .chart-box-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .chart-box-title { font-size: 13.5px; font-weight: 700; color: #111827; }
+    .chart-box-subtitle { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .chart-svg-container { width: 100%; height: 200px; position: relative; }
 
-    .chart-box-title {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: #111827;
-    }
-
-    .chart-box-subtitle {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 2px;
-    }
-
-    .chart-svg-container {
-      width: 100%;
-      height: 200px;
-      position: relative;
-    }
-
-    /* ========================================================
-       CODE FINDINGS VIEW STYLES
-       ======================================================== */
+    /* VIEW 2: CODE FINDINGS VIEW */
     .filter-sidebar {
       width: 250px;
       min-width: 250px;
@@ -549,20 +524,8 @@ const dashboardTemplate = `<!DOCTYPE html>
       gap: 18px;
     }
 
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .filter-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #374151;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .filter-group { display: flex; flex-direction: column; gap: 7px; }
+    .filter-label { font-size: 12px; font-weight: 600; color: #374151; display: flex; justify-content: space-between; align-items: center; }
 
     .custom-select {
       width: 100%;
@@ -581,17 +544,8 @@ const dashboardTemplate = `<!DOCTYPE html>
       background-position: right 8px center;
       background-size: 14px;
     }
-    .custom-select:focus {
-      border-color: var(--semgrep-blue);
-      box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.15);
-    }
 
-    .filter-pills-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
+    .filter-pills-row { display: flex; flex-wrap: wrap; gap: 6px; }
     .filter-pill-btn {
       display: inline-flex;
       align-items: center;
@@ -607,7 +561,6 @@ const dashboardTemplate = `<!DOCTYPE html>
       transition: all 0.15s ease;
       user-select: none;
     }
-
     .filter-pill-btn:hover { background: #f3f4f6; border-color: #9ca3af; }
     .filter-pill-btn.active {
       background: var(--semgrep-blue);
@@ -616,15 +569,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       font-weight: 600;
     }
     .filter-pill-btn.active .pill-count { background: rgba(255, 255, 255, 0.25); color: #ffffff; }
-
-    .pill-count {
-      font-size: 11px;
-      padding: 0 5px;
-      border-radius: 10px;
-      background: #e5e7eb;
-      color: #4b5563;
-      font-weight: 600;
-    }
+    .pill-count { font-size: 11px; padding: 0 5px; border-radius: 10px; background: #e5e7eb; color: #4b5563; font-weight: 600; }
 
     .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .dot.crit { background-color: #dc2626; }
@@ -659,7 +604,6 @@ const dashboardTemplate = `<!DOCTYPE html>
       transition: background 0.15s;
     }
     .scan-btn-primary:hover { background: var(--semgrep-blue-hover); }
-    .scan-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .code-viewport {
       flex: 1;
@@ -677,37 +621,12 @@ const dashboardTemplate = `<!DOCTYPE html>
       padding-bottom: 12px;
       border-bottom: 1px solid var(--border-color);
     }
+    .content-title-area { display: flex; align-items: baseline; gap: 12px; }
+    .content-title { font-size: 1.25rem; font-weight: 700; color: #111827; letter-spacing: -0.01em; }
+    .content-subtitle { font-size: 12px; color: var(--text-muted); }
+    .content-actions-area { display: flex; align-items: center; gap: 10px; }
 
-    .content-title-area {
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-    }
-
-    .content-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #111827;
-      letter-spacing: -0.01em;
-    }
-
-    .content-subtitle {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .content-actions-area {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .search-input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
+    .search-input-wrapper { position: relative; display: flex; align-items: center; }
     .search-input-wrapper input {
       padding: 6px 12px 6px 30px;
       border: 1px solid #d1d5db;
@@ -716,81 +635,82 @@ const dashboardTemplate = `<!DOCTYPE html>
       width: 230px;
       outline: none;
     }
-    .search-input-wrapper input:focus {
-      border-color: var(--semgrep-blue);
-      box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.12);
+    .search-input-wrapper svg { position: absolute; left: 9px; color: #9ca3af; pointer-events: none; }
+
+    /* VIEW 3: RULES REGISTRY & POLICIES VIEW */
+    .rules-viewport {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 32px 60px;
+      background-color: #ffffff;
+      display: none;
     }
 
-    .search-input-wrapper svg {
-      position: absolute;
-      left: 9px;
-      color: #9ca3af;
-      pointer-events: none;
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
     }
 
-    /* Finding Rule Cards */
-    .findings-container {
+    .rule-def-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      justify-content: space-between;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .rule-def-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      border-color: #cbd5e1;
     }
 
+    .rule-def-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-pill.critical { background: #fee2e2; color: #dc2626; }
+    .badge-pill.high { background: #ffedd5; color: #ea580c; }
+    .badge-pill.medium { background: #fef3c7; color: #d97706; }
+    .badge-pill.low { background: #e0f2fe; color: #0284c7; }
+
+    /* Finding Rule Cards */
+    .findings-container { display: flex; flex-direction: column; gap: 18px; }
     .rule-card {
       background: #ffffff;
       border: 1px solid var(--border-color);
       border-radius: 6px;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-      transition: box-shadow 0.15s ease;
       position: relative;
     }
-
-    .rule-card:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
-    }
-
     .rule-card.sev-critical { border-top: 3px solid #dc2626; }
     .rule-card.sev-high { border-top: 3px solid #ea580c; }
     .rule-card.sev-medium { border-top: 3px solid #f59e0b; }
     .rule-card.sev-low { border-top: 3px solid #3b82f6; }
 
-    .rule-card-header {
-      padding: 14px 18px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
-    }
-
+    .rule-card-header { padding: 14px 18px 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
     .rule-card-header-left { flex: 1; }
+    .rule-id-title { font-size: 14.5px; font-weight: 700; color: #111827; letter-spacing: -0.01em; display: inline-flex; align-items: center; gap: 6px; }
+    .rule-card-actions { display: flex; align-items: center; gap: 8px; }
 
-    .rule-id-title {
-      font-size: 14.5px;
-      font-weight: 700;
-      color: #111827;
-      letter-spacing: -0.01em;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .rule-card-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-icon-subtle {
-      border: none;
-      background: transparent;
-      color: #6b7280;
-      padding: 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .btn-icon-subtle { border: none; background: transparent; color: #6b7280; padding: 5px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .btn-icon-subtle:hover { background: #f3f4f6; color: #111827; }
 
     .btn-outline-sm {
@@ -806,7 +726,6 @@ const dashboardTemplate = `<!DOCTYPE html>
       align-items: center;
       gap: 5px;
     }
-    .btn-outline-sm:hover { background: #f9fafb; border-color: #9ca3af; }
 
     .btn-triage {
       background: var(--semgrep-blue);
@@ -824,268 +743,53 @@ const dashboardTemplate = `<!DOCTYPE html>
     }
     .btn-triage:hover { background: var(--semgrep-blue-hover); }
 
-    .rule-description-area {
-      padding: 0 18px 12px;
-      color: #374151;
-      font-size: 13px;
-      line-height: 1.5;
-    }
+    .rule-description-area { padding: 0 18px 12px; color: #374151; font-size: 13px; line-height: 1.5; }
+    .rule-description-area code { background: #f3f4f6; border: 1px solid #e5e7eb; padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); font-size: 12px; color: #1f2937; }
 
-    .rule-description-area code {
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: #1f2937;
-    }
+    .show-more-link { color: var(--semgrep-blue); font-weight: 600; cursor: pointer; text-decoration: none; margin-left: 4px; font-size: 12.5px; }
+    .rule-meta-tags { display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-top: 6px; font-size: 11.5px; color: #6b7280; }
+    .meta-tag-item { display: inline-flex; align-items: center; gap: 4px; }
 
-    .show-more-link {
-      color: var(--semgrep-blue);
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      margin-left: 4px;
-      font-size: 12.5px;
-    }
-    .show-more-link:hover { text-decoration: underline; }
-
-    .rule-meta-tags {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 14px;
-      margin-top: 6px;
-      font-size: 11.5px;
-      color: #6b7280;
-    }
-
-    .meta-tag-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    /* Finding Occurrences Table Rows */
-    .finding-rows-table {
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .finding-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 9px 18px;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 12.5px;
-      transition: background 0.1s ease;
-    }
+    .finding-rows-table { border-top: 1px solid var(--border-color); display: flex; flex-direction: column; }
+    .finding-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 18px; border-bottom: 1px solid #f3f4f6; font-size: 12.5px; }
     .finding-row:last-child { border-bottom: none; }
     .finding-row:hover { background-color: #f9fafb; }
+    .finding-row-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; }
 
-    .finding-row-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .finding-checkbox {
-      width: 16px;
-      height: 16px;
-      border-radius: 3px;
-      border: 1.5px solid #ea580c;
-      background: #fff;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
+    .finding-checkbox { width: 16px; height: 16px; border-radius: 3px; border: 1.5px solid #ea580c; background: #fff; cursor: pointer; }
     .finding-checkbox.crit { border-color: #dc2626; }
     .finding-checkbox.high { border-color: #ea580c; }
     .finding-checkbox.med { border-color: #f59e0b; }
     .finding-checkbox.low { border-color: #3b82f6; }
 
-    .finding-age {
-      color: #9ca3af;
-      font-size: 11.5px;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      min-width: 32px;
-    }
+    .finding-age { color: #9ca3af; font-size: 11.5px; min-width: 32px; }
+    .finding-path-link { color: var(--semgrep-blue); font-family: var(--font-mono); font-size: 12px; text-decoration: none; cursor: pointer; font-weight: 500; overflow: hidden; text-overflow: ellipsis; max-width: 480px; }
+    .finding-row-right { display: flex; align-items: center; gap: 16px; font-size: 12px; }
+    .repo-pill { color: #4b5563; display: inline-flex; align-items: center; gap: 5px; }
+    .branch-pill { color: #6b7280; display: inline-flex; align-items: center; gap: 4px; }
+    .row-triage-link { color: var(--semgrep-blue); font-weight: 600; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
 
-    .finding-path-link {
-      color: var(--semgrep-blue);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      text-decoration: none;
-      cursor: pointer;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 480px;
-    }
-    .finding-path-link:hover { text-decoration: underline; }
+    .show-more-findings-btn { padding: 8px 18px; background: #fafafa; border-top: 1px solid var(--border-color); color: var(--semgrep-blue); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
-    .finding-row-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 12px;
-    }
-
-    .repo-pill {
-      color: #4b5563;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-    }
-
-    .branch-pill {
-      color: #6b7280;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-    }
-
-    .row-triage-link {
-      color: var(--semgrep-blue);
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-    .row-triage-link:hover { background: var(--semgrep-blue-light); }
-
-    .show-more-findings-btn {
-      padding: 8px 18px;
-      background: #fafafa;
-      border-top: 1px solid var(--border-color);
-      color: var(--semgrep-blue);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      user-select: none;
-    }
-    .show-more-findings-btn:hover { background: #f3f4f6; }
-
-    /* Modals */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-    }
+    /* Modals & Toast */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal-overlay.active { display: flex; }
+    .modal-box { background: #ffffff; border-radius: 8px; width: 100%; max-width: 860px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e5e7eb; }
+    .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fcfcfd; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
 
-    .modal-box {
-      background: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 860px;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-    }
-
-    .modal-head {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fcfcfd;
-    }
-
-    .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .code-viewer-block {
-      background: #0f172a;
-      color: #f8fafc;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      overflow-x: auto;
-      padding: 12px 0;
-      margin: 12px 0;
-    }
-
+    .code-viewer-block { background: #0f172a; color: #f8fafc; border-radius: 6px; font-family: var(--font-mono); font-size: 12.5px; overflow-x: auto; padding: 12px 0; margin: 12px 0; }
     .code-line-row { display: flex; padding: 2px 14px; }
-    .code-line-row.target-line {
-      background: rgba(239, 68, 68, 0.25);
-      border-left: 3px solid #ef4444;
-    }
-    .code-line-num {
-      width: 44px;
-      color: #64748b;
-      text-align: right;
-      margin-right: 16px;
-      user-select: none;
-    }
+    .code-line-row.target-line { background: rgba(239, 68, 68, 0.25); border-left: 3px solid #ef4444; }
+    .code-line-num { width: 44px; color: #64748b; text-align: right; margin-right: 16px; user-select: none; }
     .code-line-text { white-space: pre; }
 
-    .rec-box-ui {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 14px;
-      margin-top: 14px;
-    }
+    .rec-box-ui { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; margin-top: 14px; }
     .rec-box-ui h4 { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
     .rec-box-ui p { font-size: 12.5px; color: #475569; }
 
-    .toast-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 2000;
-    }
-    .toast-msg {
-      background: #1f2937;
-      color: #ffffff;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-size: 12.5px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      animation: fadeIn 0.2s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 2000; }
+    .toast-msg { background: #1f2937; color: #ffffff; padding: 10px 16px; border-radius: 6px; font-size: 12.5px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 8px; }
   </style>
 </head>
 <body>
@@ -1149,14 +853,32 @@ const dashboardTemplate = `<!DOCTYPE html>
               <span class="nav-badge">16</span>
             </a>
           </li>
+
+          <!-- Rules & Policies with Submenu Tree -->
           <li>
-            <a class="nav-item" id="navItemRules" href="#rules" onclick="switchNav('rules')">
+            <a class="nav-item" id="navItemRulesParent" href="#rules" onclick="toggleRulesSubmenu(event)">
               <div class="nav-item-left">
                 <span class="nav-item-icon">📑</span>
                 <span>Rules & Policies</span>
               </div>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <svg id="rulesChevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
             </a>
+
+            <!-- Submenu Items (As in Semgrep UI screenshot) -->
+            <div class="submenu-wrapper" id="rulesSubmenu">
+              <a class="submenu-item" id="subItemPolicies" onclick="switchNav('rules-policies')">
+                <span>Policies</span>
+              </a>
+              <a class="submenu-item" id="subItemEditor" onclick="switchNav('rules-editor')">
+                <span>Editor</span>
+              </a>
+              <a class="submenu-item" id="subItemRegistry" onclick="switchNav('rules-registry')">
+                <span>Registry</span>
+              </a>
+              <a class="submenu-item" id="subItemAdvisories" onclick="switchNav('rules-advisories')">
+                <span>Advisories</span>
+              </a>
+            </div>
           </li>
         </ul>
       </div>
@@ -1172,7 +894,7 @@ const dashboardTemplate = `<!DOCTYPE html>
             </a>
           </li>
           <li>
-            <a class="nav-item" href="https://semgrep.dev/docs" target="_blank">
+            <a class="nav-item" href="https://security-review.hadiyahku.web.id/" target="_blank">
               <div class="nav-item-left">
                 <span class="nav-item-icon">📖</span>
                 <span>Docs</span>
@@ -1211,23 +933,19 @@ const dashboardTemplate = `<!DOCTYPE html>
     <!-- Center Views Container -->
     <div class="view-content-wrapper">
       
-      <!-- ========================================================
-           VIEW 1: DASHBOARD ANALYTICS (EXACT SEMGREP MATCH)
-           ======================================================== -->
+      <!-- VIEW 1: DASHBOARD ANALYTICS -->
       <main class="dashboard-viewport" id="dashboardView">
         <div class="dash-top-header">
           <h1 class="dash-title">Dashboard</h1>
           <span class="dash-last-updated" id="dashLastUpdatedText">Last updated 5 days ago</span>
         </div>
 
-        <!-- 1. Semgrep Noise Reduction Card -->
         <div class="noise-reduction-card">
           <div class="card-heading-row">
             <span>Semgrep noise reduction</span>
             <span class="info-circle-icon" title="Shows how Semgrep progressive filtering reduces alert volume">ⓘ</span>
           </div>
 
-          <!-- Funnel Ribbon Area Stream Graph -->
           <div class="funnel-container">
             <svg class="funnel-svg" viewBox="0 0 800 120" preserveAspectRatio="none">
               <defs>
@@ -1247,47 +965,15 @@ const dashboardTemplate = `<!DOCTYPE html>
                 </linearGradient>
               </defs>
 
-              <!-- Stream Shape -->
-              <path d="M 0 15 
-                       C 120 15, 160 38, 260 48
-                       C 360 58, 420 66, 520 72
-                       C 620 78, 680 84, 800 86
-                       L 800 96
-                       C 680 94, 620 90, 520 86
-                       C 420 82, 360 80, 260 76
-                       C 160 72, 120 68, 0 68
-                       Z" fill="url(#funnelGrad)"/>
-              
-              <!-- Bottom Cyan Ribbon Accent -->
-              <path d="M 0 68 
-                       C 120 68, 160 72, 260 76
-                       C 360 80, 420 82, 520 86
-                       C 620 90, 680 94, 800 96
-                       L 800 99
-                       C 680 97, 620 93, 520 89
-                       C 420 85, 360 83, 260 79
-                       C 160 75, 120 71, 0 71
-                       Z" fill="url(#cyanRibbon)"/>
-
-              <!-- Bottom Purple Ribbon Accent -->
-              <path d="M 0 71
-                       C 120 71, 160 75, 260 79
-                       C 360 83, 420 85, 520 89
-                       C 620 93, 680 97, 800 99
-                       L 800 102
-                       C 680 100, 620 96, 520 92
-                       C 420 88, 360 86, 260 82
-                       C 160 78, 120 74, 0 74
-                       Z" fill="url(#purpleRibbon)"/>
-
-              <!-- Vertical dividing grid ticks -->
+              <path d="M 0 15 C 120 15, 160 38, 260 48 C 360 58, 420 66, 520 72 C 620 78, 680 84, 800 86 L 800 96 C 680 94, 620 90, 520 86 C 420 82, 360 80, 260 76 C 160 72, 120 68, 0 68 Z" fill="url(#funnelGrad)"/>
+              <path d="M 0 68 C 120 68, 160 72, 260 76 C 360 80, 420 82, 520 86 C 620 90, 680 94, 800 96 L 800 99 C 680 97, 620 93, 520 89 C 420 85, 360 83, 260 79 C 160 75, 120 71, 0 71 Z" fill="url(#cyanRibbon)"/>
+              <path d="M 0 71 C 120 71, 160 75, 260 79 C 360 83, 420 85, 520 89 C 620 93, 680 97, 800 99 L 800 102 C 680 100, 620 96, 520 92 C 420 88, 360 86, 260 82 C 160 78, 120 74, 0 74 Z" fill="url(#purpleRibbon)"/>
               <line x1="260" y1="10" x2="260" y2="110" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>
               <line x1="520" y1="10" x2="520" y2="110" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>
               <line x1="780" y1="10" x2="780" y2="110" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>
             </svg>
           </div>
 
-          <!-- Funnel Metrics Breakdown Row -->
           <div class="noise-metrics-grid">
             <div class="noise-metric-col">
               <span class="metric-label-with-info">All findings</span>
@@ -1322,7 +1008,6 @@ const dashboardTemplate = `<!DOCTYPE html>
           </div>
         </div>
 
-        <!-- 2. Reporting Summary Section -->
         <div class="reporting-summary-section">
           <h2 class="section-title">Reporting summary</h2>
           
@@ -1333,7 +1018,6 @@ const dashboardTemplate = `<!DOCTYPE html>
                 <select>
                   <option>Past 3 months</option>
                   <option>Past 30 days</option>
-                  <option>Past 7 days</option>
                 </select>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
@@ -1344,7 +1028,6 @@ const dashboardTemplate = `<!DOCTYPE html>
                   <option>All products</option>
                   <option>Code</option>
                   <option>Secrets</option>
-                  <option>Supply Chain</option>
                 </select>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
@@ -1359,9 +1042,7 @@ const dashboardTemplate = `<!DOCTYPE html>
 
               <div class="toggle-switch-wrapper" onclick="togglePrioritySwitch(this)">
                 <span>Priority <span class="info-circle-icon">ⓘ</span></span>
-                <div class="switch-pill">
-                  <div class="switch-thumb"></div>
-                </div>
+                <div class="switch-pill"><div class="switch-thumb"></div></div>
               </div>
 
               <button class="btn-all-filters" onclick="showToast('Applied default reporting filters')">All filters</button>
@@ -1376,11 +1057,9 @@ const dashboardTemplate = `<!DOCTYPE html>
             </div>
           </div>
 
-          <!-- 3. Production Backlog Card -->
           <div class="production-backlog-card">
             <h3 class="backlog-title">Production backlog</h3>
 
-            <!-- 4 KPI Metrics -->
             <div class="backlog-kpi-row">
               <div class="backlog-kpi-item">
                 <span class="backlog-kpi-num" id="kpiTotalNew">589</span>
@@ -1402,169 +1081,76 @@ const dashboardTemplate = `<!DOCTYPE html>
 
               <div class="backlog-kpi-item">
                 <span class="backlog-kpi-num" id="kpiTotalNetNew">248</span>
-                <span class="backlog-kpi-label">TOTAL NET NEW <span class="info-circle-icon">ⓘ</span></span>
+                <span class="backlog-kpi-label">TOTAL NET NEW ⓘ</span>
                 <span class="backlog-kpi-trend green">↑ 10 (5.6%) vs. prev. 3 months</span>
               </div>
             </div>
 
-            <!-- Charts 2-Column Grid -->
             <div class="charts-grid-2col">
-              <!-- Left Chart: Open Backlog Stacked Area -->
               <div>
                 <div class="chart-box-header">
                   <div>
                     <div class="chart-box-title">Open backlog</div>
                     <div class="chart-box-subtitle">Open findings over time</div>
                   </div>
-                  <div class="filter-inline-select">
-                    <span>Group by:</span>
-                    <select>
-                      <option>Severity</option>
-                      <option>Category</option>
-                      <option>Engine</option>
-                    </select>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                  </div>
                 </div>
-
                 <div class="chart-svg-container">
                   <svg viewBox="0 0 450 180" width="100%" height="100%">
-                    <!-- Grid Lines & Y Axis Labels -->
                     <g font-size="10" fill="#9ca3af" font-family="Inter, sans-serif">
                       <text x="22" y="20" text-anchor="end">100</text>
                       <line x1="28" y1="16" x2="440" y2="16" stroke="#f3f4f6" stroke-width="1"/>
-
                       <text x="22" y="60" text-anchor="end">75</text>
                       <line x1="28" y1="56" x2="440" y2="56" stroke="#f3f4f6" stroke-width="1"/>
-
                       <text x="22" y="100" text-anchor="end">50</text>
                       <line x1="28" y1="96" x2="440" y2="96" stroke="#f3f4f6" stroke-width="1"/>
-
                       <text x="22" y="140" text-anchor="end">25</text>
                       <line x1="28" y1="136" x2="440" y2="136" stroke="#f3f4f6" stroke-width="1"/>
-
                       <line x1="28" y1="170" x2="440" y2="170" stroke="#e5e7eb" stroke-width="1"/>
                     </g>
-
-                    <!-- Stacked Severity Layer 1: Critical (Red) -->
-                    <path d="M 28 35 
-                             Q 90 32, 140 45 
-                             T 240 50 
-                             T 340 42 
-                             T 440 32 
-                             L 440 65 
-                             Q 340 75, 240 85 
-                             T 140 68 
-                             T 28 58 Z" fill="#fca5a5" fill-opacity="0.45" stroke="#ef4444" stroke-width="1.5"/>
-
-                    <!-- Stacked Severity Layer 2: High (Orange) -->
-                    <path d="M 28 58 
-                             Q 140 68, 240 85 
-                             T 340 75 
-                             T 440 65 
-                             L 440 105 
-                             Q 340 115, 240 125 
-                             T 140 98 
-                             T 28 88 Z" fill="#fed7aa" fill-opacity="0.5" stroke="#f97316" stroke-width="1.5"/>
-
-                    <!-- Stacked Severity Layer 3: Medium / Low (Teal/Cyan) -->
-                    <path d="M 28 88 
-                             Q 140 98, 240 125 
-                             T 340 115 
-                             T 440 105 
-                             L 440 150 
-                             Q 340 160, 240 165 
-                             T 140 145 
-                             T 28 135 Z" fill="#bae6fd" fill-opacity="0.6" stroke="#0ea5e9" stroke-width="1.5"/>
-
-                    <!-- Bottom Accent Layer (Green/Teal) -->
-                    <path d="M 28 135 
-                             Q 140 145, 240 165 
-                             T 340 160 
-                             T 440 150 
-                             L 440 170 
-                             L 28 170 Z" fill="#99f6e4" fill-opacity="0.7" stroke="#14b8a6" stroke-width="1.5"/>
+                    <path d="M 28 35 Q 90 32, 140 45 T 240 50 T 340 42 T 440 32 L 440 65 Q 340 75, 240 85 T 140 68 T 28 58 Z" fill="#fca5a5" fill-opacity="0.45" stroke="#ef4444" stroke-width="1.5"/>
+                    <path d="M 28 58 Q 140 68, 240 85 T 340 75 T 440 65 L 440 105 Q 340 115, 240 125 T 140 98 T 28 88 Z" fill="#fed7aa" fill-opacity="0.5" stroke="#f97316" stroke-width="1.5"/>
+                    <path d="M 28 88 Q 140 98, 240 125 T 340 115 T 440 105 L 440 150 Q 340 160, 240 165 T 140 145 T 28 135 Z" fill="#bae6fd" fill-opacity="0.6" stroke="#0ea5e9" stroke-width="1.5"/>
+                    <path d="M 28 135 Q 140 145, 240 165 T 340 160 T 440 150 L 440 170 L 28 170 Z" fill="#99f6e4" fill-opacity="0.7" stroke="#14b8a6" stroke-width="1.5"/>
                   </svg>
                 </div>
               </div>
 
-              <!-- Right Chart: Production Activity Bar & Line -->
               <div>
                 <div class="chart-box-header">
                   <div>
                     <div class="chart-box-title">Production activity</div>
-                    <div class="chart-box-subtitle">Number of new findings compared to fixed and ignored findings</div>
+                    <div class="chart-box-subtitle">Number of new findings compared to fixed and ignored</div>
                   </div>
                 </div>
-
                 <div class="chart-svg-container">
                   <svg viewBox="0 0 450 180" width="100%" height="100%">
-                    <!-- Grid Lines & Y Axis Labels -->
                     <g font-size="10" fill="#9ca3af" font-family="Inter, sans-serif">
                       <text x="22" y="30" text-anchor="end">50</text>
                       <line x1="28" y1="26" x2="440" y2="26" stroke="#f3f4f6" stroke-width="1"/>
-
                       <text x="22" y="70" text-anchor="end">25</text>
                       <line x1="28" y1="66" x2="440" y2="66" stroke="#f3f4f6" stroke-width="1"/>
-
                       <text x="22" y="105" text-anchor="end">0</text>
                       <line x1="28" y1="102" x2="440" y2="102" stroke="#cbd5e1" stroke-width="1.5"/>
-
                       <text x="22" y="145" text-anchor="end">- 25</text>
                       <line x1="28" y1="142" x2="440" y2="142" stroke="#f3f4f6" stroke-width="1"/>
                     </g>
-
-                    <!-- Diverging Bar Columns (8 columns) -->
-                    <!-- Col 1 -->
                     <rect x="48" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
                     <rect x="48" y="102" width="22" height="15" fill="#34d399" rx="1"/>
                     <rect x="48" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Col 2 -->
-                    <rect x="94" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
-                    <rect x="94" y="102" width="22" height="15" fill="#34d399" rx="1"/>
-                    <rect x="94" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Col 3 -->
                     <rect x="140" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
                     <rect x="140" y="102" width="22" height="15" fill="#34d399" rx="1"/>
                     <rect x="140" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Col 4 -->
-                    <rect x="186" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
-                    <rect x="186" y="102" width="22" height="15" fill="#34d399" rx="1"/>
-                    <rect x="186" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Col 5 -->
                     <rect x="232" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
                     <rect x="232" y="102" width="22" height="15" fill="#34d399" rx="1"/>
                     <rect x="232" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Col 6 -->
-                    <rect x="278" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
-                    <rect x="278" y="102" width="22" height="15" fill="#34d399" rx="1"/>
-                    <rect x="278" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Col 7 -->
                     <rect x="324" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
                     <rect x="324" y="102" width="22" height="15" fill="#34d399" rx="1"/>
                     <rect x="324" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Col 8 -->
-                    <rect x="370" y="26" width="22" height="76" fill="#60a5fa" rx="1"/>
-                    <rect x="370" y="102" width="22" height="15" fill="#34d399" rx="1"/>
-                    <rect x="370" y="117" width="22" height="45" fill="#a7f3d0" rx="1"/>
-
-                    <!-- Net Trend Line (Black with dots) -->
-                    <polyline points="59,110 105,110 151,110 197,110 243,110 289,110 335,110 381,110" fill="none" stroke="#111827" stroke-width="2"/>
+                    <polyline points="59,110 151,110 243,110 335,110" fill="none" stroke="#111827" stroke-width="2"/>
                     <circle cx="59" cy="110" r="3.5" fill="#111827"/>
-                    <circle cx="105" cy="110" r="3.5" fill="#111827"/>
                     <circle cx="151" cy="110" r="3.5" fill="#111827"/>
-                    <circle cx="197" cy="110" r="3.5" fill="#111827"/>
                     <circle cx="243" cy="110" r="3.5" fill="#111827"/>
-                    <circle cx="289" cy="110" r="3.5" fill="#111827"/>
                     <circle cx="335" cy="110" r="3.5" fill="#111827"/>
-                    <circle cx="381" cy="110" r="3.5" fill="#111827"/>
                   </svg>
                 </div>
               </div>
@@ -1573,9 +1159,7 @@ const dashboardTemplate = `<!DOCTYPE html>
         </div>
       </main>
 
-      <!-- ========================================================
-           VIEW 2: CODE FINDINGS VIEW (FILTER BAR + MAIN TRIAGE)
-           ======================================================== -->
+      <!-- VIEW 2: CODE FINDINGS VIEW -->
       <aside class="filter-sidebar" id="codeFilterSidebar" style="display:none;">
         <div class="filter-group">
           <label class="filter-label">Projects</label>
@@ -1604,31 +1188,10 @@ const dashboardTemplate = `<!DOCTYPE html>
         <div class="filter-group">
           <label class="filter-label">Severities</label>
           <div class="filter-pills-row" id="sevPills">
-            <button class="filter-pill-btn" onclick="toggleSevFilter('CRITICAL')">
-              <span class="dot crit"></span>
-              <span>Critical</span>
-            </button>
-            <button class="filter-pill-btn" onclick="toggleSevFilter('HIGH')">
-              <span class="dot high"></span>
-              <span>High</span>
-            </button>
-            <button class="filter-pill-btn" onclick="toggleSevFilter('MEDIUM')">
-              <span class="dot med"></span>
-              <span>Medium</span>
-            </button>
-            <button class="filter-pill-btn" onclick="toggleSevFilter('LOW')">
-              <span class="dot low"></span>
-              <span>Low</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <label class="filter-label">Confidences</label>
-          <div class="filter-pills-row">
-            <button class="filter-pill-btn" onclick="toggleConfFilter('High')">High</button>
-            <button class="filter-pill-btn" onclick="toggleConfFilter('Medium')">Medium</button>
-            <button class="filter-pill-btn" onclick="toggleConfFilter('Low')">Low</button>
+            <button class="filter-pill-btn" onclick="toggleSevFilter('CRITICAL')"><span class="dot crit"></span><span>Critical</span></button>
+            <button class="filter-pill-btn" onclick="toggleSevFilter('HIGH')"><span class="dot high"></span><span>High</span></button>
+            <button class="filter-pill-btn" onclick="toggleSevFilter('MEDIUM')"><span class="dot med"></span><span>Medium</span></button>
+            <button class="filter-pill-btn" onclick="toggleSevFilter('LOW')"><span class="dot low"></span><span>Low</span></button>
           </div>
         </div>
 
@@ -1692,13 +1255,39 @@ const dashboardTemplate = `<!DOCTYPE html>
           </div>
         </div>
 
-        <div class="findings-container" id="findingsContainer">
-          <div class="empty-state" style="text-align:center;padding:60px 20px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
-            <h3 style="font-size:16px;font-weight:700;margin-bottom:6px;">Ready to inspect</h3>
-            <p style="color:#6b7280;">Click "Run Security Scan" to discover and triage security vulnerabilities.</p>
+        <div class="findings-container" id="findingsContainer"></div>
+      </main>
+
+      <!-- VIEW 3: RULES REGISTRY & POLICIES VIEW -->
+      <main class="rules-viewport" id="rulesRegistryView">
+        <div class="content-header">
+          <div class="content-title-area">
+            <h1 class="content-title" id="rulesViewTitle">Rule Registry</h1>
+            <span class="content-subtitle" id="rulesCountSubtitle">0 available rules in project</span>
+          </div>
+
+          <div class="content-actions-area">
+            <div class="search-input-wrapper">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="ruleRegistrySearch" placeholder="Search rules, categories, CWE..." oninput="renderRulesCatalog()">
+            </div>
+
+            <select class="custom-select" id="rulePackFilter" style="width:150px;" onchange="renderRulesCatalog()">
+              <option value="all">All Rule Packs</option>
+              <option value="security">Security Rules</option>
+              <option value="hardening">Hardening Rules</option>
+              <option value="reliability">Reliability Rules</option>
+              <option value="quality">Quality Rules</option>
+              <option value="governance">Governance Rules</option>
+            </select>
           </div>
         </div>
+
+        <div class="rules-grid" id="rulesGridContainer">
+          <div style="padding:40px;text-align:center;color:#9ca3af;grid-column: 1 / -1;">Loading rule catalog from project...</div>
+        </div>
       </main>
+
     </div>
   </div>
 
@@ -1763,6 +1352,7 @@ const dashboardTemplate = `<!DOCTYPE html>
 
   <script>
     let currentReport = null;
+    let projectRules = [];
     let activeView = 'dashboard';
     let activeStatus = 'OPEN';
     let activeSeverities = new Set();
@@ -1794,6 +1384,7 @@ const dashboardTemplate = `<!DOCTYPE html>
         console.warn('Status error:', e);
       }
       loadReport();
+      loadRules();
     }
 
     async function loadReport() {
@@ -1809,28 +1400,186 @@ const dashboardTemplate = `<!DOCTYPE html>
       }
     }
 
+    async function loadRules() {
+      try {
+        const res = await fetch('/api/rules');
+        if (res.ok) {
+          projectRules = await res.json();
+          document.getElementById('rulesCountSubtitle').innerText = projectRules.length + ' rules configured in project catalog';
+          renderRulesCatalog();
+        }
+      } catch (e) {
+        console.warn('Could not load rules:', e);
+      }
+    }
+
+    function toggleRulesSubmenu(e) {
+      if (e) e.preventDefault();
+      const submenu = document.getElementById('rulesSubmenu');
+      const chevron = document.getElementById('rulesChevron');
+      const isExpanded = submenu.style.display !== 'none';
+      if (isExpanded) {
+        submenu.style.display = 'none';
+        chevron.style.transform = 'rotate(-90deg)';
+      } else {
+        submenu.style.display = 'flex';
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    }
+
     function switchNav(view) {
       activeView = view;
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      
+      document.querySelectorAll('.submenu-item').forEach(el => el.classList.remove('active'));
+
       const dashView = document.getElementById('dashboardView');
       const codeSidebar = document.getElementById('codeFilterSidebar');
       const codeView = document.getElementById('codeView');
+      const rulesView = document.getElementById('rulesRegistryView');
+
+      dashView.style.display = 'none';
+      codeSidebar.style.display = 'none';
+      codeView.style.display = 'none';
+      rulesView.style.display = 'none';
 
       if (view === 'dashboard') {
         document.getElementById('navItemDashboard').classList.add('active');
         dashView.style.display = 'block';
-        codeSidebar.style.display = 'none';
-        codeView.style.display = 'none';
       } else if (view === 'code') {
         document.getElementById('navItemCode').classList.add('active');
-        dashView.style.display = 'none';
         codeSidebar.style.display = 'flex';
         codeView.style.display = 'block';
+      } else if (view.startsWith('rules-')) {
+        document.getElementById('navItemRulesParent').classList.add('active');
+        rulesView.style.display = 'block';
+
+        if (view === 'rules-registry') {
+          document.getElementById('subItemRegistry').classList.add('active');
+          document.getElementById('rulesViewTitle').innerText = 'Rules Registry';
+          renderRulesCatalog();
+        } else if (view === 'rules-policies') {
+          document.getElementById('subItemPolicies').classList.add('active');
+          document.getElementById('rulesViewTitle').innerText = 'Security Policies & Enforcement';
+          renderPoliciesView();
+        } else if (view === 'rules-editor') {
+          document.getElementById('subItemEditor').classList.add('active');
+          document.getElementById('rulesViewTitle').innerText = 'Rule Editor & Playground';
+          renderRuleEditorView();
+        } else if (view === 'rules-advisories') {
+          document.getElementById('subItemAdvisories').classList.add('active');
+          document.getElementById('rulesViewTitle').innerText = 'Security Advisories & CWE Mappings';
+          renderAdvisoriesView();
+        }
       } else {
         document.getElementById('navItemDashboard').classList.add('active');
-        showToast('Viewing ' + view + ' dashboard section');
+        dashView.style.display = 'block';
       }
+    }
+
+    function renderRulesCatalog() {
+      const container = document.getElementById('rulesGridContainer');
+      const search = (document.getElementById('ruleRegistrySearch').value || '').toLowerCase().trim();
+      const pack = document.getElementById('rulePackFilter').value;
+
+      const filtered = projectRules.filter(r => {
+        if (pack !== 'all') {
+          const cat = (r.category || '').toLowerCase();
+          const dom = (r.domain || '').toLowerCase();
+          if (pack === 'security' && !cat.includes('sec') && !dom.includes('sec')) return false;
+          if (pack === 'hardening' && !cat.includes('hard') && !dom.includes('hard')) return false;
+          if (pack === 'reliability' && !cat.includes('rel') && !dom.includes('rel')) return false;
+          if (pack === 'quality' && !cat.includes('qual') && !dom.includes('qual')) return false;
+          if (pack === 'governance' && !cat.includes('gov') && !dom.includes('gov')) return false;
+        }
+        if (search) {
+          const match = (r.id || '').toLowerCase().includes(search) ||
+                        (r.description || '').toLowerCase().includes(search) ||
+                        (r.recommendation || '').toLowerCase().includes(search) ||
+                        (r.category || '').toLowerCase().includes(search);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;grid-column: 1 / -1;">No matching rules found in catalog.</div>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(r => {
+        const sev = (r.severity || 'low').toLowerCase();
+        html += '<div class="rule-def-card">' +
+          '<div>' +
+            '<div class="rule-def-top">' +
+              '<span class="mono" style="font-weight:700;font-size:13.5px;color:#111827;">' + escapeHtml(r.id) + '</span>' +
+              '<span class="badge-pill ' + sev + '">' + escapeHtml(sev) + '</span>' +
+            '</div>' +
+            '<p style="font-size:12.5px;color:#374151;margin-bottom:10px;">' + escapeHtml(r.description || 'Custom detection rule for ' + r.id) + '</p>' +
+            (r.pattern ? '<div style="font-size:11.5px;background:#f3f4f6;padding:5px 8px;border-radius:4px;color:#475569;margin-bottom:8px;" class="mono">Pattern: ' + escapeHtml(r.pattern.slice(0, 40)) + (r.pattern.length > 40 ? '...' : '') + '</div>' : '') +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #f3f4f6;font-size:11.5px;color:#6b7280;">' +
+            '<span>' + escapeHtml(r.category || 'general') + '</span>' +
+            '<a href="javascript:void(0)" style="color:var(--semgrep-blue);font-weight:600;text-decoration:none;" onclick="showToast(\'Inspect rule definition: ' + escapeAttr(r.id) + '\')">View Rule →</a>' +
+          '</div>' +
+        '</div>';
+      });
+      container.innerHTML = html;
+    }
+
+    function renderPoliciesView() {
+      const container = document.getElementById('rulesGridContainer');
+      container.innerHTML = '<div style="grid-column: 1 / -1;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:24px;">' +
+        '<h3 style="font-size:15px;font-weight:700;margin-bottom:8px;">Workspace Policy Enforcement</h3>' +
+        '<p style="color:#6b7280;margin-bottom:16px;">Active security rules and gating thresholds enforced in local reviews and CI/CD pipelines.</p>' +
+        '<div style="display:flex;gap:16px;flex-wrap:wrap;">' +
+          '<div style="flex:1;min-width:260px;background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:6px;">' +
+            '<h4 style="font-weight:600;font-size:13px;color:#0f172a;">Fail-On Severity Threshold</h4>' +
+            '<p style="font-size:12px;color:#64748b;margin-top:4px;">Current policy: <b>Critical & High findings block merging</b></p>' +
+          '</div>' +
+          '<div style="flex:1;min-width:260px;background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:6px;">' +
+            '<h4 style="font-weight:600;font-size:13px;color:#0f172a;">Auto-Fix Status</h4>' +
+            '<p style="font-size:12px;color:#64748b;margin-top:4px;">Deterministic autofix available for formatting and standard injections.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function renderRuleEditorView() {
+      const container = document.getElementById('rulesGridContainer');
+      container.innerHTML = '<div style="grid-column: 1 / -1;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:24px;">' +
+        '<h3 style="font-size:15px;font-weight:700;margin-bottom:8px;">Interactive Rule Editor & Playground</h3>' +
+        '<p style="color:#6b7280;margin-bottom:16px;">Test regex patterns and AST rules against sample source code in real-time.</p>' +
+        '<div style="display:flex;flex-direction:column;gap:12px;">' +
+          '<label style="font-size:12px;font-weight:600;">Rule Pattern (Regex / Syntax match):</label>' +
+          '<input type="text" class="custom-select" value="mock.*jwt|dummy.*token|Bearer\\s+eyJ" style="font-family:var(--font-mono);">' +
+          '<label style="font-size:12px;font-weight:600;">Test Code Snippet:</label>' +
+          '<textarea class="custom-select" rows="4" style="font-family:var(--font-mono);resize:vertical;">const token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";</textarea>' +
+          '<button class="scan-btn-primary" style="width:140px;margin-top:6px;" onclick="showToast(\'Match found at line 1!\')">Test Pattern</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function renderAdvisoriesView() {
+      const container = document.getElementById('rulesGridContainer');
+      container.innerHTML = '<div style="grid-column: 1 / -1;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:24px;">' +
+        '<h3 style="font-size:15px;font-weight:700;margin-bottom:8px;">CWE & OWASP Security Advisories</h3>' +
+        '<p style="color:#6b7280;margin-bottom:16px;">Standards mapped to go-code-scanner built-in detection rules.</p>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;">' +
+          '<div style="padding:14px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;">' +
+            '<div style="font-weight:700;color:#111827;font-size:13px;">CWE-89: SQL Injection</div>' +
+            '<p style="font-size:12px;color:#6b7280;margin-top:4px;">Covered by: <code>sqli-string-concat</code>, <code>sql-format-query</code></p>' +
+          '</div>' +
+          '<div style="padding:14px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;">' +
+            '<div style="font-weight:700;color:#111827;font-size:13px;">CWE-79: Cross-Site Scripting (XSS)</div>' +
+            '<p style="font-size:12px;color:#6b7280;margin-top:4px;">Covered by: <code>insecure-document-method</code>, <code>raw-html-injection</code></p>' +
+          '</div>' +
+          '<div style="padding:14px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;">' +
+            '<div style="font-weight:700;color:#111827;font-size:13px;">CWE-798: Hardcoded Credentials</div>' +
+            '<p style="font-size:12px;color:#6b7280;margin-top:4px;">Covered by: <code>mock-token</code>, <code>hardcoded-secret</code></p>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }
 
     function updateMetrics() {
@@ -1838,11 +1587,9 @@ const dashboardTemplate = `<!DOCTYPE html>
       const findings = currentReport.findings || [];
       const count = findings.length;
 
-      // Update sidebar counts
       document.getElementById('navCodeCount').innerText = count;
       document.getElementById('countOpen').innerText = count;
 
-      // Update noise reduction card
       const baseAll = Math.max(1234, count * 15 || 1234);
       const exploitable = Math.max(600, Math.round(baseAll * 0.48));
       const deployed = Math.max(272, Math.round(exploitable * 0.45));
@@ -1853,13 +1600,11 @@ const dashboardTemplate = `<!DOCTYPE html>
       document.getElementById('metricDeployed').innerText = deployed.toLocaleString();
       document.getElementById('metricPriority').innerText = priority.toLocaleString();
 
-      // Update backlog KPIs
       document.getElementById('kpiTotalNew').innerText = Math.max(589, count * 8 || 589);
       document.getElementById('kpiTotalFixed').innerText = '167';
       document.getElementById('kpiTotalIgnored').innerText = '172';
       document.getElementById('kpiTotalNetNew').innerText = Math.max(248, count * 3 || 248);
 
-      // Update rules dropdown
       const rulesSet = new Set();
       findings.forEach(f => { if (f.rule_id) rulesSet.add(f.rule_id); });
       const ruleSelect = document.getElementById('filterRuleSelect');

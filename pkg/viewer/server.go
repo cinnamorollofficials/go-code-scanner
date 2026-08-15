@@ -365,6 +365,9 @@ func (s *Server) handleRules(w http.ResponseWriter, r *http.Request) {
 	for i, cr := range compiled {
 		ruleDefs[i] = cr.Rule
 	}
+	if len(ruleDefs) == 0 {
+		ruleDefs = rules.Default()
+	}
 
 	writeJSON(w, http.StatusOK, ruleDefs)
 }
