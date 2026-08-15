@@ -81,22 +81,22 @@ Acceptance criteria:
 
 ## P0 — Make the Config Builder export valid configurations
 
-- [ ] In `docs/.vitepress/theme/components/ConfigBuilder.vue`, change the
+- [x] In `docs/.vitepress/theme/components/ConfigBuilder.vue`, change the
   external-scanner preset from the unsupported `type: "external"` value to the
   canonical adapter configuration.
-- [ ] Validate nested preset data, not only the small set of editable top-level
+- [x] Validate nested preset data, not only the small set of editable top-level
   fields.
-- [ ] Add a fixture test that exports every preset and checks it with the real
+- [x] Add a fixture test that exports every preset and checks it with the real
   configuration validator.
-- [ ] Review preset semantics so names such as `gradual-adoption` and
+- [x] Review preset semantics so names such as `gradual-adoption` and
   `offline-strict` include the settings required to deliver the advertised
   behavior.
-- [ ] Warn for confirmation before a preset replaces unsaved edits; the dirty
+- [x] Warn for confirmation before a preset replaces unsaved edits; the dirty
   badge alone does not prevent accidental loss.
-- [ ] Keep the preset count and behavior synchronized across
+- [x] Keep the preset count and behavior synchronized across
   `docs/reference/config-builder.md` and
   `docs/reference/config-builder-contract.md`.
-- [ ] Document whether the browser-side checks are convenience validation or a
+- [x] Document whether the browser-side checks are convenience validation or a
   complete representation of CLI validation.
 
 Acceptance criteria:

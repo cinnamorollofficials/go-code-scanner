@@ -3,6 +3,7 @@
     <div class="builder-header">
       <h2 id="builder-title">Interactive Configuration Builder</h2>
       <p>Generate, customize, and export validated <code>security-review.json</code> configuration files for your repository.</p>
+      <p class="validation-scope">Browser checks catch common schema and safety errors. The CLI validator remains authoritative for downloaded files.</p>
     </div>
 
     <!-- Live Announcement for Screen Readers -->
@@ -112,7 +113,7 @@
 
     <!-- Validation Error Alert -->
     <div v-if="validationErrors.length > 0" class="validation-box" role="alert">
-      <strong>⚠️ Configuration Warnings:</strong>
+      <strong>Configuration errors:</strong>
       <ul>
         <li v-for="(err, idx) in validationErrors" :key="idx">{{ err }}</li>
       </ul>
@@ -154,211 +155,14 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { presetDescriptions, presets, validateConfig } from './ConfigBuilderData.js'
 
 const selectedPreset = ref('minimal')
+const activePreset = ref('minimal')
 const isDirty = ref(false)
 const copied = ref(false)
 const downloaded = ref(false)
 const statusAnnouncement = ref('')
-
-const presetDescriptions = {
-  minimal: 'Lightweight starter configuration suitable for standalone Go utilities.',
-  'go-service': 'Standard configuration for production Go microservices and APIs.',
-  'frontend-app': 'Dedicated scanner configuration for React, Vue, Svelte, and Next.js applications.',
-  monorepo: 'Full-featured configuration for large multi-package repositories.',
-  'staged-hook': 'Optimized for sub-second pre-commit git hook validation.',
-  offline: 'Strict air-gapped configuration with disabled network scanners.',
-  'strict-ci': 'Zero-tolerance CI gate failing on Medium, High, and Critical findings.',
-  'external-scanner': 'Configured external scanner adapters for third-party SAST tools.',
-  'gradual-adoption': 'Baseline-driven setup for managing legacy technical debt.'
-}
-
-const presets = {
-  minimal: {
-    version: 1,
-    project: 'minimal-app',
-    root: '.',
-    mode: 'full',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.go'],
-    exclude_directories: ['.git', 'vendor'],
-    exclude_files: ['security_findings.json'],
-    workers: 4,
-    scanners: {}
-  },
-  'go-service': {
-    version: 1,
-    project: 'go-service',
-    root: '.',
-    mode: 'full',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.go', '.yaml', '.yml', '.json'],
-    exclude_directories: ['.git', 'vendor', 'bin', 'testdata'],
-    exclude_files: ['security_findings.json'],
-    workers: 8,
-    policy: {
-      security: 'HIGH',
-      reliability: 'HIGH',
-      hardening: 'HIGH',
-      quality: 'MEDIUM',
-      supply_chain: 'HIGH',
-      governance: 'MEDIUM'
-    },
-    cache: {
-      enabled: true,
-      directory: '.go-code-scanner-cache',
-      max_age: '168h',
-      max_bytes: 104857600
-    },
-    scanners: {}
-  },
-  'frontend-app': {
-    version: 1,
-    project: 'frontend-app',
-    root: '.',
-    mode: 'full',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.ts', '.tsx', '.js', '.jsx', '.vue', '.svelte'],
-    exclude_directories: ['.git', 'node_modules', 'dist', '.next', '.nuxt'],
-    exclude_files: ['package-lock.json', 'yarn.lock'],
-    workers: 4,
-    frontend: {
-      enabled: true,
-      frameworks: ['react', 'vue', 'nextjs'],
-      client_roots: ['src/client', 'pages', 'components'],
-      server_roots: ['src/server', 'api']
-    },
-    scanners: {}
-  },
-  monorepo: {
-    version: 1,
-    project: 'enterprise-monorepo',
-    root: '.',
-    mode: 'changed',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.go', '.ts', '.tsx', '.js', '.json', '.yaml'],
-    exclude_directories: ['.git', 'node_modules', 'vendor', 'dist', 'build'],
-    exclude_files: ['security_findings.json'],
-    workers: 16,
-    policy: {
-      security: 'HIGH',
-      reliability: 'HIGH',
-      hardening: 'HIGH',
-      quality: 'HIGH',
-      supply_chain: 'CRITICAL',
-      governance: 'HIGH'
-    },
-    cache: {
-      enabled: true,
-      directory: '.go-code-scanner-cache',
-      max_age: '72h',
-      max_bytes: 524288000
-    },
-    scanners: {}
-  },
-  'staged-hook': {
-    version: 1,
-    project: 'staged-hook-app',
-    root: '.',
-    mode: 'staged',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.go'],
-    exclude_directories: ['.git', 'vendor'],
-    exclude_files: ['security_findings.json'],
-    workers: 4,
-    hooks: {
-      pre_commit: {
-        enabled: true,
-        profile: 'fast',
-        staged_only: true,
-        new_only: true
-      },
-      commit_msg: {
-        enabled: true,
-        message_pattern: '^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?: .+',
-        max_subject_length: 72
-      },
-      pre_push: {
-        enabled: false
-      }
-    },
-    scanners: {}
-  },
-  offline: {
-    version: 1,
-    project: 'offline-workspace',
-    root: '.',
-    mode: 'full',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.go'],
-    exclude_directories: ['.git', 'vendor'],
-    exclude_files: ['security_findings.json'],
-    workers: 4,
-    scanners: {}
-  },
-  'strict-ci': {
-    version: 1,
-    project: 'strict-ci-service',
-    root: '.',
-    mode: 'full',
-    output: 'security_findings.json',
-    fail_on: 'MEDIUM',
-    include_extensions: ['.go', '.yaml', '.json'],
-    exclude_directories: ['.git', 'vendor'],
-    exclude_files: ['security_findings.json'],
-    workers: 8,
-    policy: {
-      security: 'MEDIUM',
-      reliability: 'MEDIUM',
-      hardening: 'MEDIUM',
-      quality: 'MEDIUM',
-      supply_chain: 'HIGH',
-      governance: 'HIGH'
-    },
-    scanners: {}
-  },
-  'external-scanner': {
-    version: 1,
-    project: 'external-scanner-suite',
-    root: '.',
-    mode: 'full',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.go'],
-    exclude_directories: ['.git', 'vendor'],
-    exclude_files: ['security_findings.json'],
-    workers: 4,
-    scanners: {
-      gitleaks: {
-        enabled: true,
-        required: false,
-        type: 'external',
-        adapter: 'gitleaks',
-        command: ['gitleaks', 'detect', '--no-git', '--report-format=json'],
-        domain: 'security'
-      }
-    }
-  },
-  'gradual-adoption': {
-    version: 1,
-    project: 'legacy-app-adoption',
-    root: '.',
-    mode: 'full',
-    output: 'security_findings.json',
-    fail_on: 'HIGH',
-    include_extensions: ['.go'],
-    exclude_directories: ['.git', 'vendor'],
-    exclude_files: ['security_findings.json'],
-    workers: 4,
-    scanners: {}
-  }
-}
 
 const config = ref(JSON.parse(JSON.stringify(presets.minimal)))
 
@@ -367,11 +171,17 @@ function markDirty() {
 }
 
 function onPresetChange() {
-  if (presets[selectedPreset.value]) {
-    config.value = JSON.parse(JSON.stringify(presets[selectedPreset.value]))
-    isDirty.value = false
-    announce(`Loaded ${selectedPreset.value} preset`)
+  const nextPreset = selectedPreset.value
+  if (!presets[nextPreset]) return
+  if (isDirty.value && !window.confirm('Changing presets will replace your unsaved edits. Continue?')) {
+    selectedPreset.value = activePreset.value
+    announce('Preset change canceled; custom edits were preserved.')
+    return
   }
+  activePreset.value = nextPreset
+  config.value = JSON.parse(JSON.stringify(presets[nextPreset]))
+  isDirty.value = false
+  announce(`Loaded ${nextPreset} preset`)
 }
 
 function resetToPreset() {
@@ -382,27 +192,7 @@ function resetToPreset() {
   }
 }
 
-const validationErrors = computed(() => {
-  const errors = []
-  if (!config.value.project || !config.value.project.trim()) {
-    errors.push('Project name cannot be empty.')
-  }
-  if (!config.value.root || !config.value.root.trim()) {
-    errors.push('Root directory cannot be empty.')
-  } else if (config.value.root.includes('..')) {
-    errors.push('Root directory cannot contain parent directory traversal ("..").')
-  }
-  if (!['full', 'changed', 'staged'].includes(config.value.mode)) {
-    errors.push('Scan mode must be one of: "full", "changed", "staged".')
-  }
-  if (!['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(config.value.fail_on)) {
-    errors.push('Fail On threshold must be one of: "CRITICAL", "HIGH", "MEDIUM", "LOW".')
-  }
-  if (typeof config.value.workers !== 'number' || config.value.workers < 1 || config.value.workers > 64) {
-    errors.push('Workers must be an integer between 1 and 64.')
-  }
-  return errors
-})
+const validationErrors = computed(() => validateConfig(config.value))
 
 const jsonOutput = computed(() => JSON.stringify(config.value, null, 2))
 
@@ -474,6 +264,11 @@ function downloadJSON() {
 .builder-header p {
   color: var(--vp-c-text-2);
   margin-bottom: 20px;
+}
+
+.builder-header .validation-scope {
+  font-size: 0.9rem;
+  margin-top: -12px;
 }
 
 .control-section {
