@@ -57,6 +57,6 @@ Note: `--fail-on` configures the severity threshold, but process exit code `1` s
  
 ## Next Steps
  
-- Explore [Scan Execution & Policy](/features/scan-execution-and-policy) to configure scan modes (staged, full, changed).
-- Configure suppressions and baselines in [Reports & Finding Lifecycle](/features/reports-and-finding-lifecycle).
+- Explore [Scan Modes and Isolation](/concepts/scan-modes) to configure staged, changed, and full scans.
+- Configure gradual adoption in [Baselines](/guides/baselines) and reviewed exceptions in [Managing Suppressions](/guides/suppressions).
 - View complete command flag details in the [CLI Reference](/reference/cli).

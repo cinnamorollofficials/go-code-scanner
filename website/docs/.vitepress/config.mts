@@ -81,7 +81,7 @@ export default defineConfig({
       { 
         text: 'Documentation', 
         link: '/getting-started/', 
-        activeMatch: '^/(getting-started|guides|concepts|features|author-guide|changelog|contributing|security)/' 
+        activeMatch: '^/(getting-started|guides|concepts|author-guide|changelog|contributing|security)/'
       },
       { 
         text: 'Reference', 
@@ -97,7 +97,6 @@ export default defineConfig({
       '/getting-started/': sidebarDocs(),
       '/guides/': sidebarDocs(),
       '/concepts/': sidebarDocs(),
-      '/features/': sidebarDocs(),
       '/author-guide': sidebarDocs(),
       '/changelog': sidebarDocs(),
       '/contributing': sidebarDocs(),

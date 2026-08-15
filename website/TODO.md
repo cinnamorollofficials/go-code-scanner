@@ -107,18 +107,28 @@ Acceptance criteria:
 
 ## P1 — Finish the `/features/` migration
 
-- [ ] Create a migration table mapping each page in `docs/features/` to its
+| Legacy URL | Canonical destination |
+| :--- | :--- |
+| `/features/` | `/concepts/` |
+| `/features/analysis-and-reproduction` | `/guides/reproducing-findings` |
+| `/features/client-scanning` | `/concepts/frontend-scanning` |
+| `/features/developer-workflow-features` | `/guides/` |
+| `/features/reports-and-finding-lifecycle` | `/concepts/reports-and-finding-lifecycle` |
+| `/features/scan-execution-and-policy` | `/concepts/scan-modes` |
+| `/features/sql-taint-analysis` | `/concepts/sql-taint-analysis` |
+
+- [x] Create a migration table mapping each page in `docs/features/` to its
   canonical replacement in `docs/concepts/`, `docs/guides/`, or `docs/reference/`.
-- [ ] Update all inbound links, including the links in
+- [x] Update all inbound links, including the links in
   `docs/getting-started/first-scan.md`, to their canonical destinations.
-- [ ] Add redirects for externally linked `/features/*` URLs where VitePress
+- [x] Add redirects for externally linked `/features/*` URLs where VitePress
   hosting supports them.
-- [ ] Remove duplicate legacy pages after redirects and inbound links are ready.
-- [ ] Remove the `/features/` sidebar mapping and active navigation match from
+- [x] Remove duplicate legacy pages after redirects and inbound links are ready.
+- [x] Remove the `/features/` sidebar mapping and active navigation match from
   `docs/.vitepress/config.mts`.
-- [ ] Confirm that the generated sitemap contains only one canonical page for
+- [x] Confirm that the generated sitemap contains only one canonical page for
   each topic.
-- [ ] Check that no legacy feature page remains discoverable through search,
+- [x] Check that no legacy feature page remains discoverable through search,
   sidebar navigation, or the sitemap.
 
 Acceptance criteria:
