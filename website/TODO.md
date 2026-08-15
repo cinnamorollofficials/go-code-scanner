@@ -1,275 +1,270 @@
-# Website Documentation TODO
+# Website Documentation TODO — Second-Pass Audit
 
-This checklist covers only the documentation website under `website/`. Complete
-the correctness work before reorganizing or polishing the UI so readers never
-receive a cleaner presentation of inaccurate instructions.
+This backlog covers only the documentation website under `website/`. It replaces
+the first-pass checklist, whose items were marked complete before several of them
+had been verified against the rendered site and the current CLI behavior.
 
 Priority legend:
 
 - **P0** — incorrect or misleading documentation; fix before publishing.
-- **P1** — navigation and task-flow problems that materially affect usability.
-- **P2** — maintainability, accessibility, and content-quality improvements.
-- **P3** — optional polish after the core documentation is trustworthy.
+- **P1** — structural or navigation issues that materially affect readers.
+- **P2** — automated quality, accessibility, SEO, and maintenance improvements.
+- **P3** — editorial and visual polish after the documentation is trustworthy.
 
-## P0 — Restore documentation accuracy
+An item may be checked only when its acceptance criteria have been verified. A
+successful VitePress build alone is not sufficient evidence that links, commands,
+configuration examples, or accessibility behavior are correct.
 
-### Canonical CLI commands and behavior
+## Existing foundations to preserve
 
-- [x] Audit every shell command in `docs/**/*.md` against the current
-  `security-review` CLI.
-- [x] Replace `--mode staged` with `--staged` and `--mode changed` with
-  `--changed`; document that a full scan is the default when neither flag is
-  supplied.
-- [x] Remove or replace unsupported examples using `--scanners=sqltaint`.
-- [x] Remove `--format terminal`; explain that terminal output is shown unless
-  `--quiet`, while `--format` selects the artifact format.
-- [x] Clarify that `--fail-on` changes the threshold but exit code `1` still
-  requires `--ci`.
-- [x] Correct baseline commands to use `create`, `update`, and `status` with the
-  required `--report` and `--baseline` arguments.
-- [x] Correct suppression examples to use the supported `suppress add` fields,
-  including file, reason, and expiry.
-- [x] Replace unsupported cache commands with `cache stats` and `cache clean`.
-- [x] Replace `upgrade --check` with `upgrade check`.
-- [x] Correct hook examples so each command includes a supported hook event.
-- [x] Remove references to unsupported hook flags such as `--overwrite`.
-- [x] Document all exit codes consistently: `0` success/allowed, `1` policy or
-  verification mismatch, `2` invalid input/configuration, and `3` operational
-  failure.
-- [x] Update the sample terminal output so its wording and layout match actual
-  `security-review scan` output.
+- [x] The primary information architecture uses Get Started, Guides, Concepts,
+  Reference, and Project groups.
+- [x] The homepage provides goal-oriented entry points and a first-scan path.
+- [x] Local documentation search is enabled.
+- [x] The Config Builder provides reset, copy, download, validation feedback,
+  and `aria-live` status announcements.
+- [x] The production VitePress build runs successfully.
 
-Affected pages:
+## P0 — Correct inaccurate documentation
 
-- `docs/index.md`
-- `docs/getting-started/first-scan.md`
-- `docs/reference/cli.md`
-- `docs/features/scan-execution-and-policy.md`
-- `docs/features/reports-and-finding-lifecycle.md`
-- `docs/features/developer-workflow-features.md`
-- `docs/features/analysis-and-reproduction.md`
-- `docs/features/sql-taint-analysis.md`
-- `docs/guides/ci-integrations.md`
-- `docs/guides/troubleshooting.md`
+### Installation and command examples
 
-### Canonical product terminology
+- [ ] In `docs/getting-started/installation.md`, replace the unsupported
+  checksum verification flag `--checksums` with the current `--manifest` form.
+- [ ] Run every copyable installation command against the current CLI help and
+  release artifact layout.
+- [ ] Replace handwritten command output with output captured from a stable test
+  fixture, or clearly label it as illustrative.
+- [ ] Replace the homepage's fictional or stale scanner names with output
+  produced by the default scan profile.
 
-- [x] Use the canonical finding domains everywhere: `quality`, `reliability`,
-  `hardening`, `security`, `supply_chain`, and `governance`.
-- [x] Use only supported severities: `CRITICAL`, `HIGH`, `MEDIUM`, and `LOW`.
-- [x] Remove `INFO` from configuration references, the CLI reference, and the
-  interactive builder.
-- [x] Distinguish domains from categories and capabilities. Terms such as
-  “Secrets”, “SAST”, “Frontend”, and “Vulnerabilities” may describe capabilities
-  but must not be presented as policy domains.
-- [x] Use **Go Code Scanner** for the product and `security-review` for the CLI,
-  following `docs/author-guide.md`.
+Acceptance criteria:
 
-### Installation, release, and trust information
+- Every installation and first-scan command is accepted by the current CLI.
+- The documented output uses scanner names and wording emitted by the product.
+- Any intentionally abbreviated output is labelled as abbreviated.
 
-- [x] Change the Go prerequisite in `docs/getting-started/installation.md` to the
-  version declared by the repository's `go.mod`.
-- [x] Replace the hard-coded `v1.0.0` navigation label with the actual released
-  version, or display `Pre-release`/`Unreleased` until a stable tag exists.
-- [x] Ensure release-download commands use artifact names that are actually
-  published; hide the precompiled-binary path until artifacts exist.
-- [x] Keep `docs/changelog.md`, the navigation version, and installation page in
-  sync.
-- [x] Link the footer's MIT License statement to an actual license document, or
-  remove the claim until that document exists.
-- [x] Replace the vague security-reporting instruction with a concrete private
-  reporting URL or contact method.
+### Suppressions
 
-## P0 — Make the Config Builder truthful and functional
+- [ ] In `docs/guides/suppressions.md`, mark `--reason` and `--expires` as
+  required rather than optional.
+- [ ] Remove the documented `// nolint:...` inline suppression syntax unless the
+  CLI implements and tests it as a public feature.
+- [ ] Verify the add, list, remove, and expiry examples against the current
+  suppression command behavior.
+- [ ] Explain the supported suppression lifecycle without suggesting an
+  unsupported source-comment workflow.
 
-- [x] Decide whether the builder is a complete configuration generator or a
-  small starter; align its title and description with that scope.
-- [x] Make the preset list, preset implementation, and
-  `docs/reference/config-builder-contract.md` agree on the same preset count.
-- [x] Implement every selectable preset so choosing one never silently does
-  nothing.
-- [x] Remove the invalid `INFO` threshold.
-- [x] Add the promised file-download action, or remove it from the contract.
-- [x] Add client-side validation for required values, number ranges, enum values,
-  and unsafe/empty paths before copy or download.
-- [x] Show clear success and failure states for clipboard and download actions.
-- [x] Announce copy/download status through an `aria-live` region.
-- [x] Add a reset action and a clear indication when changing presets will
-  replace unsaved edits.
-- [x] If the builder remains “complete”, expose the high-value policy, profile,
-  scanner, hook, frontend, and cache settings instead of only four editable
+Acceptance criteria:
+
+- Every copied suppression command succeeds with the documented inputs.
+- Required fields match both CLI help and runtime validation.
+- The page contains no unsupported suppression mechanism.
+
+### Scanner configuration reference
+
+- [ ] In `docs/reference/config/scanners.md`, document only supported scanner
+  types: the default/pattern form, `command`, and `adapter` as applicable.
+- [ ] Remove `builtin` as a supported scanner type unless it becomes a valid
+  configuration value.
+- [ ] Replace noncanonical policy domains such as `secrets`, `vulnerabilities`,
+  `architecture`, and `frontend` with the six canonical domains.
+- [ ] Correct the required-scanner failure behavior to use the operational
+  failure exit code rather than the invalid-input exit code.
+- [ ] Verify every scanner configuration example with the real configuration
+  validator.
+
+Acceptance criteria:
+
+- Allowed values, domains, defaults, and exit behavior agree with the product.
+- All JSON examples pass the current validator without manual edits.
+
+## P0 — Make the Config Builder export valid configurations
+
+- [ ] In `docs/.vitepress/theme/components/ConfigBuilder.vue`, change the
+  external-scanner preset from the unsupported `type: "external"` value to the
+  canonical adapter configuration.
+- [ ] Validate nested preset data, not only the small set of editable top-level
   fields.
-- [x] Test exported JSON with the project's real configuration validator.
+- [ ] Add a fixture test that exports every preset and checks it with the real
+  configuration validator.
+- [ ] Review preset semantics so names such as `gradual-adoption` and
+  `offline-strict` include the settings required to deliver the advertised
+  behavior.
+- [ ] Warn for confirmation before a preset replaces unsaved edits; the dirty
+  badge alone does not prevent accidental loss.
+- [ ] Keep the preset count and behavior synchronized across
+  `docs/reference/config-builder.md` and
+  `docs/reference/config-builder-contract.md`.
+- [ ] Document whether the browser-side checks are convenience validation or a
+  complete representation of CLI validation.
 
-Affected files:
+Acceptance criteria:
 
-- `docs/.vitepress/theme/components/ConfigBuilder.vue`
-- `docs/reference/config-builder.md`
-- `docs/reference/config-builder-contract.md`
+- Every preset exports JSON accepted by the current CLI validator.
+- Selecting a preset never silently discards edited configuration.
+- The builder, user guide, and contract advertise the same capabilities.
 
-## P1 — Reorganize navigation around reader goals
+## P1 — Finish the `/features/` migration
 
-- [x] Replace the current sidebar groups with the following information
-  architecture:
+- [ ] Create a migration table mapping each page in `docs/features/` to its
+  canonical replacement in `docs/concepts/`, `docs/guides/`, or `docs/reference/`.
+- [ ] Update all inbound links, including the links in
+  `docs/getting-started/first-scan.md`, to their canonical destinations.
+- [ ] Add redirects for externally linked `/features/*` URLs where VitePress
+  hosting supports them.
+- [ ] Remove duplicate legacy pages after redirects and inbound links are ready.
+- [ ] Remove the `/features/` sidebar mapping and active navigation match from
+  `docs/.vitepress/config.mts`.
+- [ ] Confirm that the generated sitemap contains only one canonical page for
+  each topic.
+- [ ] Check that no legacy feature page remains discoverable through search,
+  sidebar navigation, or the sitemap.
 
-  ```text
-  Get Started
-    Installation
-    First Scan
-    Five-Minute CI Setup
+Acceptance criteria:
 
-  Guides
-    Pre-Commit Hooks
-    GitHub Actions / GitLab CI
-    Gradual Adoption with Baselines
-    Managing Suppressions
-    Reproducing a Finding
-    Troubleshooting
+- Each topic has one source of truth.
+- Existing public `/features/*` links resolve to an intentional destination.
+- No duplicate feature/concept pages are indexed by the generated site.
 
-  Concepts
-    Scan Modes and Isolation
-    Profiles and Policy
-    Reports and Finding Lifecycle
-    Frontend Scanning
-    SQL Taint Analysis
+## P1 — Rebuild the Rule Catalog for navigation, not scrolling
 
-  Reference
-    CLI
-    Configuration
-    Scanner Compatibility
-    Rule Catalog
-    Config Builder
+- [ ] Replace the single multi-thousand-line `docs/reference/rules.md` output
+  with a generated catalog index and smaller rule detail pages.
+- [ ] Add client-side filters for rule ID, canonical domain, severity,
+  language/ecosystem, and category.
+- [ ] Keep a compact rule matrix on the catalog index.
+- [ ] Generate rule counts and domain summaries from the same source as rule
+  details.
+- [ ] Replace Markdown-like text inside raw HTML with real rendered links.
+- [ ] Generate working previous/next navigation between rule detail pages.
+- [ ] Preserve useful legacy anchors or provide redirects for inbound links.
+- [ ] Add automated checks for every detail link, previous/next link, and
+  preserved anchor.
+- [ ] Verify catalog filtering and the detail layout at 320 px, 768 px, and
+  desktop widths.
 
-  Project
-    Security Model
-    Changelog
-    Contributing
-    Documentation Author Guide
-  ```
+Acceptance criteria:
 
-- [x] Rename the misleading “Development” group to “Project”.
-- [x] Move the Documentation Author Guide out of end-user guides.
-- [x] Split “Adoption & Troubleshooting” into separate task-oriented pages.
-- [x] Split “How It Works & Reproducing Findings” into a concept page and an
-  operational reproduction guide.
-- [x] Remove bilingual parenthetical headings unless the whole site adopts a
-  documented localization strategy.
-- [x] Add the SQL Taint Analysis page to the Features/Concepts overview.
-- [x] Either expand thin overview pages with useful routing context or link
-  directly to the first meaningful page.
-- [x] Make “Documentation”, “Guides”, “Reference”, and “Project” top-level paths
-  predictable and apply consistent active navigation states.
+- Readers can find a rule without scrolling through one enormous page.
+- Every rule, guidance, previous/next, and back-to-catalog link resolves.
+- Counts and summaries cannot drift from the generated rule set.
 
-Affected files:
+## P1 — Reduce navigation and content duplication
 
-- `docs/.vitepress/config.mts`
-- `docs/getting-started/index.md`
-- `docs/features/index.md`
-- `docs/guides/index.md`
-- `docs/reference/index.md`
+- [ ] Collapse inactive sidebar groups or use section-specific sidebars so each
+  page does not expose the full documentation tree at once.
+- [ ] Turn the top navigation into predictable Learn/Guides, Reference, and
+  Project destinations or dropdowns.
+- [ ] Rename the `Unreleased` external link to `Development docs` or replace it
+  with a clearer version-status treatment.
+- [ ] Expand `docs/getting-started/index.md` and `docs/guides/index.md` into useful
+  routing pages with audience, task outcome, and approximate completion time.
+- [ ] Keep `docs/guides/troubleshooting.md` focused on diagnosis; move duplicated
+  baseline/adoption instructions to the dedicated baseline guide.
+- [ ] Apply this content model consistently:
+  - Getting Started: shortest path to first success.
+  - Guide: steps that complete a user task.
+  - Concept: mental model and product behavior.
+  - Reference: exact commands, fields, values, and contracts.
+- [ ] Prefer cross-links over repeating complete command sequences across
+  multiple content layers.
 
-## P1 — Improve the homepage onboarding path
+Acceptance criteria:
 
-- [x] Keep the hero concise and place a “Choose your goal” section immediately
-  after it: local scan, pre-commit gate, CI integration, existing-project
-  adoption, and reference lookup.
-- [x] Correct all three quick-start commands.
-- [x] Add a realistic expected-output excerpt to the local-scan path.
-- [x] Explain that the default scan writes `security_findings.json`.
-- [x] Explain local versus `--ci` exit behavior next to the first scan command.
-- [x] Link every quick-start path to a complete task-oriented guide.
-- [x] Present the six canonical domains consistently and move detailed marketing
-  claims below the first successful user workflow.
-- [x] Avoid absolute claims such as “enterprise-grade” and “100%” unless the
-  relevant guarantee is explicitly scoped and verifiable.
+- A reader can predict where a topic belongs from its page type.
+- Core tasks remain reachable within two navigation choices.
+- Repeated instructions have one canonical owner.
 
-Affected file: `docs/index.md`.
+## P2 — Add documentation quality gates under `website/`
 
-## P1 — Make the Rule Catalog navigable
+- [ ] Add a `docs:check-links` script that fails on broken internal links and
+  missing anchors in the production output.
+- [ ] Add a content check for valid frontmatter, unique titles, useful
+  descriptions, exactly one H1, and labelled fenced code blocks.
+- [ ] Add a command-example check that compares documented CLI flags and
+  subcommands with the current command definitions.
+- [ ] Validate copyable JSON configurations and every Config Builder preset with
+  the real CLI validator.
+- [ ] Continue checking generated rule, scanner, and configuration references
+  for drift.
+- [ ] Add browser smoke tests for the homepage, first-scan guide, CLI reference,
+  Rule Catalog, and Config Builder.
+- [ ] Add accessibility smoke tests covering keyboard use, focus visibility,
+  landmarks, headings, labels, status announcements, and color contrast.
+- [ ] Provide one `docs:verify` script that runs content checks, generated-content
+  checks, tests, and the production build.
+- [ ] Document each check and its expected failure message in the documentation
+  author guide.
 
-- [x] Replace the single 2,000+ line catalog page with a generated index and
-  smaller detail pages, preferably grouped by canonical domain.
-- [x] Add filters for rule ID, domain, severity, language/ecosystem, and category.
-- [x] Keep a compact rule matrix above detailed remediation guidance.
-- [x] Preserve existing rule anchors or add redirects so inbound links continue
-  working after the split.
-- [x] Ensure rule counts and domain summaries are generated rather than manually
-  maintained.
-- [x] Add previous/next navigation between rule details.
-- [x] Verify every “View Guidance” link resolves to an existing rule.
+Acceptance criteria:
 
-Affected file: `docs/reference/rules.md` and its generator output structure.
+- `npm run docs:verify` fails for a deliberately broken link, invalid command,
+  invalid preset, duplicate H1, or critical accessibility regression.
+- Contributors can run the same verification locally before opening a change.
 
-## P2 — Strengthen reference content
+## P2 — Accessibility, responsive behavior, and metadata
 
-- [x] Generate the CLI reference from the actual command and flag definitions.
-- [x] Keep generated configuration defaults synchronized with the configuration
-  metadata source.
-- [x] Add clear “Required?”, “Default”, “Allowed values”, and “Example” fields to
-  each configuration reference section.
-- [x] Cross-link related concepts, such as `--ci` with `fail_on`, and baselines
-  with `--new-only`.
-- [x] Clearly label generated pages and provide a link to their source of truth.
-- [x] Explain whether code examples are complete, abbreviated, or illustrative.
-- [x] Avoid describing internal scanner implementation details as user-visible
-  guarantees unless they are covered by tests and public contracts.
+- [ ] Add `prefers-reduced-motion` handling for custom transitions and animated
+  controls.
+- [ ] Verify the header, mobile menu, sidebar, search, Config Builder, tables,
+  and code-copy controls using keyboard-only navigation.
+- [ ] Add breadcrumbs or compact section labels to deep configuration and rule
+  reference pages.
+- [ ] Add an Open Graph image and `twitter:card` metadata.
+- [ ] Add canonical URL metadata for generated documentation pages.
+- [ ] Add a concise feedback or issue-reporting link only if the destination is
+  actively maintained.
+- [ ] Confirm that dense tables and generated rule content do not cause unusable
+  horizontal or vertical navigation on mobile.
 
-## P2 — Accessibility and responsive behavior
+Acceptance criteria:
 
-- [x] Verify keyboard navigation for the header, mobile menu, sidebar, local
-  search, Config Builder, and code-copy controls.
-- [x] Check visible focus in light and dark modes.
-- [x] Confirm color contrast for brand buttons, links, callouts, tables, and code
-  blocks in both themes.
-- [x] Add accessible names and status announcements to interactive controls.
-- [x] Test dense tables at 320 px, 768 px, and desktop widths.
-- [x] Ensure the Rule Catalog does not create an unusably long mobile table of
-  contents.
-- [x] Respect reduced-motion preferences for any added transitions.
-- [x] Confirm heading order and landmark structure on every page template.
+- Reduced-motion preferences are respected.
+- Critical pages pass the selected accessibility smoke test at mobile and
+  desktop sizes.
+- Shared pages have a useful title, description, preview image, and canonical URL.
 
-## P2 — Documentation quality gates
+## P2 — Clean up website deployment documentation
 
-- [x] Add CI checks for broken internal links and missing anchors.
-- [x] Require valid frontmatter with a unique title and useful description.
-- [x] Check for exactly one H1 per content page.
-- [x] Verify fenced code blocks specify an appropriate language.
-- [x] Validate every documented CLI command against current command definitions.
-- [x] Run safe copyable examples in temporary fixtures where practical.
-- [x] Verify configuration JSON examples with `security-review config validate`.
-- [x] Check that generated rule, scanner, and configuration references are not
-  stale.
-- [x] Fail CI when the displayed release version disagrees with the release tag
-  or changelog.
-- [x] Run the VitePress production build in CI.
-- [x] Add an accessibility smoke test for the homepage, first-scan guide, CLI
-  reference, Rule Catalog, and Config Builder.
-- [x] Keep `docs/.vitepress/dist` and `docs/.vitepress/cache` untracked.
+- [ ] Replace every `file:///Users/...` link in `DEPLOYMENT.md` with a portable
+  repository-relative link.
+- [ ] Decide whether deployment documentation is an internal Indonesian guide or
+  part of the public English documentation, then apply that choice consistently.
+- [ ] Lead with the supported deployment path and move optional VPS, reverse
+  proxy, and Certbot procedures into clearly labelled advanced sections.
+- [ ] Verify Docker, Docker Compose, base-path, and update commands against the
+  files currently shipped under `website/`.
+- [ ] Remove decorative emoji where they make the operational guide harder to
+  scan.
 
-## P3 — Visual and editorial polish
+Acceptance criteria:
 
-- [x] Add small, consistent goal cards to the homepage rather than increasing
-  the number of marketing feature cards.
-- [x] Add breadcrumbs or a compact section label above deep reference pages.
-- [x] Use consistent labels for “Overview”, “Guide”, “Concept”, and “Reference”.
-- [x] Standardize table terminology, capitalization, punctuation, and emoji use.
-- [x] Add a concise “Was this page helpful?” or issue-reporting link if there is
-  a maintained feedback channel.
-- [x] Add Open Graph image metadata for shared documentation links.
-- [x] Review page titles and descriptions for search intent and remove duplicate
-  wording.
+- The guide contains no workstation-specific path.
+- A fresh reader can follow the primary deployment path from the repository
+  without guessing which option is supported.
+
+## P3 — Editorial polish
+
+- [ ] Standardize page summaries so they state audience, outcome, and scope.
+- [ ] Standardize terminology, capitalization, table headings, punctuation, and
+  callout usage.
+- [ ] Review page titles and descriptions for search intent and duplicate wording.
+- [ ] Label complete, abbreviated, and illustrative examples consistently.
+- [ ] Remove claims such as “complete”, “supported”, or “verified” unless a test
+  or public contract provides evidence.
 
 ## Completion criteria
 
-- [x] Every copyable command is supported by the current CLI and has the expected
-  exit behavior.
-- [x] Domain, severity, version, installation, and release information is
-  consistent across the website.
-- [x] All Config Builder presets and advertised actions work and export valid
-  configuration.
-- [x] A new user can move from installation to a successful local scan, then to
-  pre-commit or CI setup, without searching outside the website.
-- [x] The Rule Catalog is searchable or filterable without scrolling through a
-  single multi-thousand-line page.
-- [x] Production build, link checks, example validation, and accessibility smoke
-  tests pass in CI.
+- [ ] All P0 items and their acceptance criteria are complete.
+- [ ] Every topic has one canonical page and the sitemap contains no stale
+  `/features/*` duplicates.
+- [ ] All Config Builder presets export valid configuration.
+- [ ] The Rule Catalog is filterable and no longer depends on a single enormous
+  page.
+- [ ] Installation, first scan, CI, baseline, suppression, and scanner examples
+  match current product behavior.
+- [ ] `npm run docs:verify` passes locally and in the website build pipeline.
+- [ ] Critical pages pass link, responsive, and accessibility smoke tests.
+- [ ] Each checked item has reproducible evidence in a test, generated artifact,
+  or documented manual verification result.
