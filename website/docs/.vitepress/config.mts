@@ -67,6 +67,16 @@ function sidebarDocs(activeSection: string) {
 
 const base = process.env.VITEPRESS_BASE || '/go-code-scanner/'
 const basePrefix = base === '/' ? '' : base.replace(/\/$/, '')
+const siteOrigin = 'https://cinnamorollofficials.github.io'
+const siteBase = new URL(base, siteOrigin)
+const socialImage = new URL(`${basePrefix}/social-card.png`, siteOrigin).href
+
+function canonicalURL(relativePath: string) {
+  let route = relativePath.replace(/\.md$/, '')
+  if (route === 'index') route = ''
+  else if (route.endsWith('/index')) route = route.slice(0, -'/index'.length)
+  return new URL(route, siteBase).href
+}
 
 export default defineConfig({
   title: 'Go Code Scanner',
@@ -82,12 +92,36 @@ export default defineConfig({
     })
   },
   transformPageData(pageData) {
-    if (pageData.relativePath === 'reference/rules.md') {
+    const legacyRules = pageData.relativePath === 'reference/rules.md'
+    const canonical = legacyRules
+      ? new URL('reference/rule-catalog', siteBase).href
+      : canonicalURL(pageData.relativePath)
+    const socialTitle = pageData.relativePath === 'index.md'
+      ? 'Go Code Scanner'
+      : `${pageData.title} | Go Code Scanner`
+    const socialDescription = pageData.frontmatter.description || 'Policy-driven, offline-first security analysis CLI'
+
+    pageData.frontmatter.head = [
+      ...(pageData.frontmatter.head || []),
+      ['link', { rel: 'canonical', href: canonical }],
+      ['meta', { property: 'og:url', content: canonical }],
+      ['meta', { property: 'og:title', content: socialTitle }],
+      ['meta', { property: 'og:description', content: socialDescription }],
+      ['meta', { property: 'og:image', content: socialImage }],
+      ['meta', { property: 'og:image:width', content: '1200' }],
+      ['meta', { property: 'og:image:height', content: '630' }],
+      ['meta', { property: 'og:image:alt', content: 'Go Code Scanner documentation' }],
+      ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+      ['meta', { name: 'twitter:title', content: socialTitle }],
+      ['meta', { name: 'twitter:description', content: socialDescription }],
+      ['meta', { name: 'twitter:image', content: socialImage }]
+    ]
+
+    if (legacyRules) {
       pageData.frontmatter.search = false
       pageData.frontmatter.head = [
         ...(pageData.frontmatter.head || []),
-        ['meta', { name: 'robots', content: 'noindex,follow' }],
-        ['link', { rel: 'canonical', href: 'https://cinnamorollofficials.github.io/go-code-scanner/reference/rule-catalog' }]
+        ['meta', { name: 'robots', content: 'noindex,follow' }]
       ]
     }
     return pageData
@@ -96,8 +130,7 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${basePrefix}/favicon.svg` }],
     ['meta', { name: 'theme-color', content: '#10b981' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'Go Code Scanner' }],
-    ['meta', { property: 'og:description', content: 'Policy-driven, offline-first security analysis CLI' }]
+    ['meta', { property: 'og:site_name', content: 'Go Code Scanner Documentation' }]
   ],
   themeConfig: {
     logo: '/logo.svg',

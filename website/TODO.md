@@ -219,11 +219,11 @@ Acceptance criteria:
   controls.
 - [x] Verify the header, mobile menu, sidebar, search, Config Builder, tables,
   and code-copy controls using keyboard-only navigation.
-- [ ] Add breadcrumbs or compact section labels to deep configuration and rule
+- [x] Add breadcrumbs or compact section labels to deep configuration and rule
   reference pages.
-- [ ] Add an Open Graph image and `twitter:card` metadata.
-- [ ] Add canonical URL metadata for generated documentation pages.
-- [ ] Add a concise feedback or issue-reporting link only if the destination is
+- [x] Add an Open Graph image and `twitter:card` metadata.
+- [x] Add canonical URL metadata for generated documentation pages.
+- [x] Add a concise feedback or issue-reporting link only if the destination is
   actively maintained.
 - [x] Confirm that dense tables and generated rule content do not cause unusable
   horizontal or vertical navigation on mobile.

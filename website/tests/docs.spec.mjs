@@ -30,6 +30,9 @@ for (const [path, heading] of criticalPages) {
     await page.goto(path)
     await expect(page.locator('h1')).toHaveCount(1)
     await expect(page.locator('h1')).toContainText(heading)
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1)
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /\/social-card\.png$/)
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image')
     const violations = await accessibilityViolations(page)
     expect(violations.length, violations.map((violation) => `${violation.id}: ${violation.help} (${violation.nodes.length} elements)`).join('\n')).toBe(0)
   })
@@ -53,6 +56,16 @@ test('Rule Catalog filters and links to focused guidance', async ({ page }) => {
   await page.getByRole('link', { name: 'mock-token' }).click()
   await expect(page.locator('h1')).toContainText('mock-token')
   await expect(page.getByRole('link', { name: /browser-token-storage/ })).toBeVisible()
+})
+
+test('generated reference pages provide breadcrumbs, canonical metadata, and feedback', async ({ page }) => {
+  await page.goto('reference/rules/mock-token')
+  const breadcrumb = page.getByRole('navigation', { name: 'Breadcrumb' })
+  await expect(breadcrumb.getByRole('link', { name: 'Reference', exact: true })).toHaveAttribute('href', '/go-code-scanner/reference/')
+  await expect(breadcrumb.getByRole('link', { name: 'Rule Catalog' })).toHaveAttribute('href', '/go-code-scanner/reference/rule-catalog')
+  await expect(breadcrumb.getByText('mock-token rule', { exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://cinnamorollofficials.github.io/go-code-scanner/reference/rules/mock-token')
+  await expect(page.getByRole('link', { name: 'Report a documentation issue' })).toHaveAttribute('href', /issues\/new\?title=Documentation%3A%20mock-token%20rule/)
 })
 
 for (const width of [320, 768, 1440]) {
