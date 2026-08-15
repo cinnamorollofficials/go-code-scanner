@@ -11,6 +11,11 @@ var changelogVersion = regexp.MustCompile(`^## \[([0-9]+)\.([0-9]+)\.([0-9]+)\] 
 
 func ValidateChangelog(data []byte) error {
 	text := strings.ReplaceAll(string(data), "\r\n", "\n")
+	if strings.HasPrefix(text, "---\n") {
+		if endIdx := strings.Index(text[4:], "\n---\n"); endIdx != -1 {
+			text = strings.TrimLeft(text[4+endIdx+5:], " \t\r\n")
+		}
+	}
 	if !strings.HasPrefix(text, "# Changelog\n") {
 		return fmt.Errorf("changelog must start with # Changelog")
 	}

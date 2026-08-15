@@ -703,7 +703,7 @@ func runReleaseArchive(args []string, stdout, stderr io.Writer) int {
 func runChangelogValidate(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("release changelog validate", flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	path := flags.String("file", "CHANGELOG.md", "changelog path")
+	path := flags.String("file", "website/docs/changelog.md", "changelog path")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}

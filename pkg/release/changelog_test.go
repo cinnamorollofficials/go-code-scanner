@@ -6,7 +6,7 @@ import (
 )
 
 func TestRepositoryChangelogContract(t *testing.T) {
-	data, err := os.ReadFile("../../CHANGELOG.md")
+	data, err := os.ReadFile("../../website/docs/changelog.md")
 	if err != nil {
 		t.Fatal(err)
 	}
