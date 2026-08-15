@@ -46,13 +46,13 @@ Acceptance criteria:
 
 ### Suppressions
 
-- [ ] In `docs/guides/suppressions.md`, mark `--reason` and `--expires` as
+- [x] In `docs/guides/suppressions.md`, mark `--reason` and `--expires` as
   required rather than optional.
-- [ ] Remove the documented `// nolint:...` inline suppression syntax unless the
+- [x] Remove the documented `// nolint:...` inline suppression syntax unless the
   CLI implements and tests it as a public feature.
-- [ ] Verify the add, list, remove, and expiry examples against the current
-  suppression command behavior.
-- [ ] Explain the supported suppression lifecycle without suggesting an
+- [x] Verify add, dry-run, duplicate detection, and expiry behavior; clearly
+  state that the CLI does not currently provide list or remove subcommands.
+- [x] Explain the supported suppression lifecycle without suggesting an
   unsupported source-comment workflow.
 
 Acceptance criteria:
