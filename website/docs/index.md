@@ -60,26 +60,14 @@ security-review scan
 ```
 
 ::: details Expected Terminal Output
+The following output was captured from a minimal Go fixture using the default
+scan settings. Only the temporary absolute report path has been shortened.
+
 ```text
-Code review: my-project (full)
-  scanner go-sec-core   passed
-  scanner go-sql-taint  passed
-
-Findings: 3 | critical=0 high=1 medium=1 low=1 | suppressed=0 stale=0
-
-[HIGH] security/hardcoded-credentials
-  config/secrets.go:12 Hardcoded API token detected in configuration assignment
-  Fix: Move sensitive credentials to environment variables or secret manager
-
-[MEDIUM] security/sql-string-format
-  pkg/db/user.go:45 Dynamic SQL query constructed via fmt.Sprintf instead of prepared statement
-  Fix: Use parameterized placeholders (?, $1) with db.QueryContext
-
-[LOW] governance/merge-conflict-marker
-  main.go:88 Unresolved Git conflict marker leftover in source file
-  Fix: Resolve merge conflict markers before committing
-
-Report: security_findings.json
+Code review: security-review (full)
+  scanner pattern          clean
+Findings: 0 | critical=0 high=0 medium=0 low=0 | suppressed=0 stale=0
+Report: /path/to/my-project/security_findings.json
 ```
 :::
 

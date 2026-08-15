@@ -45,5 +45,9 @@ Verify release integrity using checksums:
 
 ```sh
 # Verify release archive checksums
-security-review release checksums verify --checksums SHA256SUMS --directory dist/
+security-review release checksums verify --manifest SHA256SUMS --directory dist/
 ```
+
+The command returns exit code `0` only when every archive listed in the manifest
+matches its SHA-256 digest. A mismatch returns exit code `1`; invalid arguments
+or an unreadable manifest return exit code `2`.

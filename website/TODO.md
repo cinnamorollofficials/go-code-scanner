@@ -29,13 +29,13 @@ configuration examples, or accessibility behavior are correct.
 
 ### Installation and command examples
 
-- [ ] In `docs/getting-started/installation.md`, replace the unsupported
+- [x] In `docs/getting-started/installation.md`, replace the unsupported
   checksum verification flag `--checksums` with the current `--manifest` form.
-- [ ] Run every copyable installation command against the current CLI help and
+- [x] Run every copyable installation command against the current CLI help and
   release artifact layout.
-- [ ] Replace handwritten command output with output captured from a stable test
+- [x] Replace handwritten command output with output captured from a stable test
   fixture, or clearly label it as illustrative.
-- [ ] Replace the homepage's fictional or stale scanner names with output
+- [x] Replace the homepage's fictional or stale scanner names with output
   produced by the default scan profile.
 
 Acceptance criteria:
