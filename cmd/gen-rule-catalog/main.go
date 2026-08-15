@@ -325,7 +325,7 @@ tx.Commit()`,
 		count := len(grouped[info.Domain])
 		icon := strings.Fields(info.Title)[0]
 		titleWithoutIcon := strings.TrimSpace(strings.TrimPrefix(info.Title, icon))
-		buf.WriteString(fmt.Sprintf("| **[%s](#%s)** | %s | %d | %s |\n", titleWithoutIcon, strings.ToLower(strings.ReplaceAll(titleWithoutIcon, " ", "-")), count, info.Description))
+		buf.WriteString(fmt.Sprintf("| **[%s](#%s)** | %s | %d | %s |\n", titleWithoutIcon, strings.ToLower(strings.ReplaceAll(titleWithoutIcon, " ", "-")), icon, count, info.Description))
 	}
 	buf.WriteString("\n---\n\n")
 

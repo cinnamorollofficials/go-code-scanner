@@ -202,74 +202,74 @@ Affected file: `docs/reference/rules.md` and its generator output structure.
 
 ## P2 — Strengthen reference content
 
-- [ ] Generate the CLI reference from the actual command and flag definitions.
-- [ ] Keep generated configuration defaults synchronized with the configuration
+- [x] Generate the CLI reference from the actual command and flag definitions.
+- [x] Keep generated configuration defaults synchronized with the configuration
   metadata source.
-- [ ] Add clear “Required?”, “Default”, “Allowed values”, and “Example” fields to
+- [x] Add clear “Required?”, “Default”, “Allowed values”, and “Example” fields to
   each configuration reference section.
-- [ ] Cross-link related concepts, such as `--ci` with `fail_on`, and baselines
+- [x] Cross-link related concepts, such as `--ci` with `fail_on`, and baselines
   with `--new-only`.
-- [ ] Clearly label generated pages and provide a link to their source of truth.
-- [ ] Explain whether code examples are complete, abbreviated, or illustrative.
-- [ ] Avoid describing internal scanner implementation details as user-visible
+- [x] Clearly label generated pages and provide a link to their source of truth.
+- [x] Explain whether code examples are complete, abbreviated, or illustrative.
+- [x] Avoid describing internal scanner implementation details as user-visible
   guarantees unless they are covered by tests and public contracts.
 
 ## P2 — Accessibility and responsive behavior
 
-- [ ] Verify keyboard navigation for the header, mobile menu, sidebar, local
+- [x] Verify keyboard navigation for the header, mobile menu, sidebar, local
   search, Config Builder, and code-copy controls.
-- [ ] Check visible focus in light and dark modes.
-- [ ] Confirm color contrast for brand buttons, links, callouts, tables, and code
+- [x] Check visible focus in light and dark modes.
+- [x] Confirm color contrast for brand buttons, links, callouts, tables, and code
   blocks in both themes.
-- [ ] Add accessible names and status announcements to interactive controls.
-- [ ] Test dense tables at 320 px, 768 px, and desktop widths.
-- [ ] Ensure the Rule Catalog does not create an unusably long mobile table of
+- [x] Add accessible names and status announcements to interactive controls.
+- [x] Test dense tables at 320 px, 768 px, and desktop widths.
+- [x] Ensure the Rule Catalog does not create an unusably long mobile table of
   contents.
-- [ ] Respect reduced-motion preferences for any added transitions.
-- [ ] Confirm heading order and landmark structure on every page template.
+- [x] Respect reduced-motion preferences for any added transitions.
+- [x] Confirm heading order and landmark structure on every page template.
 
 ## P2 — Documentation quality gates
 
-- [ ] Add CI checks for broken internal links and missing anchors.
-- [ ] Require valid frontmatter with a unique title and useful description.
-- [ ] Check for exactly one H1 per content page.
-- [ ] Verify fenced code blocks specify an appropriate language.
-- [ ] Validate every documented CLI command against current command definitions.
-- [ ] Run safe copyable examples in temporary fixtures where practical.
-- [ ] Verify configuration JSON examples with `security-review config validate`.
-- [ ] Check that generated rule, scanner, and configuration references are not
+- [x] Add CI checks for broken internal links and missing anchors.
+- [x] Require valid frontmatter with a unique title and useful description.
+- [x] Check for exactly one H1 per content page.
+- [x] Verify fenced code blocks specify an appropriate language.
+- [x] Validate every documented CLI command against current command definitions.
+- [x] Run safe copyable examples in temporary fixtures where practical.
+- [x] Verify configuration JSON examples with `security-review config validate`.
+- [x] Check that generated rule, scanner, and configuration references are not
   stale.
-- [ ] Fail CI when the displayed release version disagrees with the release tag
+- [x] Fail CI when the displayed release version disagrees with the release tag
   or changelog.
-- [ ] Run the VitePress production build in CI.
-- [ ] Add an accessibility smoke test for the homepage, first-scan guide, CLI
+- [x] Run the VitePress production build in CI.
+- [x] Add an accessibility smoke test for the homepage, first-scan guide, CLI
   reference, Rule Catalog, and Config Builder.
-- [ ] Keep `docs/.vitepress/dist` and `docs/.vitepress/cache` untracked.
+- [x] Keep `docs/.vitepress/dist` and `docs/.vitepress/cache` untracked.
 
 ## P3 — Visual and editorial polish
 
-- [ ] Add small, consistent goal cards to the homepage rather than increasing
+- [x] Add small, consistent goal cards to the homepage rather than increasing
   the number of marketing feature cards.
-- [ ] Add breadcrumbs or a compact section label above deep reference pages.
-- [ ] Use consistent labels for “Overview”, “Guide”, “Concept”, and “Reference”.
-- [ ] Standardize table terminology, capitalization, punctuation, and emoji use.
-- [ ] Add a concise “Was this page helpful?” or issue-reporting link if there is
+- [x] Add breadcrumbs or a compact section label above deep reference pages.
+- [x] Use consistent labels for “Overview”, “Guide”, “Concept”, and “Reference”.
+- [x] Standardize table terminology, capitalization, punctuation, and emoji use.
+- [x] Add a concise “Was this page helpful?” or issue-reporting link if there is
   a maintained feedback channel.
-- [ ] Add Open Graph image metadata for shared documentation links.
-- [ ] Review page titles and descriptions for search intent and remove duplicate
+- [x] Add Open Graph image metadata for shared documentation links.
+- [x] Review page titles and descriptions for search intent and remove duplicate
   wording.
 
 ## Completion criteria
 
-- [ ] Every copyable command is supported by the current CLI and has the expected
+- [x] Every copyable command is supported by the current CLI and has the expected
   exit behavior.
-- [ ] Domain, severity, version, installation, and release information is
+- [x] Domain, severity, version, installation, and release information is
   consistent across the website.
-- [ ] All Config Builder presets and advertised actions work and export valid
+- [x] All Config Builder presets and advertised actions work and export valid
   configuration.
-- [ ] A new user can move from installation to a successful local scan, then to
+- [x] A new user can move from installation to a successful local scan, then to
   pre-commit or CI setup, without searching outside the website.
-- [ ] The Rule Catalog is searchable or filterable without scrolling through a
+- [x] The Rule Catalog is searchable or filterable without scrolling through a
   single multi-thousand-line page.
-- [ ] Production build, link checks, example validation, and accessibility smoke
+- [x] Production build, link checks, example validation, and accessibility smoke
   tests pass in CI.

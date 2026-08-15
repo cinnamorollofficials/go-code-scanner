@@ -11,12 +11,12 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 | Domain | Icon | Total Rules | Scope & Focus |
 | :--- | :---: | :---: | :--- |
-| **[Security Rules](#security-rules)** | %!s(int=40) | %!d(string=Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws.) | %!s(MISSING) |
-| **[Hardening Rules](#hardening-rules)** | %!s(int=6) | %!d(string=Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings.) | %!s(MISSING) |
-| **[Reliability Rules](#reliability-rules)** | %!s(int=16) | %!d(string=Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes.) | %!s(MISSING) |
-| **[Quality Rules](#quality-rules)** | %!s(int=5) | %!d(string=Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements.) | %!s(MISSING) |
-| **[Supply Chain Rules](#supply-chain-rules)** | %!s(int=0) | %!d(string=Rules auditing third-party dependencies, version pins, package vulnerabilities, and license restrictions.) | %!s(MISSING) |
-| **[Governance Rules](#governance-rules)** | %!s(int=4) | %!d(string=Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints.) | %!s(MISSING) |
+| **[Security Rules](#security-rules)** | 🔒 | 40 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
+| **[Hardening Rules](#hardening-rules)** | 🛡️ | 6 | Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings. |
+| **[Reliability Rules](#reliability-rules)** | ⚡ | 16 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
+| **[Quality Rules](#quality-rules)** | 🧹 | 5 | Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements. |
+| **[Supply Chain Rules](#supply-chain-rules)** | 📦 | 0 | Rules auditing third-party dependencies, version pins, package vulnerabilities, and license restrictions. |
+| **[Governance Rules](#governance-rules)** | 📜 | 4 | Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints. |
 
 ---
 

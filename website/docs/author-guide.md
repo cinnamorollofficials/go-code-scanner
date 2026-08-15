@@ -1,6 +1,9 @@
-# Documentation Author Guide
+---
+title: Documentation Author Guide
+description: Standards, conventions, and style guidelines for contributing content to Go Code Scanner documentation.
+---
 
-This guide outlines standards and conventions for contributing content to the **Go Code Scanner** documentation site.
+# Documentation Author Guide
 
 ## Frontmatter & Headings
 

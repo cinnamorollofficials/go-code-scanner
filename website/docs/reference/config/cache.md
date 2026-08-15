@@ -13,9 +13,9 @@ Configure local AST and scan artifact caching parameters.
 {
   "cache": {
     "enabled": true,
-    "directory": ".cache/security-review",
+    "directory": ".go-code-scanner-cache",
     "max_age": "168h",
-    "max_bytes": 1073741824
+    "max_bytes": 104857600
   }
 }
 ```
