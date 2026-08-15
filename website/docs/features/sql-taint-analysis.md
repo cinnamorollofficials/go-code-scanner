@@ -160,18 +160,18 @@ To explicitly configure the `sqltaint` scanner in your `security-review.json` fi
 
 ### CLI Execution Options
 
-Run taint analysis standalone or across all scanners:
+Run taint analysis as part of the standard scanning workflow:
 
 ::: code-group
-```bash [Full Workspace Scan]
-security-review scan --mode=full
+```bash [Standard Scan]
+security-review scan
 ```
 
-```bash [Targeted SQL Taint Scan]
-security-review scan --scanners=sqltaint
+```bash [Deep AST & SQL Taint Scan]
+security-review scan --profile full --verbose
 ```
 
 ```bash [Scan with Auto-Remediation]
-security-review scan --scanners=sqltaint --fix
+security-review scan --fix
 ```
 :::

@@ -16,20 +16,20 @@ security-review [command] [flags]
 | Command | Description |
 | :--- | :--- |
 | **[`scan`](#scan)** | Runs security scans against Go, configuration, and frontend source files. |
-| **[`config`](#config)** | Validates `security-review.json` syntax and constraint rules. |
-| **[`hook`](#hook)** | Installs, inspects, runs, and uninstalls git hooks (`pre-commit`, `commit-msg`, `pre-push`). |
-| **[`baseline`](#baseline)** | Manages finding baseline snapshots (`create`, `check`). |
-| **[`suppress`](#suppress)** | Manages rule suppression rules (`add`, `list`, `check`). |
-| **[`cache`](#cache)** | Inspects AST cache status and clears cached scan artifacts (`status`, `clear`). |
-| **[`release`](#release)** | Verifies release builds and produces release notes. |
-| **[`upgrade`](#upgrade)** | Checks for available software updates. |
+| **[`config`](#config)** | Validates `security-review.json` syntax and constraint rules (`config validate <path>`). |
+| **[`hook`](#hook)** | Installs, inspects, runs, and uninstalls git hooks (`install`, `uninstall`, `status`, `run`). |
+| **[`baseline`](#baseline)** | Manages finding baseline snapshots (`create`, `update`, `status`). |
+| **[`suppress`](#suppress)** | Adds reviewed rule suppressions to `.security-ignore` (`add`). |
+| **[`cache`](#cache)** | Inspects AST cache statistics and cleans cached scan artifacts (`stats`, `clean`). |
+| **[`release`](#release)** | Verifies release artifacts, checksums, and provenance manifests. |
+| **[`upgrade`](#upgrade)** | Checks for compatibility contract migrations (`upgrade check`). |
 | **[`version`](#version)** | Prints binary version, commit SHA, and target architecture. |
 
 ---
 
 ## `scan`
 
-Executes security scanning rules across project files.
+Executes security scanning rules across project files. A full working-tree scan is performed by default when neither `--staged` nor `--changed` is supplied.
 
 ```sh
 security-review scan [flags]
@@ -41,31 +41,31 @@ security-review scan [flags]
 | :--- | :--- | :--- | :--- |
 | `--config <path>` | `string` | `""` | Path to JSON configuration file. |
 | `--root <dir>` | `string` | `"."` | Target project root directory. |
-| `--output <path>` | `string` | `""` | Path to write scan report output. |
+| `--output <path>` | `string` | `""` | Path to write scan report artifact (defaults to `security_findings.json` in config). |
 | `--changed` | `bool` | `false` | Restricts discovery to files modified relative to HEAD. |
 | `--staged` | `bool` | `false` | Restricts discovery to files staged in Git index snapshot. |
-| `--ci` | `bool` | `false` | Enforces policy threshold exit code `1` on findings. |
-| `--fail-on <sev>` | `string` | `""` | Minimum severity threshold (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`). |
+| `--ci` | `bool` | `false` | Returns exit code `1` when active findings meet the failure threshold. |
+| `--fail-on <sev>` | `string` | `""` | Minimum severity threshold (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`). Requires `--ci` to fail the process. |
 | `--profile <name>` | `string` | `""` | Performance profile (`fast`, `standard`, `full`, `frontend`). |
 | `--scope <name>` | `string` | `""` | Client scope filter (`client`, `server`, `all`). |
-| `--format <type>` | `string` | `"json"` | Report format (`json`, `sarif`, `junit`, `terminal`). |
+| `--format <type>` | `string` | `"json"` | Report artifact format (`json`, `sarif`, `junit`). Terminal output is printed unless `--quiet`. |
 | `--baseline <path>`| `string` | `""` | Path to baseline JSON snapshot file. |
-| `--new-only` | `bool` | `false` | Applies CI policy failure only to findings absent from baseline. |
-| `--fix` | `bool` | `false` | Applies deterministic auto-fixes directly to source code. |
-| `--dry-run` | `bool` | `false` | Previews `--fix` modifications without writing files. |
+| `--new-only` | `bool` | `false` | Applies CI policy evaluation only to findings absent from baseline. |
+| `--fix` | `bool` | `false` | Applies deterministic auto-fixes directly to source code (full scan mode only). |
+| `--dry-run` | `bool` | `false` | Previews `--fix` modifications without writing files (requires `--fix`). |
 | `--explain <rule>` | `string` | `""` | Prints remediation guidance for a specific rule ID and exits. |
 | `--quiet` | `bool` | `false` | Suppresses terminal summary output. |
-| `--verbose` | `bool` | `false` | Prints scanner execution timing and metadata. |
+| `--verbose` | `bool` | `false` | Prints scanner execution timing, capabilities, and metadata. |
 | `--color <mode>` | `string` | `"auto"` | Terminal color mode (`auto`, `always`, `never`). |
 
 ---
 
 ## `config`
 
-Validates configuration syntax and field constraints.
+Validates configuration syntax and field constraints against the canonical schema.
 
 ```sh
-security-review config validate <file>
+security-review config validate <path>
 ```
 
 ---
@@ -75,41 +75,64 @@ security-review config validate <file>
 Manages git hook installation and pre-commit lifecycle.
 
 ```sh
-security-review hook <subcommand>
+security-review hook <install|uninstall|status|run> [event] [--root <dir>]
 ```
 
-### Subcommands
+Supported hook events: `pre-commit` (default), `commit-msg`, `pre-push`.
 
-- **`install`**: Installs `security-review` pre-commit hook into `.git/hooks/`.
-- **`status`**: Displays hook installation state and active `core.hooksPath`.
-- **`run`**: Manually executes pre-commit hook logic against staged index.
-- **`uninstall`**: Removes `security-review` managed git hook cleanly.
+```sh
+# Install pre-commit hook into .git/hooks/
+security-review hook install pre-commit
+
+# Inspect hook status and active installation state
+security-review hook status pre-commit
+
+# Execute pre-commit checks against staged index
+security-review hook run pre-commit
+
+# Remove managed hook cleanly
+security-review hook uninstall pre-commit
+```
 
 ---
 
 ## `baseline`
 
-Manages legacy finding baseline snapshots.
+Manages finding baseline snapshots for gradual adoption in existing repositories.
 
 ```sh
-# Generate baseline snapshot
-security-review baseline create --output .security-baseline.json
+# Generate a new baseline from a scan report
+security-review baseline create --report security_findings.json [--baseline .security-baseline.json] [--dry-run]
 
-# Check baseline validity
-security-review baseline check .security-baseline.json
+# Update an existing baseline from a new scan report
+security-review baseline update --report security_findings.json [--baseline .security-baseline.json] [--accept-resolved] [--dry-run]
+
+# Check status of findings against baseline
+security-review baseline status --report security_findings.json [--baseline .security-baseline.json]
 ```
 
 ---
 
 ## `suppress`
 
-Manages false-positive and risk-accepted rule suppressions.
+Adds reviewed rule suppressions to the suppression file (`.security-ignore`).
 
 ```sh
-security-review suppress add --rule hardcoded-credential --reason "Fixture"
-security-review suppress list
-security-review suppress check
+security-review suppress add --file <path> --reason <text> --expires <YYYY-MM-DD> [options]
 ```
+
+### Options
+
+- `--file <path>`: *(Required)* Finding file path to suppress.
+- `--reason <text>`: Documented audit justification for suppression.
+- `--expires <YYYY-MM-DD>`: Expiration date for the suppression.
+- `--line <int>`: Target line number (`-1` for any line in file).
+- `--rule <id>`: Specific rule ID to suppress.
+- `--fingerprint <hash>`: Specific finding fingerprint.
+- `--ticket <id>`: Security review or tracking ticket reference.
+- `--approved-by <name>`: Approver identity.
+- `--suppression-file <path>`: Suppression JSON file (default `.security-ignore`).
+- `--dry-run`: Previews suppression change without writing to disk.
 
 ---
 
@@ -118,8 +141,11 @@ security-review suppress check
 Inspects and purges local AST cache storage.
 
 ```sh
-security-review cache status
-security-review cache clear
+# View cache entry count and disk usage
+security-review cache stats [--dir <path>]
+
+# Purge cached ASTs and scan artifacts
+security-review cache clean [--dir <path>]
 ```
 
 ---
@@ -127,8 +153,8 @@ security-review cache clear
 ## `release` & `upgrade`
 
 ```sh
-# Check available version upgrades
-security-review upgrade --check
+# Check compatibility contract changes against a previous schema
+security-review upgrade check [--contract <path>]
 
 # Print version and build details
 security-review version
@@ -138,6 +164,10 @@ security-review version
 
 ## Exit Codes
 
-- **`0`**: Scan/command succeeded without policy failures.
-- **`1`**: Findings present meeting or exceeding enforced `--ci` / `--fail-on` policy thresholds.
-- **`2`**: Invalid CLI flags, missing required tool executables, or fatal configuration error.
+`security-review` returns deterministic exit codes:
+
+- **`0`**: Scan succeeded without policy failures, or command executed successfully.
+- **`1`**: Policy threshold violated when `--ci` is active (findings meet or exceed threshold), or release/contract verification mismatch.
+- **`2`**: Invalid CLI flags, missing required arguments, or invalid configuration syntax.
+- **`3`**: Operational failure (I/O error, file permission, git repository error, or cache failure).
+

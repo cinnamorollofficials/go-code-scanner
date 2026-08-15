@@ -15,7 +15,11 @@ When introducing `security-review` into an existing codebase, follow this 3-step
 Generate a baseline snapshot to record pre-existing technical debt:
 
 ```sh
-security-review scan --format json --output .security-baseline.json
+# 1. Run full scan and save findings report
+security-review scan --output security_findings.json
+
+# 2. Create baseline snapshot from report
+security-review baseline create --report security_findings.json --baseline .security-baseline.json
 ```
 
 ### Step 2: Enforce Policy on New Code Only
@@ -26,10 +30,14 @@ security-review scan --ci --baseline .security-baseline.json --new-only
 ```
 
 ### Step 3: Progressive Remediation & Suppressions
-Audit baseline issues over time. For legitimate false positives or risk-accepted exceptions, record explicit suppressions in `.security-suppress.json`:
+Audit baseline issues over time. For legitimate false positives or risk-accepted exceptions, record explicit suppressions in `.security-ignore`:
 
 ```sh
-security-review suppress add --rule hardcoded-credential --reason "Synthetic unit test fixture"
+security-review suppress add \
+  --file pkg/secrets/fixture_test.go \
+  --rule hardcoded-credential \
+  --reason "Synthetic unit test fixture" \
+  --expires 2026-12-31
 ```
 
 ---
@@ -53,7 +61,7 @@ security-review suppress add --rule hardcoded-credential --reason "Synthetic uni
 - **Symptom**: Inconsistent scan results across local runs.
 - **Remediation**: Purge local AST cache storage:
   ```sh
-  security-review cache clear
+  security-review cache clean
   ```
 
 ### 5. Schema Migration & Upgrade Verification
@@ -61,5 +69,5 @@ security-review suppress add --rule hardcoded-credential --reason "Synthetic uni
 - **Remediation**: Validate configuration syntax against current schema version:
   ```sh
   security-review config validate security-review.json
-  security-review upgrade --check
+  security-review upgrade check
   ```

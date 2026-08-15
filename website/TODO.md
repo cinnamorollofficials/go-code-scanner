@@ -15,28 +15,28 @@ Priority legend:
 
 ### Canonical CLI commands and behavior
 
-- [ ] Audit every shell command in `docs/**/*.md` against the current
+- [x] Audit every shell command in `docs/**/*.md` against the current
   `security-review` CLI.
-- [ ] Replace `--mode staged` with `--staged` and `--mode changed` with
+- [x] Replace `--mode staged` with `--staged` and `--mode changed` with
   `--changed`; document that a full scan is the default when neither flag is
   supplied.
-- [ ] Remove or replace unsupported examples using `--scanners=sqltaint`.
-- [ ] Remove `--format terminal`; explain that terminal output is shown unless
+- [x] Remove or replace unsupported examples using `--scanners=sqltaint`.
+- [x] Remove `--format terminal`; explain that terminal output is shown unless
   `--quiet`, while `--format` selects the artifact format.
-- [ ] Clarify that `--fail-on` changes the threshold but exit code `1` still
+- [x] Clarify that `--fail-on` changes the threshold but exit code `1` still
   requires `--ci`.
-- [ ] Correct baseline commands to use `create`, `update`, and `status` with the
+- [x] Correct baseline commands to use `create`, `update`, and `status` with the
   required `--report` and `--baseline` arguments.
-- [ ] Correct suppression examples to use the supported `suppress add` fields,
+- [x] Correct suppression examples to use the supported `suppress add` fields,
   including file, reason, and expiry.
-- [ ] Replace unsupported cache commands with `cache stats` and `cache clean`.
-- [ ] Replace `upgrade --check` with `upgrade check`.
-- [ ] Correct hook examples so each command includes a supported hook event.
-- [ ] Remove references to unsupported hook flags such as `--overwrite`.
-- [ ] Document all exit codes consistently: `0` success/allowed, `1` policy or
+- [x] Replace unsupported cache commands with `cache stats` and `cache clean`.
+- [x] Replace `upgrade --check` with `upgrade check`.
+- [x] Correct hook examples so each command includes a supported hook event.
+- [x] Remove references to unsupported hook flags such as `--overwrite`.
+- [x] Document all exit codes consistently: `0` success/allowed, `1` policy or
   verification mismatch, `2` invalid input/configuration, and `3` operational
   failure.
-- [ ] Update the sample terminal output so its wording and layout match actual
+- [x] Update the sample terminal output so its wording and layout match actual
   `security-review scan` output.
 
 Affected pages:
@@ -54,30 +54,30 @@ Affected pages:
 
 ### Canonical product terminology
 
-- [ ] Use the canonical finding domains everywhere: `quality`, `reliability`,
+- [x] Use the canonical finding domains everywhere: `quality`, `reliability`,
   `hardening`, `security`, `supply_chain`, and `governance`.
-- [ ] Use only supported severities: `CRITICAL`, `HIGH`, `MEDIUM`, and `LOW`.
-- [ ] Remove `INFO` from configuration references, the CLI reference, and the
+- [x] Use only supported severities: `CRITICAL`, `HIGH`, `MEDIUM`, and `LOW`.
+- [x] Remove `INFO` from configuration references, the CLI reference, and the
   interactive builder.
-- [ ] Distinguish domains from categories and capabilities. Terms such as
+- [x] Distinguish domains from categories and capabilities. Terms such as
   “Secrets”, “SAST”, “Frontend”, and “Vulnerabilities” may describe capabilities
   but must not be presented as policy domains.
-- [ ] Use **Go Code Scanner** for the product and `security-review` for the CLI,
+- [x] Use **Go Code Scanner** for the product and `security-review` for the CLI,
   following `docs/author-guide.md`.
 
 ### Installation, release, and trust information
 
-- [ ] Change the Go prerequisite in `docs/getting-started/installation.md` to the
+- [x] Change the Go prerequisite in `docs/getting-started/installation.md` to the
   version declared by the repository's `go.mod`.
-- [ ] Replace the hard-coded `v1.0.0` navigation label with the actual released
+- [x] Replace the hard-coded `v1.0.0` navigation label with the actual released
   version, or display `Pre-release`/`Unreleased` until a stable tag exists.
-- [ ] Ensure release-download commands use artifact names that are actually
+- [x] Ensure release-download commands use artifact names that are actually
   published; hide the precompiled-binary path until artifacts exist.
-- [ ] Keep `docs/changelog.md`, the navigation version, and installation page in
+- [x] Keep `docs/changelog.md`, the navigation version, and installation page in
   sync.
-- [ ] Link the footer's MIT License statement to an actual license document, or
+- [x] Link the footer's MIT License statement to an actual license document, or
   remove the claim until that document exists.
-- [ ] Replace the vague security-reporting instruction with a concrete private
+- [x] Replace the vague security-reporting instruction with a concrete private
   reporting URL or contact method.
 
 ## P0 — Make the Config Builder truthful and functional

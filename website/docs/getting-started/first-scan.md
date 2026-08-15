@@ -18,41 +18,57 @@ security-review scan
 The scanner automatically discovers Go packages, configuration files, supply chain dependencies, and frontend assets.
 
 ## Interpreting Scan Results
+ 
+Scan output displays scanner execution states, aggregate summary, and finding details:
+ 
+```text
+Code review: my-project (full)
+  scanner go-sec-core   passed
+  scanner go-sql-taint  passed
 
-Scan output is structured by severity and domain:
+Findings: 3 | critical=0 high=1 medium=1 low=1 | suppressed=0 stale=0
 
+[HIGH] security/hardcoded-credentials
+  config/secrets.go:12 Hardcoded API token detected in configuration assignment
+  Fix: Move sensitive credentials to environment variables or secret manager
+
+[MEDIUM] security/sql-string-format
+  pkg/db/user.go:45 Dynamic SQL query constructed via fmt.Sprintf instead of prepared statement
+  Fix: Use parameterized placeholders (?, $1) with db.QueryContext
+
+[LOW] governance/merge-conflict-marker
+  main.go:88 Unresolved Git conflict marker leftover in source file
+  Fix: Resolve merge conflict markers before committing
+
+Report: security_findings.json
 ```
-[HIGH] hardcoded-credential: Hardcoded credential string identified in config/secrets.go:12
-[MEDIUM] sql-string-format: Unsanitized SQL query format string in pkg/db/user.go:45
-[LOW] merge-conflict-marker: Git merge conflict marker left in repository root
-
-Scan Summary: 3 finding(s) across 3 domain(s) [1 High, 1 Medium, 1 Low]
-```
-
+ 
 ## Exit Code Behavior & Policy Enforcement
-
+ 
 `security-review` uses deterministic exit codes:
-
-- **`0`**: Scan succeeded without violating enforced policy thresholds.
-- **`1`**: Policy threshold violated (e.g. `--ci` flag active, or `--fail-on` threshold met).
-- **`2`**: Invalid CLI flags, missing configuration file, or execution failure.
-
+ 
+- **`0`**: Scan completed without violating enforced CI policy thresholds, or run in local mode without `--ci`.
+- **`1`**: Policy threshold violated when `--ci` is active (findings meet or exceed `--fail-on` threshold).
+- **`2`**: Invalid CLI flags, missing required arguments, or invalid configuration.
+- **`3`**: Operational failure (I/O error, file permission, git repository error, or cache failure).
+ 
 ::: important Default Behavior vs. CI Policy Enforcement
-By default in local interactive mode, running `security-review scan` prints findings to terminal stdout and returns **exit code `0`** to avoid blocking interactive local iteration.
-
-To enforce strict blocking in CI/CD pipelines, pass the **`--ci`** flag or specify **`--fail-on HIGH`**:
-
+By default in local interactive mode, running `security-review scan` prints findings to stdout, writes the report artifact, and returns **exit code `0`** to avoid breaking local developer workflows.
+ 
+To enforce strict failure in CI/CD pipelines, pass the **`--ci`** flag:
+ 
 ```sh
-# Enforces exit code 1 if ANY findings exist
+# Fails with exit code 1 if ANY active findings exist
 security-review scan --ci
 
-# Enforces exit code 1 ONLY if High or Critical findings exist
-security-review scan --fail-on HIGH
+# Fails with exit code 1 ONLY if High or Critical findings exist
+security-review scan --ci --fail-on HIGH
 ```
+Note: `--fail-on` configures the severity threshold, but process exit code `1` still requires `--ci`.
 :::
-
+ 
 ## Next Steps
-
+ 
 - Explore [Scan Execution & Policy](/features/scan-execution-and-policy) to configure scan modes (staged, full, changed).
 - Configure suppressions and baselines in [Reports & Finding Lifecycle](/features/reports-and-finding-lifecycle).
 - View complete command flag details in the [CLI Reference](/reference/cli).

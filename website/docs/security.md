@@ -157,5 +157,10 @@ GOCACHE=/tmp/go-code-scanner-gocache ./scripts/release-candidate.sh
 The gate includes unit/integration/E2E tests, race, vet, diff checks, cached and uncached equivalence, release reproducibility, golden contracts, fuzz smoke, vulnerability scanning when the pinned tool is available, performance budgets, and self-scan.
 
 ## Reporting Vulnerabilities
-
-Do not publish suspected vulnerabilities, private keys, tokens, or sensitive repository content in a public issue. Contact the repository maintainers through the private security-reporting channel configured by the hosting organization. Include the affected version/commit, reproduction steps using non-sensitive fixtures, impact, and any proposed mitigation.
+ 
+Do not publish suspected vulnerabilities, private keys, tokens, or sensitive repository content in a public issue.
+ 
+Please report security vulnerabilities privately via GitHub Security Advisories:
+- **Private Advisory URL**: [Submit Security Advisory](https://github.com/cinnamorollofficials/go-code-scanner/security/advisories/new)
+ 
+Include the affected version/commit, reproduction steps using non-sensitive fixtures, impact, and any proposed mitigation. Maintainers will triage and respond promptly.

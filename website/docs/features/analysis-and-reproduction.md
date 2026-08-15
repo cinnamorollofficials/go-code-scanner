@@ -29,16 +29,16 @@ flowchart TD
 ### 1.1 Scan Pipeline Stages
 
 1. **Target Discovery & Snapshot Isolation**:
-   - Analyzes project workspace files based on active mode (`full`, `changed`, or `staged`).
-   - In `--mode staged`, materializes temporary snapshots directly from the `git index` objects to guarantee that unstaged edits never introduce noise.
+   - Analyzes project workspace files based on active mode (full scan by default, `--changed`, or `--staged`).
+   - In `--staged` mode, materializes temporary snapshots directly from the `git index` objects to guarantee that unstaged edits never introduce noise.
 2. **Scope & Profile Filtering**:
-   - Filters target files according to scope (`all`, `server`, `client`) and active rulesets determined by performance profile (`fast`, `standard`, `full`).
+   - Filters target files according to scope (`all`, `server`, `client`) and active rulesets determined by performance profile (`fast`, `standard`, `full`, `frontend`).
 3. **Multi-Engine Execution**:
    - Concurrently executes detection engines tailored to specific source code languages and asset types.
 4. **Finding Aggregation & Fingerprinting**:
    - Standardizes raw violations into structured findings with deterministic fingerprints.
 5. **Suppression & Baseline Filtering**:
-   - Evaluates findings against inline `// nolint` comments, `.security-suppress.json`, and `.security-baseline.json`.
+   - Evaluates findings against inline `// nolint` comments, `.security-ignore`, and `.security-baseline.json`.
 6. **Policy Threshold Evaluation & Reporting**:
    - Compares remaining findings against `--fail-on` severity thresholds and generates requested report formats (Terminal, JSON, SARIF, JUnit).
 
@@ -147,7 +147,7 @@ Determine if the finding is active, suppressed, or baseline-filtered:
 2. **Check Inline Annotations**:
    Inspect if `// nolint:go-shell-command` exists on or above the target line.
 3. **Check Suppression File**:
-   Verify if the finding fingerprint or file path is matched in `.security-suppress.json`.
+   Verify if the finding fingerprint or file path is matched in `.security-ignore`.
 
 ---
 

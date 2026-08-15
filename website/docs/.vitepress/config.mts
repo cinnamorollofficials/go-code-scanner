@@ -75,7 +75,7 @@ export default defineConfig({
         activeMatch: '^/reference/' 
       },
       { 
-        text: 'v1.0.0', 
+        text: 'Unreleased', 
         link: 'https://github.com/cinnamorollofficials/go-code-scanner/releases' 
       }
     ],

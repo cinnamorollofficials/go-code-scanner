@@ -11,12 +11,12 @@ Learn how `security-review` discovers files, isolates index snapshots, applies p
 
 | Mode | Flag | Description | Typical Use Case |
 | :--- | :--- | :--- | :--- |
-| **Full** | `--mode full` | Scans all recognized files across the entire workspace directory. | Nightly CI, baseline generation, release audits. |
-| **Changed** | `--mode changed` | Scans files modified relative to git target branch or uncommitted workspace diffs. | Pull Request (PR) validation builds. |
-| **Staged** | `--mode staged` | Scans only files staged in the git index (`git add`). Operates in strict index isolation. | Pre-commit git hooks. |
+| **Full** | *(default)* | Scans all recognized files across the entire workspace directory when neither `--staged` nor `--changed` is supplied. | Nightly CI, baseline generation, release audits. |
+| **Changed** | `--changed` | Scans files modified relative to git target branch or uncommitted workspace diffs. | Pull Request (PR) validation builds. |
+| **Staged** | `--staged` | Scans only files staged in the git index (`git add`). Operates in strict index isolation. | Pre-commit git hooks. |
 
 ::: important Git Index Isolation Guarantee
-When running in `--mode staged`, `security-review` materializes a temporary snapshot directly from `git index` objects rather than reading working tree files. This guarantees that unstaged edits in your working directory will never cause false positives or false negatives in pre-commit checks.
+When running with `--staged`, `security-review` materializes a temporary snapshot directly from `git index` objects rather than reading working tree files. This guarantees that unstaged edits in your working directory will never cause false positives or false negatives in pre-commit checks.
 :::
 
 ---
@@ -43,11 +43,11 @@ security-review scan --scope client
 
 Profiles tune active rule sets, AST depth, and scanner timeout limits:
 
-| Profile | Active Rule Sets | Speed Target | Use Case |
+| Profile | Active Rule Capabilities | Speed Target | Use Case |
 | :--- | :--- | :--- | :--- |
-| **`fast`** | Secrets + High-confidence SAST rules | `< 1s` | Pre-commit hooks |
-| **`standard`** | Secrets + SAST + Supply Chain + Governance | `< 5s` | PR validation builds |
-| **`full`** | All rules + Deep AST analysis + Architecture checks | Thorough | Release certification |
+| **`fast`** | High-confidence secret detection and fast rules | `< 1s` | Pre-commit hooks |
+| **`standard`** | Secret + SAST + Supply Chain + Governance rules | `< 5s` | PR validation builds |
+| **`full`** | All rules + Deep AST & SQL taint analysis + Architecture checks | Thorough | Release certification |
 | **`frontend`** | Client rules + Framework sanitizers + Import cycle detection | Fast | Frontend audits |
 
 ---
@@ -56,14 +56,16 @@ Profiles tune active rule sets, AST depth, and scanner timeout limits:
 
 ### `--fail-on <SEVERITY>`
 
-Defines the minimum severity required to trigger exit code `1`:
+Defines the minimum severity required to trigger exit code `1` when `--ci` is enabled:
 
 ```sh
 # Fails build only if Critical or High severity findings are found
 security-review scan --ci --fail-on HIGH
 ```
 
-Severity hierarchy: `CRITICAL` > `HIGH` > `MEDIUM` > `LOW` > `INFO`.
+Severity hierarchy: `CRITICAL` > `HIGH` > `MEDIUM` > `LOW`.
+
+Note: `--fail-on` configures the severity threshold, but process exit code `1` still requires `--ci`.
 
 ### `--new-only`
 

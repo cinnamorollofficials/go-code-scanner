@@ -15,9 +15,10 @@ Configure performance profiles, severity gates, and domain policy thresholds.
 - **Description**: Default file discovery mode.
 
 ### `fail_on` (`string`)
-- **Allowed Values**: `"CRITICAL"`, `"HIGH"`, `"MEDIUM"`, `"LOW"`, `"INFO"`
-- **Default**: `"CRITICAL"`
-- **Description**: Global minimum severity required to trigger exit code `1` under policy enforcement.
+- **Type**: `string`
+- **Default**: `"HIGH"`
+- **Allowed Values**: `"CRITICAL"`, `"HIGH"`, `"MEDIUM"`, `"LOW"`
+- **Description**: Defines the minimum severity required to trigger a policy violation exit code (`1`) during CI scans.
 
 ### `profiles` (`map[string]string[]`)
 - **Description**: Map of profile names (`fast`, `standard`, `full`, `frontend`) to lists of enabled scanner IDs.

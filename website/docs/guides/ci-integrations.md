@@ -55,7 +55,7 @@ jobs:
 ```yaml
 security_review:
   stage: test
-  image: golang:1.22
+  image: golang:1.25
   script:
     - go run ./cmd/security-review scan --ci --fail-on HIGH --format junit --output junit-report.xml
   artifacts:
@@ -72,13 +72,13 @@ Automate sub-second local checks before every git commit:
 
 ```sh
 # Install hook into .git/hooks/pre-commit
-security-review hook install
+security-review hook install pre-commit
 ```
 
 When installed, committing staged changes triggers:
 
 ```sh
-security-review scan --mode staged --profile fast
+security-review scan --staged --profile fast
 ```
 
 ---

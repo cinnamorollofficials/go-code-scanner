@@ -23,21 +23,21 @@ security-review hook uninstall pre-commit
 ```
 
 ::: tip Managed-File Safety Guarantee
-Hook files created by `security-review` include a unique signature block. The scanner will never overwrite or modify custom pre-existing git hooks unless explicitly forced with `--overwrite`.
+Hook files created by `security-review` include a unique signature block. The scanner will never overwrite or modify custom pre-existing git hooks.
 :::
 
 ---
 
 ## Local Cache Management
 
-To accelerate repeated scans on large codebases, `security-review` caches package ASTs and intermediate analysis results in `$HOME/.cache/security-review` (or `%LOCALAPPDATA%\security-review`).
+To accelerate repeated scans on large codebases, `security-review` caches package ASTs and intermediate analysis results in `.go-code-scanner-cache` (configurable via `--dir`).
 
 ```sh
 # Inspect cache directory size and cached entry count
-security-review cache status
+security-review cache stats
 
 # Purge cached ASTs and scan artifacts
-security-review cache clear
+security-review cache clean
 ```
 
 ---
