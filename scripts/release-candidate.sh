@@ -14,7 +14,7 @@ git diff --check
 
 go test . -run '^TestRuntimeCachePreservesResultsAndInvalidatesContent$' -count=1
 go test ./scripts -run '^(TestReleaseBuildIsReproducible|TestReleasePipelineEndToEnd|TestReleaseBinaryHookLifecycle)$' -count=1
-go test ./reporter ./compatibility ./release ./scripts -run 'Golden|Contract|Structure|Checksums' -count=1
+go test ./pkg/reporter ./pkg/compatibility ./pkg/release ./scripts -run 'Golden|Contract|Structure|Checksums' -count=1
 
 ./scripts/fuzz-smoke.sh
 ./scripts/vulnerability-scan.sh --if-available

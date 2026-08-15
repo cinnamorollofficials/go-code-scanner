@@ -61,7 +61,14 @@ func initRepository(t *testing.T) string {
 func runGit(t *testing.T, root string, args ...string) {
 	t.Helper()
 	commandArgs := append([]string{"-C", root}, args...)
-	if output, err := exec.Command("git", commandArgs...).CombinedOutput(); err != nil {
+	cmd := exec.Command("git", commandArgs...)
+	cmd.Env = append(os.Environ(),
+		"GIT_AUTHOR_NAME=Test Runner",
+		"GIT_AUTHOR_EMAIL=test@example.com",
+		"GIT_COMMITTER_NAME=Test Runner",
+		"GIT_COMMITTER_EMAIL=test@example.com",
+	)
+	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("git %v: %v: %s", args, err, output)
 	}
 }

@@ -132,6 +132,12 @@ func BenchmarkFastPreCommit(b *testing.B) {
 func performanceRunGit(tb testing.TB, root string, args ...string) {
 	tb.Helper()
 	command := exec.Command("git", append([]string{"-C", root}, args...)...)
+	command.Env = append(os.Environ(),
+		"GIT_AUTHOR_NAME=Test Runner",
+		"GIT_AUTHOR_EMAIL=test@example.com",
+		"GIT_COMMITTER_NAME=Test Runner",
+		"GIT_COMMITTER_EMAIL=test@example.com",
+	)
 	if output, err := command.CombinedOutput(); err != nil {
 		tb.Fatalf("git %v: %v: %s", args, err, output)
 	}
