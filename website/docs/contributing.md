@@ -1,6 +1,6 @@
 ---
-title: Contributing Guide
-description: Guidelines, development setup, change design rules, tests, and release checklists for contributing to Go Code Scanner.
+title: Contributing to Go Code Scanner
+description: "For code contributors: set up development, design compatible changes, run required tests, and prepare release-ready updates."
 ---
 
 # Contributing to Go Code Scanner

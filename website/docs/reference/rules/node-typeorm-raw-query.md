@@ -1,9 +1,9 @@
 ---
 title: "node-typeorm-raw-query rule"
-description: "TypeORM raw query with dynamic string interpolation"
+description: "For developers remediating node-typeorm-raw-query: TypeORM raw query with dynamic string interpolation"
 ---
 
-# `node-typeorm-raw-query`
+# `node-typeorm-raw-query` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "TypeORM raw query with dynamic string interpolation"
 
 **Recommendation**: Pass parameters as the second argument array to query() rather than template interpolation
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 await connection.query(`SELECT * FROM users WHERE email = '${email}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 await connection.query("SELECT * FROM users WHERE email = $1", [email]);
 ```
 

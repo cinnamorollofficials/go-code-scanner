@@ -1,9 +1,9 @@
 ---
 title: "python-psycopg-format-query rule"
-description: "psycopg database cursor executed with Python string formatting instead of query parameters"
+description: "For developers remediating python-psycopg-format-query: psycopg database cursor executed with Python string formatting instead of query parameters"
 ---
 
-# `python-psycopg-format-query`
+# `python-psycopg-format-query` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "psycopg database cursor executed with Python string formatting ins
 
 **Recommendation**: Pass query parameters as the second tuple argument to cursor.execute(query, (param,))
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 cursor.execute(f"SELECT * FROM items WHERE owner_id = '{owner_id}'")
 
-// ✅ Do (Recommended)
+// Safer example
 cursor.execute("SELECT * FROM items WHERE owner_id = %s", (owner_id,))
 ```
 

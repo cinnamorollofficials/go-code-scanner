@@ -1,9 +1,9 @@
 ---
 title: "SQLAUTH-003 rule"
-description: "Raw query bypasses standard ORM authorization scopes and permission filters"
+description: "For developers remediating SQLAUTH-003: Raw query bypasses standard ORM authorization scopes and permission filters"
 ---
 
-# `SQLAUTH-003`
+# `SQLAUTH-003` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Raw query bypasses standard ORM authorization scopes and permissio
 
 **Recommendation**: Ensure raw queries replicate all security barriers, role restrictions, and tenant scopes provided by ORM repositories
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Raw("SELECT * FROM users")
 
-// ✅ Do (Recommended)
+// Safer example
 db.Raw("SELECT * FROM users WHERE organization_id = ? AND role <= ?", orgID, maxRole)
 ```
 

@@ -1,9 +1,9 @@
 ---
 title: "SQLI-001 rule"
-description: "Untrusted value concatenated or formatted into executable SQL at database driver sink"
+description: "For developers remediating SQLI-001: Untrusted value concatenated or formatted into executable SQL at database driver sink"
 ---
 
-# `SQLI-001`
+# `SQLI-001` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,16 +15,19 @@ description: "Untrusted value concatenated or formatted into executable SQL at d
 
 **Recommendation**: Use parameterized queries ($1, ?, :name) instead of string concatenation or fmt.Sprintf
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go (database/sql)]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := "SELECT * FROM users WHERE id = " + id
 row := db.QueryRow(query)
 
-// ✅ Do (Recommended)
+// Safer example
 query := "SELECT * FROM users WHERE id = $1"
 row := db.QueryRow(query, id)
 ```

@@ -1,9 +1,9 @@
 ---
 title: "SQLAUTH-001 rule"
-description: "Multi-tenant entity queried without tenant_id or organization_id scoping constraint"
+description: "For developers remediating SQLAUTH-001: Multi-tenant entity queried without tenant_id or organization_id scoping constraint"
 ---
 
-# `SQLAUTH-001`
+# `SQLAUTH-001` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,17 +15,20 @@ description: "Multi-tenant entity queried without tenant_id or organization_id s
 
 **Recommendation**: Enforce explicit tenant_id or organization_id filtering on all multi-tenant queries to prevent cross-tenant data access
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func getAccounts(db *sql.DB) (*sql.Rows, error) {
     return db.Query("SELECT * FROM accounts WHERE status = 'active'")
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func getAccounts(db *sql.DB, tenantID string) (*sql.Rows, error) {
     return db.Query("SELECT * FROM accounts WHERE tenant_id = $1 AND status = 'active'", tenantID)
 }

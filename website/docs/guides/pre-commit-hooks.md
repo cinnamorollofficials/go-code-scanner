@@ -1,6 +1,6 @@
 ---
 title: Pre-Commit Hooks Guide
-description: Set up automated local git hooks with security-review for fast, isolated staged scanning.
+description: "For developers: install, verify, run, and remove a security-review Git hook for isolated staged scans."
 ---
 
 # Pre-Commit Hooks Guide
@@ -27,7 +27,7 @@ security-review scan --staged --profile fast
 ### Key Safety Guarantees
 
 1. **Git Index Isolation**: Scans strictly read blob contents staged in the Git index (`git add`). Unstaged modifications in your working directory are ignored, preventing false positives and false negatives.
-2. **Sub-Second Performance**: The `--profile fast` flag optimizes scanner execution to complete in `< 1s` so developer workflow is never impeded.
+2. **Measured Fast-Profile Budget**: The release gate benchmarks its staged-scan fixture against a one-second budget. Repository size and enabled scanners still affect local runtime.
 3. **Deterministic Blocking**: If staged files contain findings meeting policy thresholds, the commit is aborted with exit code `1`.
 
 ---
@@ -40,7 +40,7 @@ Inspect the current hook installation and repository state:
 security-review hook status pre-commit
 ```
 
-Example output:
+Illustrative output:
 ```text
 pre-commit: installed
 ```

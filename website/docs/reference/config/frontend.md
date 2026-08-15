@@ -1,6 +1,6 @@
 ---
 title: Frontend Policy Configuration
-description: Field reference for client/server roots, framework detection, and DOM sanitizer rules.
+description: "For configuration authors: look up client and server roots, framework detection, and DOM sanitizer fields."
 ---
 
 # Frontend Policy Configuration

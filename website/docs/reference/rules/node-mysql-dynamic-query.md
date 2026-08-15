@@ -1,9 +1,9 @@
 ---
 title: "node-mysql-dynamic-query rule"
-description: "mysql2 query executed with dynamic template string interpolation"
+description: "For developers remediating node-mysql-dynamic-query: mysql2 query executed with dynamic template string interpolation"
 ---
 
-# `node-mysql-dynamic-query`
+# `node-mysql-dynamic-query` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "mysql2 query executed with dynamic template string interpolation"
 
 **Recommendation**: Use query placeholders (?) and pass arguments in the parameter array
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 await pool.query(`SELECT * FROM products WHERE category = '${category}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 await pool.query("SELECT * FROM products WHERE category = ?", [category]);
 ```
 

@@ -1,9 +1,9 @@
 ---
 title: "go-permissive-file-mode rule"
-description: "File or directory created with permissive world-writable file permissions (0777)"
+description: "For developers remediating go-permissive-file-mode: File or directory created with permissive world-writable file permissions (0777)"
 ---
 
-# `go-permissive-file-mode`
+# `go-permissive-file-mode` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "File or directory created with permissive world-writable file perm
 
 **Recommendation**: Use minimum required file permissions such as 0600 for files or 0750 for directories
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 os.WriteFile("config.json", data, 0777)
 
-// ✅ Do (Recommended)
+// Safer example
 os.WriteFile("config.json", data, 0600)
 ```
 

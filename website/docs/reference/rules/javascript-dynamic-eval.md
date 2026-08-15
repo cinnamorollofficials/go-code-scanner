@@ -1,9 +1,9 @@
 ---
 title: "javascript-dynamic-eval rule"
-description: "Dynamic eval execution of untrusted input detected"
+description: "For developers remediating javascript-dynamic-eval: Dynamic eval execution of untrusted input detected"
 ---
 
-# `javascript-dynamic-eval`
+# `javascript-dynamic-eval` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Dynamic eval execution of untrusted input detected"
 
 **Recommendation**: Use structured data parsers (JSON.parse) and schema validators instead of code evaluation
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 const config = eval("(" + jsonString + ")");
 
-// ✅ Do (Recommended)
+// Safer example
 const config = JSON.parse(jsonString);
 ```
 

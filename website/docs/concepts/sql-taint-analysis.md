@@ -1,9 +1,9 @@
 ---
 title: SQL Taint Analysis
-description: Deep dive into Abstract Syntax Tree (AST) parsing, interprocedural taint propagation, call graphs, and automated remediation.
+description: "For developers investigating SQL findings: understand AST parsing, taint propagation, call graphs, and remediation guidance."
 ---
 
-# AST & SQL Taint Analysis
+# SQL Taint Analysis
 
 `security-review` features a native, offline-capable **AST (Abstract Syntax Tree) & SQL Taint Analysis Engine**. Rather than relying purely on naive regex pattern matching, the engine analyzes Go AST syntax structures, models interprocedural parameter flows, reconstructs dynamic query templates, and tracks dataflow provenance from untrusted inputs down to database sinks.
 

@@ -43,6 +43,19 @@ function cleanBody(block) {
     .trim()
 }
 
+function pageDescription(rule) {
+  const value = `For developers remediating ${rule.id}: ${rule.description}`
+  if (value.length <= 160) return value
+  return `${value.slice(0, 156).replace(/\s+\S*$/, '')}…`
+}
+
+function labelExamples(body) {
+  return body.replace(
+    /\n(##### Unsafe and Safer Examples?)/,
+    '\n\nThe examples below are illustrative and focus on the pattern relevant to this rule.\n\n$1'
+  )
+}
+
 const rules = headings.map((heading, index) => {
   const start = heading.index
   const end = index + 1 < headings.length ? headings[index + 1].index : source.length
@@ -76,14 +89,14 @@ for (const [index, rule] of rules.entries()) {
   ].filter(Boolean).join(' · ')
   const page = `---
 title: ${JSON.stringify(`${rule.id} rule`)}
-description: ${JSON.stringify(rule.description)}
+description: ${JSON.stringify(pageDescription(rule))}
 ---
 
-# \`${rule.id}\`
+# \`${rule.id}\` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
-${rule.body}
+${labelExamples(rule.body)}
 
 ---
 

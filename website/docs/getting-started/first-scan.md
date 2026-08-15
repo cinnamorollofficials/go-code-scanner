@@ -1,9 +1,9 @@
 ---
-title: First Scan & Exit Codes
-description: Run your first security scan, interpret terminal output, and understand exit code policy enforcement.
+title: First Scan and Exit Codes
+description: "For first-time users: run security-review, interpret findings, and apply its local and CI exit-code contract."
 ---
 
-# First Scan & Exit Codes
+# First Scan and Exit Codes
 
 Learn how to execute your first repository scan and understand how `security-review` enforces policy exit codes.
 
@@ -31,7 +31,7 @@ Findings: 0 | critical=0 high=0 medium=0 low=0 | suppressed=0 stale=0
 Report: /path/to/my-project/security_findings.json
 ```
  
-## Exit Code Behavior & Policy Enforcement
+## Exit Code Behavior and Policy Enforcement
  
 `security-review` uses deterministic exit codes:
  

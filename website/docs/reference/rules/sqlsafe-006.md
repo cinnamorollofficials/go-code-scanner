@@ -1,9 +1,9 @@
 ---
 title: "SQLSAFE-006 rule"
-description: "Raw query omits deleted_at IS NULL condition on soft-deletable entity table"
+description: "For developers remediating SQLSAFE-006: Raw query omits deleted_at IS NULL condition on soft-deletable entity table"
 ---
 
-# `SQLSAFE-006`
+# `SQLSAFE-006` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Raw query omits deleted_at IS NULL condition on soft-deletable ent
 
 **Recommendation**: Include 'deleted_at IS NULL' in WHERE clauses when querying tables that use soft deletion
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Query("SELECT * FROM users WHERE email = $1", email)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL", email)
 ```
 

@@ -1,6 +1,6 @@
 ---
-title: Configuration Reference Overview
-description: Canonical reference overview for security-review.json configuration schema version 1.
+title: Configuration Reference
+description: "For configuration authors: find schema version 1 entry points, validation behavior, and focused field references."
 ---
 
 # Configuration Reference

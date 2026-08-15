@@ -1,9 +1,9 @@
 ---
 title: "debug-mode-enabled rule"
-description: "Debug mode appears to be explicitly enabled in configuration"
+description: "For developers remediating debug-mode-enabled: Debug mode appears to be explicitly enabled in configuration"
 ---
 
-# `debug-mode-enabled`
+# `debug-mode-enabled` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Debug mode appears to be explicitly enabled in configuration"
 
 **Recommendation**: Disable debug mode in production deployment configurations to prevent information disclosure
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 debug := true
 
-// ✅ Do (Recommended)
+// Safer example
 debug := os.Getenv("APP_ENV") == "development"
 ```
 

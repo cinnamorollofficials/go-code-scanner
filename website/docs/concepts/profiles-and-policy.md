@@ -1,6 +1,6 @@
 ---
 title: Profiles and Policy
-description: Performance profiles, 6 canonical domains, severity thresholds, and commit gating policy in Go Code Scanner.
+description: "For policy owners: understand performance profiles, six canonical domains, severity thresholds, and commit gating."
 ---
 
 # Profiles and Policy
@@ -13,12 +13,12 @@ Understand how `security-review` tunes scanner execution speed using performance
 
 Profiles configure active scanner capabilities and AST recursion limits to match specific workflow time budgets:
 
-| Profile | Active Capabilities | Target Speed | Ideal Use Case |
+| Profile | Active capabilities | Performance expectation | Typical use |
 | :--- | :--- | :---: | :--- |
-| **`fast`** | High-confidence secret detection and fast rules | `< 1s` | Pre-commit Git hooks |
-| **`standard`** | Secret + SAST + Supply Chain + Governance rules | `< 5s` | Pull Request (PR) validation |
-| **`full`** | All rules + Deep AST & SQL taint analysis + Architecture checks | Thorough | Nightly builds & release audits |
-| **`frontend`** | Client rules + Framework sanitizers + Import cycle detection | Fast | Frontend-focused audits |
+| **`fast`** | High-confidence secret detection and fast rules | One-second benchmark budget for the staged fixture | Pre-commit Git hooks |
+| **`standard`** | Secret, SAST, supply-chain, and governance rules | Repository-dependent | Pull-request validation |
+| **`full`** | All rules, deeper AST and SQL taint analysis, and architecture checks | Repository-dependent | Nightly builds and release audits |
+| **`frontend`** | Client rules, framework sanitizers, and import cycle detection | Repository-dependent | Frontend-focused audits |
 
 Select a profile via the `--profile` CLI flag:
 
@@ -51,7 +51,7 @@ CRITICAL > HIGH > MEDIUM > LOW
 
 ---
 
-## Policy Evaluation & Exit Codes
+## Policy Evaluation and Exit Codes
 
 `security-review` operates as a strict commit and CI gate:
 

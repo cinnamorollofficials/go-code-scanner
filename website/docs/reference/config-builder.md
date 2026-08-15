@@ -1,11 +1,13 @@
 ---
-title: Interactive Configuration Generator
-description: Interactive client-side configuration builder for security-review.json.
+title: Config Builder
+description: "For configuration authors: create security-review.json locally with browser controls and CLI-validated presets."
 ---
 
-# Interactive Configuration Generator
+# Config Builder
 
-Use the interactive generator below to visually customize and export your `security-review.json` configuration file. All state operations are performed 100% locally in your browser.
+Use the interactive builder below to customize and export a
+`security-review.json` file. Configuration state remains in the browser unless
+you explicitly copy or download it.
 
 The nine presets are executable starting points rather than decorative examples:
 

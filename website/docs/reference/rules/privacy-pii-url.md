@@ -1,9 +1,9 @@
 ---
 title: "privacy-pii-url rule"
-description: "Personally identifiable information may be placed in a URL query string"
+description: "For developers remediating privacy-pii-url: Personally identifiable information may be placed in a URL query string"
 ---
 
-# `privacy-pii-url`
+# `privacy-pii-url` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Personally identifiable information may be placed in a URL query s
 
 **Recommendation**: Transmit sensitive fields in an authenticated request body and avoid retaining them in URLs or access logs
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 urlParams.append("email", userEmail);
 
-// ✅ Do (Recommended)
+// Safer example
 // Transmit sensitive parameters in authenticated POST request body
 ```
 

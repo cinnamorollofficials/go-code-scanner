@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev docs",
-    "predocs:build": "npm run docs:check-source-generated && npm run docs:generate-rules && npm run docs:check-generated && npm run docs:check-content && npm run docs:check-cli && npm run docs:check-presets && npm run docs:check-configs && npm run docs:check-deployment",
+    "predocs:build": "npm run docs:check-source-generated && npm run docs:generate-rules && npm run docs:check-generated && npm run docs:check-content && npm run docs:check-editorial && npm run docs:check-cli && npm run docs:check-presets && npm run docs:check-configs && npm run docs:check-deployment",
     "docs:build": "vitepress build docs",
     "docs:build-site": "npm run docs:generate-rules && vitepress build docs",
     "postdocs:build": "npm run docs:check-links && npm run docs:test-browser",
@@ -15,6 +15,7 @@
     "docs:check-source-generated": "node scripts/check-source-generated.mjs",
     "docs:check-generated": "node scripts/check-generated.mjs",
     "docs:check-content": "node scripts/check-content.mjs",
+    "docs:check-editorial": "node scripts/check-editorial.mjs",
     "docs:check-cli": "node scripts/check-cli-examples.mjs",
     "docs:check-configs": "node scripts/validate-config-examples.mjs",
     "docs:check-deployment": "node scripts/check-deployment.mjs",

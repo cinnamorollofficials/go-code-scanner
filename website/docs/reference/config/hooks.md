@@ -1,6 +1,6 @@
 ---
 title: Git Hooks Configuration
-description: Field reference for pre-commit, commit-msg, and pre-push hook configuration.
+description: "For configuration authors: look up pre-commit, commit-msg, and pre-push Git hook fields and defaults."
 ---
 
 # Git Hooks Configuration

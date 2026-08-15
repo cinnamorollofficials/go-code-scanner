@@ -1,9 +1,9 @@
 ---
 title: "weak-secret rule"
-description: "Default or weak secret value found"
+description: "For developers remediating weak-secret: Default or weak secret value found"
 ---
 
-# `weak-secret`
+# `weak-secret` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,31 +15,34 @@ description: "Default or weak secret value found"
 
 **Recommendation**: Replace default/placeholder secrets with cryptographically strong random values from secure configuration
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 jwtSecret := []byte("change-me-in-production")
 
-// ✅ Do (Recommended)
+// Safer example
 jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const jwtSecret = "change-me-in-production";
 
-// ✅ Do (Recommended)
+// Safer example
 const jwtSecret = process.env.JWT_SECRET_KEY;
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 JWT_SECRET = "change-me-in-production"
 
-# ✅ Do (Recommended)
+# Safer example
 JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 ```
 

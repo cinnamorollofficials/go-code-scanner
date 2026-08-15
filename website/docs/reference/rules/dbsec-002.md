@@ -1,9 +1,9 @@
 ---
 title: "DBSEC-002 rule"
-description: "Sensitive credentials or PII fields logged to application tracing stream"
+description: "For developers remediating DBSEC-002: Sensitive credentials or PII fields logged to application tracing stream"
 ---
 
-# `DBSEC-002`
+# `DBSEC-002` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Sensitive credentials or PII fields logged to application tracing 
 
 **Recommendation**: Redact credentials, tokens, and payment card details before writing to log sinks
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 logger.info("Processing payment for card:", cardToken, secretKey);
 
-// ✅ Do (Recommended)
+// Safer example
 logger.info("Processing payment for transaction ID:", transactionId);
 ```
 

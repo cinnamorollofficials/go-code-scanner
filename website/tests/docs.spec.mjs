@@ -3,10 +3,10 @@ import axe from 'axe-core'
 
 const criticalPages = [
   ['', 'Go Code Scanner'],
-  ['getting-started/first-scan', 'First Scan & Exit Codes'],
+  ['getting-started/first-scan', 'First Scan and Exit Codes'],
   ['reference/cli', 'CLI Command Reference'],
   ['reference/rule-catalog', 'Rule Catalog'],
-  ['reference/config-builder', 'Interactive Configuration Generator']
+  ['reference/config-builder', 'Config Builder']
 ]
 
 async function accessibilityViolations(page) {

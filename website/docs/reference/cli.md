@@ -1,6 +1,6 @@
 ---
 title: CLI Command Reference
-description: Complete usage reference for all security-review CLI commands, flags, defaults, and exit codes.
+description: "For operators and automation authors: look up security-review commands, flags, defaults, outputs, and exit codes."
 ---
 
 # CLI Command Reference

@@ -1,9 +1,9 @@
 ---
 title: "wildcard-cors-origin rule"
-description: "Wildcard CORS origin header found in configuration"
+description: "For developers remediating wildcard-cors-origin: Wildcard CORS origin header found in configuration"
 ---
 
-# `wildcard-cors-origin`
+# `wildcard-cors-origin` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Wildcard CORS origin header found in configuration"
 
 **Recommendation**: Use an explicit CORS origin allowlist tailored for each deployment environment
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 c.Header("Access-Control-Allow-Origin", "*")
 
-// ✅ Do (Recommended)
+// Safer example
 c.Header("Access-Control-Allow-Origin", "https://app.example.com")
 ```
 

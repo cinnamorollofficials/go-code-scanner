@@ -1,9 +1,9 @@
 ---
 title: "SQLI-008 rule"
-description: "SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed"
+description: "For developers remediating SQLI-008: SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed"
 ---
 
-# `SQLI-008`
+# `SQLI-008` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "SQL placeholder count mismatch: query specifies N placeholders but
 
 **Recommendation**: Ensure the number of bind placeholders ($1, ?) matches the count of passed query arguments exactly
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id, tenantID)
 ```
 

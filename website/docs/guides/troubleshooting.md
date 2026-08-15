@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Diagnose CLI input errors, scanner operational failures, timeouts, cache issues, and configuration migrations.
+description: "For operators diagnosing failures: use exit codes and messages to resolve input, scanner, timeout, cache, and migration errors."
 ---
 
 # Troubleshooting
@@ -31,7 +31,7 @@ for reviewed exceptions, use [Managing Suppressions](/guides/suppressions).
 - **Symptom**: `scanner execution timed out after 30s`
 - **Remediation**: Increase the scanner timeout limit in configuration (`"timeout": "2m"`) or use `--profile fast` in pre-commit hooks.
 
-### 3. File Size Exceeded & Partial Scans
+### 3. File Size Exceeded and Partial Scans
 - **Symptom**: `file exceeds pattern_max_file_bytes limit`
 - **Remediation**: Increase `"pattern_max_file_bytes"` in `security-review.json` or add generated vendor files to `"exclude_directories"`.
 
@@ -42,7 +42,7 @@ for reviewed exceptions, use [Managing Suppressions](/guides/suppressions).
   security-review cache clean
   ```
 
-### 5. Schema Migration & Upgrade Verification
+### 5. Schema Migration and Upgrade Verification
 - **Symptom**: Configuration decoding error after upgrading CLI.
 - **Remediation**: Validate configuration syntax against current schema version:
   ```sh

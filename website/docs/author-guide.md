@@ -1,9 +1,13 @@
 ---
 title: Documentation Author Guide
-description: Standards, conventions, and style guidelines for contributing content to Go Code Scanner documentation.
+description: "For documentation contributors: choose a content type and apply metadata, example, terminology, and verification standards."
 ---
 
 # Documentation Author Guide
+
+Use this guide when adding or revising documentation. It defines the intended
+reader and outcome for each content type, then sets the metadata, example,
+terminology, accessibility, and verification contract.
 
 ## Content Types and Ownership
 
@@ -20,16 +24,20 @@ Each command sequence has one canonical owner. Other pages should summarize the
 idea and link to that owner instead of copying a complete procedure. This keeps
 examples from drifting when CLI behavior changes.
 
-## Frontmatter & Headings
+## Frontmatter and Headings
 
 Every page must start with YAML frontmatter specifying title and description:
 
 ```yaml
 ---
 title: Page Title
-description: Concise description of the page purpose.
+description: "For the intended reader: state the outcome and scope of this page."
 ---
 ```
+
+Write descriptions in the form `For <audience>: <outcome and scope>`. Keep them
+between 50 and 160 characters so search results and social previews remain
+useful. The frontmatter title and page H1 must use the same wording.
 
 Use a single `<h1>` (`# Page Title`) per document. Subsections should follow a strict hierarchy (`## Heading 2`, `### Heading 3`).
 
@@ -59,6 +67,7 @@ builds the site, inspects rendered links and anchors, and runs browser smoke tes
 | `docs:check-source-generated` | Configuration fields, the raw rule reference, and scanner compatibility stay synchronized with Go sources. | `Generated source-backed references were stale` means the command refreshed one or more files. Review those changes and run the check again. |
 | `docs:check-generated` | Rule Catalog records and all focused rule pages match the raw generated rule reference. | `Generated Rule Catalog output was stale` lists derived files that need to be reviewed and committed. |
 | `docs:check-content` | Frontmatter, unique titles, useful descriptions, one H1, labelled code fences, and portable paths. | The message starts with the affected page and states the missing or duplicate field, heading count, code-fence language, or absolute path. |
+| `docs:check-editorial` | Audience-focused summaries, matching titles and H1s, terminology, heading punctuation, output labels, and generated example labels stay consistent. | The affected page is followed by the editorial contract and the wording that must be corrected. |
 | `docs:check-cli` | Copyable `security-review` commands use current subcommands and flags. | `unsupported command shape` or `is not valid` identifies the command that must be corrected against the CLI reference. |
 | `docs:check-presets` | Every Config Builder preset passes both browser-side checks and the real CLI validator. | The preset name is followed by `browser validation failed` or `CLI validation failed`; correct the shared preset data rather than the generated output. |
 | `docs:check-configs` | Copyable JSON configuration examples pass the real CLI validator. | The page and JSON block number are followed by the validator error. Correct the documented example. |
@@ -78,6 +87,10 @@ VitePress supports built-in container callouts:
 Helpful suggestions, efficiency tips, or best practices.
 :::
 
+::: important
+Behavior or constraints readers must understand before continuing.
+:::
+
 ::: warning
 Potential pitfalls, breaking changes, or caution notices.
 :::
@@ -86,8 +99,12 @@ Potential pitfalls, breaking changes, or caution notices.
 Critical warnings regarding security risks or destructive operations.
 :::
 
-## Terminology & Style
+Use `details` only for optional supporting material, such as captured output.
+
+## Terminology and Style
 
 - Use **`security-review`** when referring to the CLI executable binary.
 - Use **Go Code Scanner** when referring to the product or suite.
+- Prefer `and` over `&` in titles and headings; use sentence case for table
+  headings and labels.
 - Use relative internal links without file extensions (e.g. `[CLI Reference](/reference/cli)`).

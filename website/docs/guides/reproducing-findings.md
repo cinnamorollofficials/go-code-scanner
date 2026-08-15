@@ -1,6 +1,6 @@
 ---
 title: Reproducing a Finding
-description: Step-by-step operational playbook for isolating, diagnosing, and verifying reported security findings.
+description: "For developers investigating a finding: isolate its input, inspect its rationale, and verify a remediation."
 ---
 
 # Reproducing a Finding
@@ -45,7 +45,7 @@ security-review scan --root pkg/runner --verbose
 
 ---
 
-## Step 3: Inspect Rule Rationale & Diagnostics
+## Step 3: Inspect Rule Rationale and Diagnostics
 
 Use the `--explain` flag to retrieve rule recommendations and remediation examples:
 
@@ -60,7 +60,7 @@ Output details include:
 
 ---
 
-## Step 4: Verify Baseline & Suppression Status
+## Step 4: Verify Baseline and Suppression Status
 
 Determine if the finding is active, suppressed, or baseline-filtered:
 
@@ -102,7 +102,7 @@ security-review scan --root testdata
 
 ---
 
-## Step 6: Remediation & Fix Verification
+## Step 6: Remediation and Fix Verification
 
 Apply the recommended remediation to the source code:
 

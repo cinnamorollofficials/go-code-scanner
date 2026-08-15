@@ -1,9 +1,9 @@
 ---
 title: "DBMIG-001 rule"
-description: "Destructive schema migration detected without guarded rollout or deprecation phase"
+description: "For developers remediating DBMIG-001: Destructive schema migration detected without guarded rollout or deprecation phase"
 ---
 
-# `DBMIG-001`
+# `DBMIG-001` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Destructive schema migration detected without guarded rollout or d
 
 **Recommendation**: Follow the expand-contract migration pattern and avoid immediate column/table drops in live environments
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 ALTER TABLE users DROP COLUMN phone_number;
 
-// ✅ Do (Recommended)
+// Safer example
 -- Phase 1: Mark column deprecated in application code; Phase 2: Drop after code deployment
 ```
 

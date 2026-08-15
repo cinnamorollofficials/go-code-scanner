@@ -1,6 +1,6 @@
 ---
 title: Guides Overview
-description: Task-oriented integration, operational playbooks, and troubleshooting guides for security-review.
+description: "For developers and CI maintainers: choose a guide for hooks, CI, baselines, suppressions, reproduction, or troubleshooting."
 ---
 
 # Guides Overview

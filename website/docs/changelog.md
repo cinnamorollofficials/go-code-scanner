@@ -1,6 +1,6 @@
 ---
 title: Changelog
-description: All notable changes, release notes, and version history for Go Code Scanner.
+description: "For users tracking releases: review notable Go Code Scanner changes, release notes, and version history."
 ---
 
 # Changelog

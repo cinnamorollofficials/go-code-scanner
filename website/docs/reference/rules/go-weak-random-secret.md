@@ -1,9 +1,9 @@
 ---
 title: "go-weak-random-secret rule"
-description: "Security-sensitive value generated using pseudo-random math/rand package"
+description: "For developers remediating go-weak-random-secret: Security-sensitive value generated using pseudo-random math/rand package"
 ---
 
-# `go-weak-random-secret`
+# `go-weak-random-secret` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Security-sensitive value generated using pseudo-random math/rand p
 
 **Recommendation**: Use crypto/rand for generating tokens, nonces, session identifiers, and secret keys
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 sessionToken := fmt.Sprintf("%d", rand.Intn(1000000))
 
-// ✅ Do (Recommended)
+// Safer example
 tokenBytes := make([]byte, 32)
 cryptoRand.Read(tokenBytes)
 sessionToken := hex.EncodeToString(tokenBytes)

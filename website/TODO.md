@@ -256,25 +256,25 @@ Acceptance criteria:
 
 ## P3 — Editorial polish
 
-- [ ] Standardize page summaries so they state audience, outcome, and scope.
-- [ ] Standardize terminology, capitalization, table headings, punctuation, and
+- [x] Standardize page summaries so they state audience, outcome, and scope.
+- [x] Standardize terminology, capitalization, table headings, punctuation, and
   callout usage.
-- [ ] Review page titles and descriptions for search intent and duplicate wording.
-- [ ] Label complete, abbreviated, and illustrative examples consistently.
-- [ ] Remove claims such as “complete”, “supported”, or “verified” unless a test
+- [x] Review page titles and descriptions for search intent and duplicate wording.
+- [x] Label complete, abbreviated, and illustrative examples consistently.
+- [x] Remove claims such as “complete”, “supported”, or “verified” unless a test
   or public contract provides evidence.
 
 ## Completion criteria
 
-- [ ] All P0 items and their acceptance criteria are complete.
-- [ ] Every topic has one canonical page and the sitemap contains no stale
+- [x] All P0 items and their acceptance criteria are complete.
+- [x] Every topic has one canonical page and the sitemap contains no stale
   `/features/*` duplicates.
-- [ ] All Config Builder presets export valid configuration.
-- [ ] The Rule Catalog is filterable and no longer depends on a single enormous
+- [x] All Config Builder presets export valid configuration.
+- [x] The Rule Catalog is filterable and no longer depends on a single enormous
   page.
-- [ ] Installation, first scan, CI, baseline, suppression, and scanner examples
+- [x] Installation, first scan, CI, baseline, suppression, and scanner examples
   match current product behavior.
 - [x] `npm run docs:verify` passes locally and in the website build pipeline.
 - [x] Critical pages pass link, responsive, and accessibility smoke tests.
-- [ ] Each checked item has reproducible evidence in a test, generated artifact,
+- [x] Each checked item has reproducible evidence in a test, generated artifact,
   or documented manual verification result.

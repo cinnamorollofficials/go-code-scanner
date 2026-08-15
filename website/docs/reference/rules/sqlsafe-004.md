@@ -1,9 +1,9 @@
 ---
 title: "SQLSAFE-004 rule"
-description: "Database operation executes on global connection pool escaping active transaction boundary"
+description: "For developers remediating SQLSAFE-004: Database operation executes on global connection pool escaping active transaction boundary"
 ---
 
-# `SQLSAFE-004`
+# `SQLSAFE-004` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,19 +15,22 @@ description: "Database operation executes on global connection pool escaping act
 
 **Recommendation**: Execute queries using the active transaction handle (tx) to guarantee atomic rollback on error
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func Transfer(tx *sql.Tx, from, to string, amount int) error {
     db.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
     tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)
     return nil
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func Transfer(tx *sql.Tx, from, to string, amount int) error {
     tx.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
     tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)

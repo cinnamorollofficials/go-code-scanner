@@ -1,6 +1,6 @@
 ---
 title: Scanner Definitions Configuration
-description: Field reference for external command and supported adapter scanner declarations.
+description: "For configuration authors: look up pattern, command, and adapter scanner declarations and validation rules."
 ---
 
 # Scanner Definitions Configuration

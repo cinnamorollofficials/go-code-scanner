@@ -1,9 +1,9 @@
 ---
 title: "merge-conflict-marker rule"
-description: "Unresolved merge-conflict marker found"
+description: "For developers remediating merge-conflict-marker: Unresolved merge-conflict marker found"
 ---
 
-# `merge-conflict-marker`
+# `merge-conflict-marker` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,17 +15,20 @@ description: "Unresolved merge-conflict marker found"
 
 **Recommendation**: Resolve merge conflict and remove all markers before committing
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 <<<<<<< HEAD
 const apiURL = "http://localhost:8080";
 =======
 const apiURL = "https://api.production.com";
 >>>>>>> main
 
-// ✅ Do (Recommended)
+// Safer example
 const apiURL = process.env.API_URL || "https://api.production.com";
 ```
 

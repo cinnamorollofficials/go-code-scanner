@@ -1,9 +1,9 @@
 ---
 title: "sql-string-format rule"
-description: "Potential SQL injection using formatted strings"
+description: "For developers remediating sql-string-format: Potential SQL injection using formatted strings"
 ---
 
-# `sql-string-format`
+# `sql-string-format` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,36 +15,39 @@ description: "Potential SQL injection using formatted strings"
 
 **Recommendation**: Use parameterized queries or prepared statements instead of string formatting
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)
 rows, err := db.Query(query)
 
-// ✅ Do (Recommended)
+// Safer example
 query := "SELECT * FROM users WHERE email = $1"
 rows, err := db.Query(query, userEmail)
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const query = `SELECT * FROM users WHERE email = '${userEmail}'`;
 const result = await client.query(query);
 
-// ✅ Do (Recommended)
+// Safer example
 const query = "SELECT * FROM users WHERE email = $1";
 const result = await client.query(query, [userEmail]);
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 query = f"SELECT * FROM users WHERE email = '{user_email}'"
 cursor.execute(query)
 
-# ✅ Do (Recommended)
+# Safer example
 query = "SELECT * FROM users WHERE email = %s"
 cursor.execute(query, (user_email,))
 ```

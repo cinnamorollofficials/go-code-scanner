@@ -1,9 +1,9 @@
 ---
 title: "mock-token rule"
-description: "Hardcoded mock token found — remove before production deployment"
+description: "For developers remediating mock-token: Hardcoded mock token found — remove before production deployment"
 ---
 
-# `mock-token`
+# `mock-token` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,31 +15,34 @@ description: "Hardcoded mock token found — remove before production deployment
 
 **Recommendation**: Remove hardcoded mock tokens and load credentials from environment variables or key vaults
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const authHeader = "Bearer google-mock-jwt-token-12345"
 
-// ✅ Do (Recommended)
+// Safer example
 authHeader := fmt.Sprintf("Bearer %s", os.Getenv("AUTH_TOKEN"))
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";
 
-// ✅ Do (Recommended)
+// Safer example
 const AUTH_HEADER = `Bearer ${process.env.AUTH_TOKEN}`;
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 AUTH_HEADER = "Bearer google-mock-jwt-token-12345"
 
-# ✅ Do (Recommended)
+# Safer example
 auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"
 ```
 

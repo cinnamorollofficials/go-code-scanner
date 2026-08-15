@@ -7,7 +7,7 @@ function sidebarDocs(activeSection: string) {
       items: [
         { text: 'Overview', link: '/getting-started/' },
         { text: 'Installation', link: '/getting-started/installation' },
-        { text: 'First Scan & Exit Codes', link: '/getting-started/first-scan' },
+        { text: 'First Scan and Exit Codes', link: '/getting-started/first-scan' },
         { text: 'Five-Minute CI Setup', link: '/getting-started/ci-setup' }
       ]
     },

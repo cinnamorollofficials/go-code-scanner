@@ -1,9 +1,9 @@
 ---
 title: "SQLI-011 rule"
-description: "Unsafe list or IN clause expansion using strings.Join or manual string interpolation"
+description: "For developers remediating SQLI-011: Unsafe list or IN clause expansion using strings.Join or manual string interpolation"
 ---
 
-# `SQLI-011`
+# `SQLI-011` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,16 +15,19 @@ description: "Unsafe list or IN clause expansion using strings.Join or manual st
 
 **Recommendation**: Use sqlx.In or generate parameterized bind variable lists (?, ?, ...) for slice queries
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := fmt.Sprintf("SELECT * FROM users WHERE id IN (%s)", strings.Join(ids, ","))
 rows, err := db.Query(query)
 
-// ✅ Do (Recommended)
+// Safer example
 query, args, err := sqlx.In("SELECT * FROM users WHERE id IN (?)", ids)
 query = db.Rebind(query)
 rows, err := db.Query(query, args...)

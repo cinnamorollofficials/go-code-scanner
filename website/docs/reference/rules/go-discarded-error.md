@@ -1,9 +1,9 @@
 ---
 title: "go-discarded-error rule"
-description: "Returned error value is explicitly ignored with blank identifier"
+description: "For developers remediating go-discarded-error: Returned error value is explicitly ignored with blank identifier"
 ---
 
-# `go-discarded-error`
+# `go-discarded-error` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Returned error value is explicitly ignored with blank identifier"
 
 **Recommendation**: Check and handle returned errors or document valid reason for ignoring
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 _ = db.Close()
 
-// ✅ Do (Recommended)
+// Safer example
 if err := db.Close(); err != nil {
     log.Printf("Failed to close DB connection: %v", err)
 }

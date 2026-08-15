@@ -1,9 +1,9 @@
 ---
 title: "SQLI-004 rule"
-description: "Unsafe raw ORM escape hatch called with dynamic or concatenated string"
+description: "For developers remediating SQLI-004: Unsafe raw ORM escape hatch called with dynamic or concatenated string"
 ---
 
-# `SQLI-004`
+# `SQLI-004` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Unsafe raw ORM escape hatch called with dynamic or concatenated st
 
 **Recommendation**: Pass parameters as separate arguments to ORM clauses (e.g. db.Where("name = ?", val)) rather than dynamic string formatting
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go (GORM)]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Where(fmt.Sprintf("role = '%s'", role)).Find(&users)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Where("role = ?", role).Find(&users)
 ```
 

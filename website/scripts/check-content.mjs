@@ -36,8 +36,19 @@ for (const file of files) {
     errors.push(`${name}: missing YAML frontmatter`)
     continue
   }
-  const title = frontmatter[1].match(/^title:\s*(.+)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
-  const description = frontmatter[1].match(/^description:\s*(.+)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
+  const rawTitle = frontmatter[1].match(/^title:\s*(.+)$/m)?.[1]?.trim()
+  const rawDescription = frontmatter[1].match(/^description:\s*(.+)$/m)?.[1]?.trim()
+  const quotedScalar = (value) => (value?.startsWith('"') && value.endsWith('"')) || (value?.startsWith("'") && value.endsWith("'"))
+  for (const [field, value] of [['title', rawTitle], ['description', rawDescription]]) {
+    if (value && value.includes(': ') && !quotedScalar(value)) {
+      errors.push(`${name}: frontmatter ${field} containing a colon must be quoted as valid YAML`)
+    }
+    if (value && /^["']/.test(value) && !quotedScalar(value)) {
+      errors.push(`${name}: frontmatter ${field} has an unclosed quote`)
+    }
+  }
+  const title = rawTitle?.replace(/^['"]|['"]$/g, '').trim()
+  const description = rawDescription?.replace(/^['"]|['"]$/g, '').trim()
   if (!title) errors.push(`${name}: frontmatter title is required`)
   if (!description || description.length < 24) errors.push(`${name}: frontmatter description must be useful (at least 24 characters)`)
   if (title) {

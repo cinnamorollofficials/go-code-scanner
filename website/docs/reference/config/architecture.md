@@ -1,6 +1,6 @@
 ---
 title: Architecture Policy Configuration
-description: Field reference for layer isolation, forbidden dependency rules, and cycle detection.
+description: "For configuration authors: look up layer isolation, forbidden dependency, and package cycle-detection fields."
 ---
 
 # Architecture Policy Configuration

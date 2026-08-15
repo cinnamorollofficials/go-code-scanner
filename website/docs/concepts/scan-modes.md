@@ -1,6 +1,6 @@
 ---
 title: Scan Modes and Isolation
-description: Deep dive into full workspace scans, changed PR scans, and isolated staged Git index scanning.
+description: "For developers and policy owners: compare full workspace, changed-file, and isolated staged Git index scans."
 ---
 
 # Scan Modes and Isolation

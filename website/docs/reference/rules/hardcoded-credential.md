@@ -1,9 +1,9 @@
 ---
 title: "hardcoded-credential rule"
-description: "Hardcoded credential or API secret key found"
+description: "For developers remediating hardcoded-credential: Hardcoded credential or API secret key found"
 ---
 
-# `hardcoded-credential`
+# `hardcoded-credential` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,39 +15,42 @@ description: "Hardcoded credential or API secret key found"
 
 **Recommendation**: Extract credentials to environment variables or secret management services
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 apiKey := "synthetic_secret_api_key_12345"
 
-// ✅ Do (Recommended)
+// Safer example
 apiKey := os.Getenv("STRIPE_API_KEY")
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const apiKey = "synthetic_secret_api_key_12345";
 
-// ✅ Do (Recommended)
+// Safer example
 const apiKey = process.env.STRIPE_API_KEY;
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 api_key = "synthetic_secret_api_key_12345"
 
-# ✅ Do (Recommended)
+# Safer example
 api_key = os.environ.get("STRIPE_API_KEY")
 ```
 
 ```java [Java]
-// ❌ Don't (Unsafe)
+// Unsafe example
 String apiKey = "synthetic_secret_api_key_12345";
 
-// ✅ Do (Recommended)
+// Safer example
 String apiKey = System.getenv("STRIPE_API_KEY");
 ```
 

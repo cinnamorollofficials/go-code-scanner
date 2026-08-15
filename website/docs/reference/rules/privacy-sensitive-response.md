@@ -1,9 +1,9 @@
 ---
 title: "privacy-sensitive-response rule"
-description: "Response construction may expose a sensitive personal field"
+description: "For developers remediating privacy-sensitive-response: Response construction may expose a sensitive personal field"
 ---
 
-# `privacy-sensitive-response`
+# `privacy-sensitive-response` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Response construction may expose a sensitive personal field"
 
 **Recommendation**: Map the response through an explicit allowlisted DTO and omit sensitive fields
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 res.json({ id: user.id, email: user.email, ssn: user.ssn });
 
-// ✅ Do (Recommended)
+// Safer example
 res.json({ id: user.id, email: user.email });
 ```
 

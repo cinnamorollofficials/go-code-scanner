@@ -1,9 +1,9 @@
 ---
 title: "go-process-termination rule"
-description: "Application path may terminate entire process unexpectedly"
+description: "For developers remediating go-process-termination: Application path may terminate entire process unexpectedly"
 ---
 
-# `go-process-termination`
+# `go-process-termination` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Application path may terminate entire process unexpectedly"
 
 **Recommendation**: Propagate errors to request boundaries and perform controlled shutdown instead of calling panic/log.Fatal
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 if err != nil {
     panic(err)
 }
 
-// ✅ Do (Recommended)
+// Safer example
 if err != nil {
     return fmt.Errorf("process request: %w", err)
 }

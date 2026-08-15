@@ -1,9 +1,9 @@
 ---
 title: "SQLAUTH-004 rule"
-description: "Database query assumes Row-Level Security but explicitly switches to superuser or bypass role"
+description: "For developers remediating SQLAUTH-004: Database query assumes Row-Level Security but explicitly switches to superuser or bypass role"
 ---
 
-# `SQLAUTH-004`
+# `SQLAUTH-004` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,16 +15,19 @@ description: "Database query assumes Row-Level Security but explicitly switches 
 
 **Recommendation**: Connect and execute application queries using least-privilege non-superuser roles to enforce database Row-Level Security
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Exec("SET ROLE postgres")
 db.Query("SELECT * FROM sensitive_documents")
 
-// ✅ Do (Recommended)
+// Safer example
 db.Exec("SET LOCAL app.current_tenant_id = $1", tenantID)
 db.Query("SELECT * FROM sensitive_documents")
 ```

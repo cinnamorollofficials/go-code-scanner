@@ -1,6 +1,6 @@
 ---
 title: Frontend Scanning
-description: Architecture, AST analyzers, and security checks for modern frontend applications in Go Code Scanner.
+description: "For full-stack developers: understand frontend discovery, AST analyzers, framework checks, and client-server boundaries."
 ---
 
 # Frontend Scanning
@@ -9,9 +9,9 @@ In modern full-stack web applications, security boundaries span both backend API
 
 ---
 
-## Supported Ecosystems & Frameworks
+## Supported Ecosystems and Frameworks
 
-| Framework / Ecosystem | Recognized File Types | Key Security Checks |
+| Framework or ecosystem | Recognized file types | Key security checks |
 | :--- | :--- | :--- |
 | **React / Next.js** | `.jsx`, `.tsx`, `.js`, `.ts` | `dangerouslySetInnerHTML`, Client Secret Leaks, Server Actions |
 | **Vue / Nuxt** | `.vue`, `.js`, `.ts` | `v-html` Injection, SSR State Pollution, Window Object Leaks |
@@ -30,7 +30,7 @@ Detects raw HTML interpolation directives and dynamic DOM sinks without proper s
 ### 2. Client-Side Secret Exposure
 Flags high-entropy strings, API tokens, and private keys declared in client-side bundles or `public/` directory assets.
 
-### 3. Circular Import & Boundary Violations
+### 3. Circular Import and Boundary Violations
 Identifies circular component dependencies and prohibited client-to-server module imports.
 
 ---

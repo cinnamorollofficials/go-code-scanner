@@ -1,9 +1,9 @@
 ---
 title: "python-sqlalchemy-raw-sql rule"
-description: "SQLAlchemy raw text expression formatted with dynamic Python f-string or format()"
+description: "For developers remediating python-sqlalchemy-raw-sql: SQLAlchemy raw text expression formatted with dynamic Python f-string or format()"
 ---
 
-# `python-sqlalchemy-raw-sql`
+# `python-sqlalchemy-raw-sql` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "SQLAlchemy raw text expression formatted with dynamic Python f-str
 
 **Recommendation**: Use bound parameters (:param_name) with session.execute(text("..."), {"param_name": val})
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 session.execute(text(f"SELECT * FROM users WHERE username = '{username}'"))
 
-// ✅ Do (Recommended)
+// Safer example
 session.execute(text("SELECT * FROM users WHERE username = :u"), {"u": username})
 ```
 

@@ -1,9 +1,9 @@
 ---
-title: Complete Field Reference
-description: Automatically generated configuration reference tables from Go struct definitions.
+title: Configuration Field Reference
+description: "For configuration authors: look up schema fields, types, defaults, and requirements generated from Go definitions."
 ---
 
-# Complete Configuration Field Reference
+# Configuration Field Reference
 
 This page is automatically generated from Go struct definitions in `pkg/config`. Do not edit manually.
 

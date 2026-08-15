@@ -1,9 +1,9 @@
 ---
 title: "go-multipart-memory rule"
-description: "Ensure multipart request processing configures explicit memory limits"
+description: "For developers remediating go-multipart-memory: Ensure multipart request processing configures explicit memory limits"
 ---
 
-# `go-multipart-memory`
+# `go-multipart-memory` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Ensure multipart request processing configures explicit memory lim
 
 **Recommendation**: Set explicit memory limit with ParseMultipartForm or MaxBytesReader to prevent memory exhaustion
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 c.Request.ParseMultipartForm(100 << 20) // Unbounded 100MB buffer
 
-// ✅ Do (Recommended)
+// Safer example
 c.Request.ParseMultipartForm(10 << 20) // Controlled 10MB memory limit
 ```
 

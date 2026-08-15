@@ -1,9 +1,9 @@
 ---
 title: "go-shell-command rule"
-description: "Shell command interpreter executed via os/exec"
+description: "For developers remediating go-shell-command: Shell command interpreter executed via os/exec"
 ---
 
-# `go-shell-command`
+# `go-shell-command` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,31 +15,34 @@ description: "Shell command interpreter executed via os/exec"
 
 **Recommendation**: Execute binary commands directly with argument arrays and sanitize untrusted input
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 cmd := exec.Command("sh", "-c", "ls " + userInput)
 
-// ✅ Do (Recommended)
+// Safer example
 cmd := exec.Command("ls", "--", validatedPath)
 ```
 
 ```ts [TypeScript / Node.js]
-// ❌ Don't (Unsafe)
+// Unsafe example
 child_process.exec("ls " + userInput);
 
-// ✅ Do (Recommended)
+// Safer example
 child_process.execFile("ls", ["--", validatedPath]);
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 subprocess.Popen("ls " + user_input, shell=True)
 
-# ✅ Do (Recommended)
+# Safer example
 subprocess.Popen(["ls", "--", validated_path], shell=False)
 ```
 

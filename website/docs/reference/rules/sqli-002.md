@@ -1,9 +1,9 @@
 ---
 title: "SQLI-002 rule"
-description: "Untrusted table, column, or identifier dynamically interpolated into SQL"
+description: "For developers remediating SQLI-002: Untrusted table, column, or identifier dynamically interpolated into SQL"
 ---
 
-# `SQLI-002`
+# `SQLI-002` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,16 +15,19 @@ description: "Untrusted table, column, or identifier dynamically interpolated in
 
 **Recommendation**: Validate SQL identifiers against an explicit allow-list of known safe column/table names before interpolation
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := fmt.Sprintf("SELECT * FROM %s WHERE active = 1", tableName)
 rows, err := db.Query(query)
 
-// ✅ Do (Recommended)
+// Safer example
 allowed := map[string]string{"users": "users", "admins": "admins"}
 table, ok := allowed[tableName]
 if !ok { return nil, errors.New("invalid table") }

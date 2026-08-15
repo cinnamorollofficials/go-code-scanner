@@ -1,9 +1,9 @@
 ---
 title: "sensitive-json-field rule"
-description: "Sensitive struct field may be exposed in JSON serialization"
+description: "For developers remediating sensitive-json-field: Sensitive struct field may be exposed in JSON serialization"
 ---
 
-# `sensitive-json-field`
+# `sensitive-json-field` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,16 +15,19 @@ description: "Sensitive struct field may be exposed in JSON serialization"
 
 **Recommendation**: Use json:"-" struct tag or custom serializer to exclude sensitive attributes
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 type Account struct {
     ID           string `json:"id"`
     PasswordHash string `json:"password_hash"`
 }
 
-// ✅ Do (Recommended)
+// Safer example
 type Account struct {
     ID           string `json:"id"`
     PasswordHash string `json:"-"`

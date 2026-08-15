@@ -1,9 +1,9 @@
 ---
 title: "DBMIG-002 rule"
-description: "Database migration file lacks reversible rollback instructions"
+description: "For developers remediating DBMIG-002: Database migration file lacks reversible rollback instructions"
 ---
 
-# `DBMIG-002`
+# `DBMIG-002` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Database migration file lacks reversible rollback instructions"
 
 **Recommendation**: Always provide corresponding down migrations or automated rollback scripts for disaster recovery
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 -- no-down: Irreversible migration
 
-// ✅ Do (Recommended)
+// Safer example
 -- Provide matching down.sql migration with schema restore steps
 ```
 

@@ -1,9 +1,9 @@
 ---
 title: "mixed-indentation rule"
-description: "Mixed tabs and spaces used for indentation on the same line"
+description: "For developers remediating mixed-indentation: Mixed tabs and spaces used for indentation on the same line"
 ---
 
-# `mixed-indentation`
+# `mixed-indentation` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Mixed tabs and spaces used for indentation on the same line"
 
 **Recommendation**: Use a consistent indentation style throughout the project
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 func process() {
 	  var x = 10 // Mixed tabs and spaces
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func process() {
 	var x = 10 // Consistent tab indentation
 }

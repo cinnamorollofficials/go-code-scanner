@@ -1,6 +1,6 @@
 ---
 title: Cache Policy Configuration
-description: Field reference for AST cache enablement, retention max-age, and storage byte limits.
+description: "For configuration authors: look up AST cache enablement, retention duration, storage limits, and cache paths."
 ---
 
 # Cache Policy Configuration

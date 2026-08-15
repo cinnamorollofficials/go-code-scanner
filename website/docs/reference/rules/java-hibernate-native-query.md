@@ -1,9 +1,9 @@
 ---
 title: "java-hibernate-native-query rule"
-description: "Hibernate createNativeQuery executed with dynamic string concatenation"
+description: "For developers remediating java-hibernate-native-query: Hibernate createNativeQuery executed with dynamic string concatenation"
 ---
 
-# `java-hibernate-native-query`
+# `java-hibernate-native-query` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Hibernate createNativeQuery executed with dynamic string concatena
 
 **Recommendation**: Use parameterized placeholders and bind parameters via query.setParameter()
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 session.createNativeQuery("SELECT * FROM orders WHERE status = '" + status + "'")
 
-// ✅ Do (Recommended)
+// Safer example
 session.createNativeQuery("SELECT * FROM orders WHERE status = :status").setParameter("status", status)
 ```
 

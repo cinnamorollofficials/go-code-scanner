@@ -1,9 +1,9 @@
 ---
 title: "api-struct-response rule"
-description: "Internal domain struct may be serialized directly into HTTP response"
+description: "For developers remediating api-struct-response: Internal domain struct may be serialized directly into HTTP response"
 ---
 
-# `api-struct-response`
+# `api-struct-response` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,14 +15,17 @@ description: "Internal domain struct may be serialized directly into HTTP respon
 
 **Recommendation**: Map internal domain entities to explicit response DTOs to avoid leaking sensitive fields
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 var user User // Contains HashedPassword, SecretToken
 c.JSON(http.StatusOK, user)
 
-// ✅ Do (Recommended)
+// Safer example
 response := UserResponse{ID: user.ID, Email: user.Email}
 c.JSON(http.StatusOK, response)
 ```

@@ -1,9 +1,9 @@
 ---
 title: "browser-token-storage rule"
-description: "Token stored in localStorage — vulnerable to XSS token theft"
+description: "For developers remediating browser-token-storage: Token stored in localStorage — vulnerable to XSS token theft"
 ---
 
-# `browser-token-storage`
+# `browser-token-storage` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Token stored in localStorage — vulnerable to XSS token theft"
 
 **Recommendation**: Store authentication tokens in HttpOnly, Secure, SameSite cookies instead of localStorage
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 localStorage.setItem("access_token", response.token);
 
-// ✅ Do (Recommended)
+// Safer example
 await fetch("/api/login", { credentials: "include", method: "POST", body });
 ```
 

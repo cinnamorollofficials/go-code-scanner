@@ -1,9 +1,9 @@
 ---
 title: "DBPERF-002 rule"
-description: "Database query executed inside loop (N+1 query anti-pattern)"
+description: "For developers remediating DBPERF-002: Database query executed inside loop (N+1 query anti-pattern)"
 ---
 
-# `DBPERF-002`
+# `DBPERF-002` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Database query executed inside loop (N+1 query anti-pattern)"
 
 **Recommendation**: Batch queries using WHERE id IN (...) or JOINs to fetch data in a single roundtrip
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 for _, userID := range userIDs {
     db.QueryRow("SELECT * FROM profiles WHERE user_id = $1", userID)
 }
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM profiles WHERE user_id IN ($1, $2, ...)", userIDs)
 ```
 

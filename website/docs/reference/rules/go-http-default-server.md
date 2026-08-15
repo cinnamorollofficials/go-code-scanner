@@ -1,9 +1,9 @@
 ---
 title: "go-http-default-server rule"
-description: "Default HTTP server does not configure defensive timeouts"
+description: "For developers remediating go-http-default-server: Default HTTP server does not configure defensive timeouts"
 ---
 
-# `go-http-default-server`
+# `go-http-default-server` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Default HTTP server does not configure defensive timeouts"
 
 **Recommendation**: Use custom http.Server with ReadHeaderTimeout, ReadTimeout, WriteTimeout, and IdleTimeout
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 http.ListenAndServe(":8080", handler)
 
-// ✅ Do (Recommended)
+// Safer example
 server := &http.Server{
     Addr: ":8080", Handler: handler,
     ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second,

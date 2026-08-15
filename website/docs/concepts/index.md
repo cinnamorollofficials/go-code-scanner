@@ -1,9 +1,9 @@
 ---
 title: Concepts Overview
-description: High-level architectural concepts, scanner mechanics, scan modes, profiles, policies, and taint analysis in Go Code Scanner.
+description: "For policy owners and developers: understand Go Code Scanner scan modes, profiles, findings, frontend analysis, and SQL taint analysis."
 ---
 
-# Architecture & Concepts Overview
+# Concepts Overview
 
 Learn the foundational concepts and design principles behind `security-review` (Go Code Scanner).
 

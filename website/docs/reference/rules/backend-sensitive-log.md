@@ -1,9 +1,9 @@
 ---
 title: "backend-sensitive-log rule"
-description: "Backend log statement may expose sensitive credentials or keys"
+description: "For developers remediating backend-sensitive-log: Backend log statement may expose sensitive credentials or keys"
 ---
 
-# `backend-sensitive-log`
+# `backend-sensitive-log` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Backend log statement may expose sensitive credentials or keys"
 
 **Recommendation**: Redact sensitive parameters before writing to application log streams
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 log.Printf("Connecting to DB with secret: %s", dbSecret)
 
-// ✅ Do (Recommended)
+// Safer example
 log.Printf("Connecting to DB host: %s", dbHost)
 ```
 

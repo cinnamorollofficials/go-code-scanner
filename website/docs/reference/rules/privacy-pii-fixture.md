@@ -1,9 +1,9 @@
 ---
 title: "privacy-pii-fixture rule"
-description: "Fixture may contain a literal personally identifiable value"
+description: "For developers remediating privacy-pii-fixture: Fixture may contain a literal personally identifiable value"
 ---
 
-# `privacy-pii-fixture`
+# `privacy-pii-fixture` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Fixture may contain a literal personally identifiable value"
 
 **Recommendation**: Use clearly synthetic, reserved test data and keep production-derived records out of the repository
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```json
-// ❌ Don't (Unsafe)
+// Unsafe example
 {"email": "real_person_1985@gmail.com", "ssn": "123-45-6789"}
 
-// ✅ Do (Recommended)
+// Safer example
 {"email": "user@example.com", "ssn": "000-00-0000"}
 ```
 

@@ -1,9 +1,9 @@
 ---
 title: "permission-bypass rule"
-description: "Hardcoded permission bypass found in application logic"
+description: "For developers remediating permission-bypass: Hardcoded permission bypass found in application logic"
 ---
 
-# `permission-bypass`
+# `permission-bypass` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,12 +15,15 @@ description: "Hardcoded permission bypass found in application logic"
 
 **Recommendation**: Remove permission bypass conditions and enforce strict authorization checks
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func CheckPermission(user User) bool {
     if user.Role == "admin" || bypassPermission {
         return true
@@ -28,14 +31,14 @@ func CheckPermission(user User) bool {
     return false
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func CheckPermission(ctx context.Context, user User, resource string) bool {
     return authzService.CanAccess(ctx, user.ID, resource)
 }
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 function checkPermission(user: User): boolean {
     if (user.role === 'admin' || process.env.BYPASS_PERMISSIONS === 'true') {
         return true;
@@ -43,20 +46,20 @@ function checkPermission(user: User): boolean {
     return false;
 }
 
-// ✅ Do (Recommended)
+// Safer example
 async function checkPermission(user: User, resource: string): Promise<boolean> {
     return await authzService.canAccess(user.id, resource);
 }
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 def check_permission(user):
     if user.role == "admin" or bypass_permission:
         return True
     return False
 
-# ✅ Do (Recommended)
+# Safer example
 def check_permission(user, resource):
     return authz_service.can_access(user.id, resource)
 ```

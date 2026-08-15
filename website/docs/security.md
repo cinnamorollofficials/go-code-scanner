@@ -1,9 +1,13 @@
 ---
-title: Security Model & Release Guide
-description: Security architecture, trust boundaries, path hardening, staged isolation, redaction, command execution, and release verification in Go Code Scanner.
+title: Security Model and Release Guide
+description: "For operators and reviewers: understand Go Code Scanner trust boundaries, hardening controls, signing, and release verification."
 ---
 
-# Security & Release Guide
+# Security Model and Release Guide
+
+Use this page when reviewing the scanner's trust boundaries or operating its
+release process. It covers repository isolation, sensitive-output handling,
+external commands, signing keys, artifact verification, and release controls.
 
 ## Security Model
 

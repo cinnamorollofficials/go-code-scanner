@@ -1,15 +1,20 @@
 ---
-title: Local & CI Integrations Guide
-description: Step-by-step integration guide for pre-commit hooks, GitHub Actions, GitLab CI, SARIF upload, and offline CI pipelines.
+title: CI Integration Examples
+description: "For CI maintainers: adapt illustrative GitHub Actions and GitLab CI jobs for policy gates, reports, and offline profiles."
 ---
 
-# Local & CI Integrations Guide
+# CI Integration Examples
 
-Integrate `security-review` seamlessly into local developer hooks and continuous integration (CI/CD) pipelines.
+Use these examples when adding `security-review` to an existing pipeline. They
+assume the repository contains the Go module and scanner source; replace the
+`go run` command with your pinned binary installation when scanning another
+project.
 
 ## GitHub Actions Integration
 
-Use GitHub Actions to automatically scan pull requests and upload SARIF security results directly to GitHub's **Security > Code Scanning** tab.
+This illustrative job scans pushes and pull requests, then uploads its SARIF
+artifact to GitHub Code Scanning. Review action versions and permissions against
+your repository policy before copying it.
 
 ```yaml
 name: Security Audit
@@ -48,9 +53,9 @@ jobs:
           sarif_file: results.sarif
 ```
 
----
-
 ## GitLab CI Integration
+
+This illustrative job publishes JUnit output to the GitLab test report view:
 
 ```yaml
 security_review:
@@ -64,32 +69,23 @@ security_review:
     when: always
 ```
 
----
+## Offline CI
 
-## Pre-Commit Git Hook Integration
-
-Automate sub-second local checks before every git commit:
-
-```sh
-# Install hook into .git/hooks/pre-commit
-security-review hook install pre-commit
-```
-
-When installed, committing staged changes triggers:
+Use a profile declared in `profiles` and listed in `offline_profiles` when the
+runner must not invoke network-requiring scanners. This illustrative command
+assumes `security-review.json` defines the `offline` profile; its scanners must
+still be installed in the runner image:
 
 ```sh
-security-review scan --staged --profile fast
+security-review scan --config security-review.json --ci --profile offline --fail-on HIGH
 ```
 
----
+See [Profiles and Policy](/concepts/profiles-and-policy) for the execution model
+and [Scanner and Adapter Compatibility](/reference/scanners) for network
+requirements.
 
-## AI Agent Skill Integration
+## Local Git Hooks
 
-`go-code-scanner` includes a pre-packaged AI Agent Skill module under `.agents/skills/go-code-scanner/` that enables AI coding assistants (such as Antigravity, Claude, and Codex) to autonomously inspect repositories, run AST & SQL taint analysis, validate configuration, and execute evidence-based remediations.
-
-### Using the Skill with AI Assistants
-
-1. **Automatic Discovery**: AI agents automatically discover the skill under `.agents/skills/go-code-scanner/`.
-2. **Review Mode**: Trigger an offline audit by asking: *"Scan the repository for security findings and validate security configuration"*.
-3. **Remediation Mode**: Trigger targeted fixes by asking: *"Fix the SQL injection vulnerabilities found by security-review"*.
-
+Local hook installation and staged-index behavior have a separate canonical
+procedure. Follow [Pre-Commit Hooks](/guides/pre-commit-hooks) instead of copying
+CI setup into a developer workstation.

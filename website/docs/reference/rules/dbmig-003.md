@@ -1,9 +1,9 @@
 ---
 title: "DBMIG-003 rule"
-description: "Security-sensitive key column defined in table definition"
+description: "For developers remediating DBMIG-003: Security-sensitive key column defined in table definition"
 ---
 
-# `DBMIG-003`
+# `DBMIG-003` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Security-sensitive key column defined in table definition"
 
 **Recommendation**: Enforce explicit FOREIGN KEY, UNIQUE, or CHECK constraints on tenant and account scoping columns
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID);
 
-// ✅ Do (Recommended)
+// Safer example
 CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE);
 ```
 

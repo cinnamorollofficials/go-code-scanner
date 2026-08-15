@@ -1,9 +1,9 @@
 ---
 title: "hardcoded-api-url rule"
-description: "Hardcoded localhost API URL found — load dynamically from environment variable"
+description: "For developers remediating hardcoded-api-url: Hardcoded localhost API URL found — load dynamically from environment variable"
 ---
 
-# `hardcoded-api-url`
+# `hardcoded-api-url` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Hardcoded localhost API URL found — load dynamically from enviro
 
 **Recommendation**: Configure API endpoints dynamically via environment variables for different environments
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 const API_URL = "http://localhost:8080/api/v1";
 
-// ✅ Do (Recommended)
+// Safer example
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 ```
 

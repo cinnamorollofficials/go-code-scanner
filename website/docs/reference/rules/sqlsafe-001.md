@@ -1,9 +1,9 @@
 ---
 title: "SQLSAFE-001 rule"
-description: "Unbounded UPDATE or DELETE query without a WHERE clause"
+description: "For developers remediating SQLSAFE-001: Unbounded UPDATE or DELETE query without a WHERE clause"
 ---
 
-# `SQLSAFE-001`
+# `SQLSAFE-001` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Unbounded UPDATE or DELETE query without a WHERE clause"
 
 **Recommendation**: Always specify a WHERE clause or explicit target filter to prevent accidental table-wide mutation
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Exec("DELETE FROM users")
 
-// ✅ Do (Recommended)
+// Safer example
 db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)
 ```
 

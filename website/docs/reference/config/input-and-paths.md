@@ -1,9 +1,9 @@
 ---
-title: Input & Paths Configuration
-description: Field reference for root directory, file extensions, exclusion rules, and buffer byte limits.
+title: Input and Path Configuration
+description: "For configuration authors: look up the root, file extensions, exclusions, and file or line byte limits."
 ---
 
-# Input & Paths Configuration
+# Input and Path Configuration
 
 Configure workspace discovery boundaries, file extension filtering, directory exclusions, and line/file size safety thresholds.
 

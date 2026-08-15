@@ -1,9 +1,9 @@
 ---
 title: "SQLSAFE-005 rule"
-description: "Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence"
+description: "For developers remediating SQLSAFE-005: Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence"
 ---
 
-# `SQLSAFE-005`
+# `SQLSAFE-005` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Query contains unparenthesized mixed AND / OR operators in WHERE c
 
 **Recommendation**: Explicitly group logical expressions with parentheses to avoid inadvertent filter bypass or tenant leakage
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := "SELECT * FROM orders WHERE tenant_id = $1 AND status = 'active' OR is_admin = true"
 
-// ✅ Do (Recommended)
+// Safer example
 query := "SELECT * FROM orders WHERE tenant_id = $1 AND (status = 'active' OR is_admin = true)"
 ```
 

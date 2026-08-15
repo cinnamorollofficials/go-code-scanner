@@ -1,9 +1,9 @@
 ---
 title: "SQLAUTH-002 rule"
-description: "Sensitive resource queried solely by object ID without user ownership scoping (IDOR risk)"
+description: "For developers remediating SQLAUTH-002: Sensitive resource queried solely by object ID without user ownership scoping (IDOR risk)"
 ---
 
-# `SQLAUTH-002`
+# `SQLAUTH-002` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,17 +15,20 @@ description: "Sensitive resource queried solely by object ID without user owners
 
 **Recommendation**: Scope entity lookups by both the object ID and authenticated user/account ID
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func getOrder(db *sql.DB, orderID string) (*sql.Row, error) {
     return db.QueryRow("SELECT * FROM orders WHERE id = $1", orderID), nil
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func getOrder(db *sql.DB, orderID, userID string) (*sql.Row, error) {
     return db.QueryRow("SELECT * FROM orders WHERE id = $1 AND user_id = $2", orderID, userID), nil
 }

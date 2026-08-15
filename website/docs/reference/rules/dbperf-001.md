@@ -1,9 +1,9 @@
 ---
 title: "DBPERF-001 rule"
-description: "Public dataset queried without an explicit LIMIT or pagination boundary"
+description: "For developers remediating DBPERF-001: Public dataset queried without an explicit LIMIT or pagination boundary"
 ---
 
-# `DBPERF-001`
+# `DBPERF-001` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Public dataset queried without an explicit LIMIT or pagination bou
 
 **Recommendation**: Always enforce LIMIT and OFFSET / cursor pagination to prevent unbounded memory allocation and DB stalls
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Query("SELECT * FROM events WHERE created_at > $1", startTime)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM events WHERE created_at > $1 ORDER BY id ASC LIMIT 100", startTime)
 ```
 

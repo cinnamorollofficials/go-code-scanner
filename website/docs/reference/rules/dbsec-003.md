@@ -1,9 +1,9 @@
 ---
 title: "DBSEC-003 rule"
-description: "Internal database driver error exposed directly in HTTP client response"
+description: "For developers remediating DBSEC-003: Internal database driver error exposed directly in HTTP client response"
 ---
 
-# `DBSEC-003`
+# `DBSEC-003` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Internal database driver error exposed directly in HTTP client res
 
 **Recommendation**: Log the internal database error securely on the server and return a sanitized, generic error message to the client
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
-// ✅ Do (Recommended)
+// Safer example
 c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal server error occurred"})
 ```
 

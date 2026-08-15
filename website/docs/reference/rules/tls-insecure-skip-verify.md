@@ -1,9 +1,9 @@
 ---
 title: "tls-insecure-skip-verify rule"
-description: "TLS certificate verification is explicitly disabled"
+description: "For developers remediating tls-insecure-skip-verify: TLS certificate verification is explicitly disabled"
 ---
 
-# `tls-insecure-skip-verify`
+# `tls-insecure-skip-verify` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "TLS certificate verification is explicitly disabled"
 
 **Recommendation**: Enable certificate verification and configure valid trust stores
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 tr := &http.Transport{
     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
 
-// ✅ Do (Recommended)
+// Safer example
 tr := &http.Transport{
     TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 }

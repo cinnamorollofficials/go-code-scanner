@@ -1,9 +1,9 @@
 ---
 title: "go-weak-cryptographic-hash rule"
-description: "Weak cryptographic hash algorithm (MD5/SHA1) detected"
+description: "For developers remediating go-weak-cryptographic-hash: Weak cryptographic hash algorithm (MD5/SHA1) detected"
 ---
 
-# `go-weak-cryptographic-hash`
+# `go-weak-cryptographic-hash` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,33 +15,36 @@ description: "Weak cryptographic hash algorithm (MD5/SHA1) detected"
 
 **Recommendation**: Use SHA-256 or stronger algorithms; use bcrypt/argon2 for password hashing
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 hasher := md5.New()
 hasher.Write([]byte(password))
 
-// ✅ Do (Recommended)
+// Safer example
 hasher := sha256.New()
 hasher.Write([]byte(password))
 ```
 
 ```ts [TypeScript / Node.js]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const hash = crypto.createHash("md5").update(password).digest("hex");
 
-// ✅ Do (Recommended)
+// Safer example
 const hash = crypto.createHash("sha256").update(password).digest("hex");
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 hash_val = hashlib.md5(password.encode()).hexdigest()
 
-# ✅ Do (Recommended)
+# Safer example
 hash_val = hashlib.sha256(password.encode()).hexdigest()
 ```
 

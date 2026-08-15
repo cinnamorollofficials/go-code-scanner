@@ -1,9 +1,9 @@
 ---
 title: "trailing-whitespace rule"
-description: "Trailing whitespace found at end of line"
+description: "For developers remediating trailing-whitespace: Trailing whitespace found at end of line"
 ---
 
-# `trailing-whitespace`
+# `trailing-whitespace` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Trailing whitespace found at end of line"
 
 **Recommendation**: Remove trailing whitespace at line end
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 const username = "john_doe";
 
-// ✅ Do (Recommended)
+// Safer example
 const username = "john_doe";
 ```
 

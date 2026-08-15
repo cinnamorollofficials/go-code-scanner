@@ -1,6 +1,6 @@
 ---
 title: Reference Overview
-description: Authoritative technical specifications, CLI flags, configuration schemas, and rule catalog for Go Code Scanner.
+description: "For operators and integrators: find exact Go Code Scanner CLI, configuration, scanner, and rule contracts."
 ---
 
 # Reference Overview
@@ -9,7 +9,7 @@ Authoritative technical specifications, command reference, and rule catalog for 
 
 ---
 
-## Tools & CLI Reference
+## Tools and CLI Reference
 
 - **[CLI Reference](/reference/cli)**: Complete guide to all subcommands (`scan`, `config`, `hook`, `baseline`, `suppress`, `cache`, `upgrade`, `version`), flags, defaults, and deterministic exit codes.
 - **[Interactive Config Builder](/reference/config-builder)**: Visual, browser-local configuration generator supporting all 9 presets and direct file download.

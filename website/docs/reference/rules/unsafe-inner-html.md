@@ -1,9 +1,9 @@
 ---
 title: "unsafe-inner-html rule"
-description: "dangerouslySetInnerHTML used — potential DOM XSS vulnerability"
+description: "For developers remediating unsafe-inner-html: dangerouslySetInnerHTML used — potential DOM XSS vulnerability"
 ---
 
-# `unsafe-inner-html`
+# `unsafe-inner-html` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "dangerouslySetInnerHTML used — potential DOM XSS vulnerability"
 
 **Recommendation**: Sanitize raw HTML using DOMPurify before injecting into the DOM
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 <div dangerouslySetInnerHTML={{ __html: userInput }} />
 
-// ✅ Do (Recommended)
+// Safer example
 <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
 ```
 

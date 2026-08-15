@@ -1,9 +1,9 @@
 ---
 title: "javascript-debugger rule"
-description: "JavaScript debugger statement found"
+description: "For developers remediating javascript-debugger: JavaScript debugger statement found"
 ---
 
-# `javascript-debugger`
+# `javascript-debugger` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,16 +15,19 @@ description: "JavaScript debugger statement found"
 
 **Recommendation**: Remove debugger statement before committing
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 function calculateTotal(items: Item[]) {
   debugger; // Leftover debug statement
   return items.reduce((acc, item) => acc + item.price, 0);
 }
 
-// ✅ Do (Recommended)
+// Safer example
 function calculateTotal(items: Item[]) {
   return items.reduce((acc, item) => acc + item.price, 0);
 }

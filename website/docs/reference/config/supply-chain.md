@@ -1,6 +1,6 @@
 ---
 title: Supply Chain Policy Configuration
-description: Field reference for dependency and license allowlists/denylists.
+description: "For configuration authors: look up dependency audit, license allowlist, and package denylist policy fields."
 ---
 
 # Supply Chain Policy Configuration

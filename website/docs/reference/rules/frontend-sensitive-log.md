@@ -1,9 +1,9 @@
 ---
 title: "frontend-sensitive-log rule"
-description: "Frontend log statement may expose sensitive credentials or PII"
+description: "For developers remediating frontend-sensitive-log: Frontend log statement may expose sensitive credentials or PII"
 ---
 
-# `frontend-sensitive-log`
+# `frontend-sensitive-log` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Frontend log statement may expose sensitive credentials or PII"
 
 **Recommendation**: Sanitize log parameters and remove sensitive tokens or user identifiers from console logs
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 console.log("User auth failed for password:", password);
 
-// ✅ Do (Recommended)
+// Safer example
 console.error("User authentication failed", { username });
 ```
 

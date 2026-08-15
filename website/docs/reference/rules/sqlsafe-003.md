@@ -1,9 +1,9 @@
 ---
 title: "SQLSAFE-003 rule"
-description: "Non-atomic read-modify-write pattern detected on balance/inventory field without row locking"
+description: "For developers remediating SQLSAFE-003: Non-atomic read-modify-write pattern detected on balance/inventory field without row locking"
 ---
 
-# `SQLSAFE-003`
+# `SQLSAFE-003` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,18 +15,21 @@ description: "Non-atomic read-modify-write pattern detected on balance/inventory
 
 **Recommendation**: Use SELECT ... FOR UPDATE within a transaction or perform atomic SQL mutations
 
-##### Code Examples (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 var balance int
 db.QueryRow("SELECT balance FROM accounts WHERE id = $1", id).Scan(&balance)
 balance += 100
 db.Exec("UPDATE accounts SET balance = $1 WHERE id = $2", balance, id)
 
-// ✅ Do (Recommended)
+// Safer example
 tx, _ := db.Begin()
 var balance int
 tx.QueryRow("SELECT balance FROM accounts WHERE id = $1 FOR UPDATE", id).Scan(&balance)

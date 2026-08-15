@@ -1,6 +1,6 @@
 ---
 title: Governance Policy Configuration
-description: Field reference for required repository files, license header rules, ownership attribution, and ticket requirements.
+description: "For configuration authors: look up required files, license headers, ownership attribution, and ticket fields."
 ---
 
 # Governance Policy Configuration

@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install Go Code Scanner from pre-compiled binaries, Go toolchain, or source.
+description: "For developers and operators: install the security-review CLI with Go, source, or a tagged release archive."
 ---
 
 # Installation

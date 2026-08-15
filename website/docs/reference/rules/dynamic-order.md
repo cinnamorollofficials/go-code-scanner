@@ -1,9 +1,9 @@
 ---
 title: "dynamic-order rule"
-description: "Dynamic ORDER BY clause built via string formatting"
+description: "For developers remediating dynamic-order: Dynamic ORDER BY clause built via string formatting"
 ---
 
-# `dynamic-order`
+# `dynamic-order` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Dynamic ORDER BY clause built via string formatting"
 
 **Recommendation**: Validate dynamic column names against an explicit allowlist before building queries
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Order(fmt.Sprintf("%s ASC", sortColumn))
 
-// ✅ Do (Recommended)
+// Safer example
 allowedColumns := map[string]bool{"created_at": true, "name": true}
 if allowedColumns[sortColumn] {
     db.Order(sortColumn + " ASC")

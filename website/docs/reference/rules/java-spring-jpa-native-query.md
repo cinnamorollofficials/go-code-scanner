@@ -1,9 +1,9 @@
 ---
 title: "java-spring-jpa-native-query rule"
-description: "Spring Data JPA native query built via string concatenation"
+description: "For developers remediating java-spring-jpa-native-query: Spring Data JPA native query built via string concatenation"
 ---
 
-# `java-spring-jpa-native-query`
+# `java-spring-jpa-native-query` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Spring Data JPA native query built via string concatenation"
 
 **Recommendation**: Use named parameters (:param) or positional parameters (?1) in native @Query annotations
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 @Query(value = "SELECT * FROM users WHERE role = '" + ROLE + "'", nativeQuery = true)
 
-// ✅ Do (Recommended)
+// Safer example
 @Query(value = "SELECT * FROM users WHERE role = :role", nativeQuery = true)
 ```
 

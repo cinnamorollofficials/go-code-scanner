@@ -1,6 +1,6 @@
 ---
 title: Managing Suppressions
-description: Register, audit, and manage reviewed false-positive and risk-accepted rule exceptions with security-review.
+description: "For developers and security reviewers: add auditable, expiring security-review exceptions and understand their lifecycle."
 ---
 
 # Managing Suppressions

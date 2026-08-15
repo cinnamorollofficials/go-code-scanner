@@ -1,9 +1,9 @@
 ---
-title: Configuration Builder Contract
-description: Architecture, state model, accessibility rules, and privacy contract for the client-side configuration generator.
+title: Config Builder Contract
+description: "For Config Builder maintainers: understand its state, validation boundary, accessibility, export, and privacy contract."
 ---
 
-# Configuration Builder Contract
+# Config Builder Contract
 
 Design specification and client-side architecture contract for the interactive configuration generator.
 
@@ -44,7 +44,7 @@ Design specification and client-side architecture contract for the interactive c
 5. **Nested Preset Data**: Checks policy, cache, frontend, scanner, profile, and offline-profile structures before export.
 6. **Authoritative Validation**: Browser checks provide fast feedback but do not replace `security-review config validate` for user-edited files.
 
-## Export & Accessibility Capabilities
+## Export and Accessibility Capabilities
 
 - **Copy to Clipboard**: One-click formatted JSON copy using `navigator.clipboard.writeText` with visual feedback and `aria-live="polite"` status announcements.
 - **Download File**: Generates and downloads `security-review.json` locally using browser `Blob` object and object URL.

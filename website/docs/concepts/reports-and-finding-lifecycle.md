@@ -1,6 +1,6 @@
 ---
 title: Reports and Finding Lifecycle
-description: Deterministic fingerprints, report artifacts, and finding lifecycle states across commits.
+description: "For developers and CI maintainers: understand finding fingerprints, report artifacts, and lifecycle states across commits."
 ---
 
 # Reports and Finding Lifecycle
@@ -38,7 +38,7 @@ When evaluated against a baseline snapshot (`.security-baseline.json`), each fin
 
 `security-review` outputs a human-readable terminal summary to stdout and writes structured artifacts via `--format`:
 
-| Format | Artifact Flag | Typical Usage |
+| Format | Artifact flag | Typical use |
 | :--- | :--- | :--- |
 | **JSON** | `--format json` *(default)* | Machine parsing, baseline creation, custom dashboards |
 | **SARIF** | `--format sarif` | GitHub Code Scanning tab, OASIS standard analyzers |

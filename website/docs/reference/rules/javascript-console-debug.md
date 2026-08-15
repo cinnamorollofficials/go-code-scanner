@@ -1,9 +1,9 @@
 ---
 title: "javascript-console-debug rule"
-description: "Console debug statement left in code"
+description: "For developers remediating javascript-console-debug: Console debug statement left in code"
 ---
 
-# `javascript-console-debug`
+# `javascript-console-debug` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,15 +15,18 @@ description: "Console debug statement left in code"
 
 **Recommendation**: Remove debug statements or use an application logger with proper log level
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 function handleLogin(user: User) {
   console.log("User logged in:", user);
 }
 
-// ✅ Do (Recommended)
+// Safer example
 function handleLogin(user: User) {
   logger.info("User logged in", { userId: user.id });
 }

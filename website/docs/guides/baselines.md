@@ -1,6 +1,6 @@
 ---
 title: Gradual Adoption with Baselines
-description: Step-by-step operational guide for adopting security-review in legacy codebases without blocking existing workflows.
+description: "For maintainers adopting security-review: create and update a baseline while continuing to block newly introduced findings."
 ---
 
 # Gradual Adoption with Baselines
@@ -54,7 +54,7 @@ security-review baseline status \
   --baseline .security-baseline.json
 ```
 
-Example output:
+Illustrative output:
 ```text
 Baseline: new=0 existing=14 resolved=3
 ```

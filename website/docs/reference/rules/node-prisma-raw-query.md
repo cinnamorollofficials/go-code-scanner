@@ -1,9 +1,9 @@
 ---
 title: "node-prisma-raw-query rule"
-description: "Prisma raw unsafe query executed with potentially untrusted dynamic string"
+description: "For developers remediating node-prisma-raw-query: Prisma raw unsafe query executed with potentially untrusted dynamic string"
 ---
 
-# `node-prisma-raw-query`
+# `node-prisma-raw-query` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Prisma raw unsafe query executed with potentially untrusted dynami
 
 **Recommendation**: Use prisma.$queryRaw with tagged template literals (parameterized) instead of unsafe variants
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 const users = await prisma.$queryRawUnsafe(`SELECT * FROM users WHERE id = '${id}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 const users = await prisma.$queryRaw`SELECT * FROM users WHERE id = ${id}`;
 ```
 

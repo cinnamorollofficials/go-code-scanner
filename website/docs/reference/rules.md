@@ -1,11 +1,11 @@
 ---
-title: Rule Catalog
-description: Complete catalog of default built-in security, secret, governance, and quality rules with Do's and Don'ts code examples.
+title: Legacy Rule Reference
+description: "For maintainers preserving legacy anchors: inspect the generated monolithic rule reference and its remediation examples."
 ---
 
-# Built-In Rule Catalog
+# Legacy Rule Reference
 
-Below is the complete catalog of built-in detection rules provided by `security-review`. This catalog includes detailed guidance, recommendations, and **Do's and Don'ts** code examples for each rule.
+This generated compatibility page preserves historical rule anchors. Use the [Rule Catalog](/reference/rule-catalog) to search rules and open focused remediation pages.
 
 ## Domain Overview
 
@@ -67,7 +67,7 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 | [`SQLAUTH-003`](#sqlauth-003) | `HIGH` | `raw-query-bypass` | Raw query bypasses standard ORM authorization scopes and permission filters |
 | [`SQLAUTH-004`](#sqlauth-004) | `HIGH` | `rls-misconfiguration` | Database query assumes Row-Level Security but explicitly switches to superuser or bypass role |
 
-### Details & Guidance
+### Details and Guidance
 
 #### `mock-token` {#mock-token}
 
@@ -79,31 +79,31 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 
 **Recommendation**: Remove hardcoded mock tokens and load credentials from environment variables or key vaults
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const authHeader = "Bearer google-mock-jwt-token-12345"
 
-// ✅ Do (Recommended)
+// Safer example
 authHeader := fmt.Sprintf("Bearer %s", os.Getenv("AUTH_TOKEN"))
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const AUTH_HEADER = "Bearer google-mock-jwt-token-12345";
 
-// ✅ Do (Recommended)
+// Safer example
 const AUTH_HEADER = `Bearer ${process.env.AUTH_TOKEN}`;
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 AUTH_HEADER = "Bearer google-mock-jwt-token-12345"
 
-# ✅ Do (Recommended)
+# Safer example
 auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"
 ```
 
@@ -123,13 +123,13 @@ auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"
 
 **Recommendation**: Store authentication tokens in HttpOnly, Secure, SameSite cookies instead of localStorage
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 localStorage.setItem("access_token", response.token);
 
-// ✅ Do (Recommended)
+// Safer example
 await fetch("/api/login", { credentials: "include", method: "POST", body });
 ```
 
@@ -147,12 +147,12 @@ await fetch("/api/login", { credentials: "include", method: "POST", body });
 
 **Recommendation**: Remove permission bypass conditions and enforce strict authorization checks
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func CheckPermission(user User) bool {
     if user.Role == "admin" || bypassPermission {
         return true
@@ -160,14 +160,14 @@ func CheckPermission(user User) bool {
     return false
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func CheckPermission(ctx context.Context, user User, resource string) bool {
     return authzService.CanAccess(ctx, user.ID, resource)
 }
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 function checkPermission(user: User): boolean {
     if (user.role === 'admin' || process.env.BYPASS_PERMISSIONS === 'true') {
         return true;
@@ -175,20 +175,20 @@ function checkPermission(user: User): boolean {
     return false;
 }
 
-// ✅ Do (Recommended)
+// Safer example
 async function checkPermission(user: User, resource: string): Promise<boolean> {
     return await authzService.canAccess(user.id, resource);
 }
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 def check_permission(user):
     if user.role == "admin" or bypass_permission:
         return True
     return False
 
-# ✅ Do (Recommended)
+# Safer example
 def check_permission(user, resource):
     return authz_service.can_access(user.id, resource)
 ```
@@ -209,31 +209,31 @@ def check_permission(user, resource):
 
 **Recommendation**: Replace default/placeholder secrets with cryptographically strong random values from secure configuration
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 jwtSecret := []byte("change-me-in-production")
 
-// ✅ Do (Recommended)
+// Safer example
 jwtSecret := []byte(os.Getenv("JWT_SECRET_KEY"))
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const jwtSecret = "change-me-in-production";
 
-// ✅ Do (Recommended)
+// Safer example
 const jwtSecret = process.env.JWT_SECRET_KEY;
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 JWT_SECRET = "change-me-in-production"
 
-# ✅ Do (Recommended)
+# Safer example
 JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 ```
 
@@ -253,13 +253,13 @@ JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 
 **Recommendation**: Sanitize log parameters and remove sensitive tokens or user identifiers from console logs
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 console.log("User auth failed for password:", password);
 
-// ✅ Do (Recommended)
+// Safer example
 console.error("User authentication failed", { username });
 ```
 
@@ -277,13 +277,13 @@ console.error("User authentication failed", { username });
 
 **Recommendation**: Redact sensitive parameters before writing to application log streams
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 log.Printf("Connecting to DB with secret: %s", dbSecret)
 
-// ✅ Do (Recommended)
+// Safer example
 log.Printf("Connecting to DB host: %s", dbHost)
 ```
 
@@ -301,36 +301,36 @@ log.Printf("Connecting to DB host: %s", dbHost)
 
 **Recommendation**: Use parameterized queries or prepared statements instead of string formatting
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", userEmail)
 rows, err := db.Query(query)
 
-// ✅ Do (Recommended)
+// Safer example
 query := "SELECT * FROM users WHERE email = $1"
 rows, err := db.Query(query, userEmail)
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const query = `SELECT * FROM users WHERE email = '${userEmail}'`;
 const result = await client.query(query);
 
-// ✅ Do (Recommended)
+// Safer example
 const query = "SELECT * FROM users WHERE email = $1";
 const result = await client.query(query, [userEmail]);
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 query = f"SELECT * FROM users WHERE email = '{user_email}'"
 cursor.execute(query)
 
-# ✅ Do (Recommended)
+# Safer example
 query = "SELECT * FROM users WHERE email = %s"
 cursor.execute(query, (user_email,))
 ```
@@ -351,39 +351,39 @@ cursor.execute(query, (user_email,))
 
 **Recommendation**: Extract credentials to environment variables or secret management services
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 apiKey := "synthetic_secret_api_key_12345"
 
-// ✅ Do (Recommended)
+// Safer example
 apiKey := os.Getenv("STRIPE_API_KEY")
 ```
 
 ```ts [TypeScript / JavaScript]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const apiKey = "synthetic_secret_api_key_12345";
 
-// ✅ Do (Recommended)
+// Safer example
 const apiKey = process.env.STRIPE_API_KEY;
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 api_key = "synthetic_secret_api_key_12345"
 
-# ✅ Do (Recommended)
+# Safer example
 api_key = os.environ.get("STRIPE_API_KEY")
 ```
 
 ```java [Java]
-// ❌ Don't (Unsafe)
+// Unsafe example
 String apiKey = "synthetic_secret_api_key_12345";
 
-// ✅ Do (Recommended)
+// Safer example
 String apiKey = System.getenv("STRIPE_API_KEY");
 ```
 
@@ -403,13 +403,13 @@ String apiKey = System.getenv("STRIPE_API_KEY");
 
 **Recommendation**: Sanitize raw HTML using DOMPurify before injecting into the DOM
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 <div dangerouslySetInnerHTML={{ __html: userInput }} />
 
-// ✅ Do (Recommended)
+// Safer example
 <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
 ```
 
@@ -427,13 +427,13 @@ String apiKey = System.getenv("STRIPE_API_KEY");
 
 **Recommendation**: Validate dynamic column names against an explicit allowlist before building queries
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Order(fmt.Sprintf("%s ASC", sortColumn))
 
-// ✅ Do (Recommended)
+// Safer example
 allowedColumns := map[string]bool{"created_at": true, "name": true}
 if allowedColumns[sortColumn] {
     db.Order(sortColumn + " ASC")
@@ -454,14 +454,14 @@ if allowedColumns[sortColumn] {
 
 **Recommendation**: Map internal domain entities to explicit response DTOs to avoid leaking sensitive fields
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 var user User // Contains HashedPassword, SecretToken
 c.JSON(http.StatusOK, user)
 
-// ✅ Do (Recommended)
+// Safer example
 response := UserResponse{ID: user.ID, Email: user.Email}
 c.JSON(http.StatusOK, response)
 ```
@@ -480,16 +480,16 @@ c.JSON(http.StatusOK, response)
 
 **Recommendation**: Use json:"-" struct tag or custom serializer to exclude sensitive attributes
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 type Account struct {
     ID           string `json:"id"`
     PasswordHash string `json:"password_hash"`
 }
 
-// ✅ Do (Recommended)
+// Safer example
 type Account struct {
     ID           string `json:"id"`
     PasswordHash string `json:"-"`
@@ -510,31 +510,31 @@ type Account struct {
 
 **Recommendation**: Execute binary commands directly with argument arrays and sanitize untrusted input
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 cmd := exec.Command("sh", "-c", "ls " + userInput)
 
-// ✅ Do (Recommended)
+// Safer example
 cmd := exec.Command("ls", "--", validatedPath)
 ```
 
 ```ts [TypeScript / Node.js]
-// ❌ Don't (Unsafe)
+// Unsafe example
 child_process.exec("ls " + userInput);
 
-// ✅ Do (Recommended)
+// Safer example
 child_process.execFile("ls", ["--", validatedPath]);
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 subprocess.Popen("ls " + user_input, shell=True)
 
-# ✅ Do (Recommended)
+# Safer example
 subprocess.Popen(["ls", "--", validated_path], shell=False)
 ```
 
@@ -554,33 +554,33 @@ subprocess.Popen(["ls", "--", validated_path], shell=False)
 
 **Recommendation**: Use SHA-256 or stronger algorithms; use bcrypt/argon2 for password hashing
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 hasher := md5.New()
 hasher.Write([]byte(password))
 
-// ✅ Do (Recommended)
+// Safer example
 hasher := sha256.New()
 hasher.Write([]byte(password))
 ```
 
 ```ts [TypeScript / Node.js]
-// ❌ Don't (Unsafe)
+// Unsafe example
 const hash = crypto.createHash("md5").update(password).digest("hex");
 
-// ✅ Do (Recommended)
+// Safer example
 const hash = crypto.createHash("sha256").update(password).digest("hex");
 ```
 
 ```python [Python]
-# ❌ Don't (Unsafe)
+# Unsafe example
 hash_val = hashlib.md5(password.encode()).hexdigest()
 
-# ✅ Do (Recommended)
+# Safer example
 hash_val = hashlib.sha256(password.encode()).hexdigest()
 ```
 
@@ -600,14 +600,14 @@ hash_val = hashlib.sha256(password.encode()).hexdigest()
 
 **Recommendation**: Normalize paths, enforce base directory boundaries, and use allowlisted identifiers
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 filePath := r.URL.Query().Get("file")
 data, _ := os.ReadFile(filePath)
 
-// ✅ Do (Recommended)
+// Safer example
 filename := filepath.Base(r.URL.Query().Get("file"))
 safePath := filepath.Join("/var/app/storage", filename)
 data, _ := os.ReadFile(safePath)
@@ -627,13 +627,13 @@ data, _ := os.ReadFile(safePath)
 
 **Recommendation**: Use crypto/rand for generating tokens, nonces, session identifiers, and secret keys
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 sessionToken := fmt.Sprintf("%d", rand.Intn(1000000))
 
-// ✅ Do (Recommended)
+// Safer example
 tokenBytes := make([]byte, 32)
 cryptoRand.Read(tokenBytes)
 sessionToken := hex.EncodeToString(tokenBytes)
@@ -653,13 +653,13 @@ sessionToken := hex.EncodeToString(tokenBytes)
 
 **Recommendation**: Use structured data parsers (JSON.parse) and schema validators instead of code evaluation
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 const config = eval("(" + jsonString + ")");
 
-// ✅ Do (Recommended)
+// Safer example
 const config = JSON.parse(jsonString);
 ```
 
@@ -677,13 +677,13 @@ const config = JSON.parse(jsonString);
 
 **Recommendation**: Use prisma.$queryRaw with tagged template literals (parameterized) instead of unsafe variants
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 const users = await prisma.$queryRawUnsafe(`SELECT * FROM users WHERE id = '${id}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 const users = await prisma.$queryRaw`SELECT * FROM users WHERE id = ${id}`;
 ```
 
@@ -701,13 +701,13 @@ const users = await prisma.$queryRaw`SELECT * FROM users WHERE id = ${id}`;
 
 **Recommendation**: Pass parameters as the second argument array to query() rather than template interpolation
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 await connection.query(`SELECT * FROM users WHERE email = '${email}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 await connection.query("SELECT * FROM users WHERE email = $1", [email]);
 ```
 
@@ -725,13 +725,13 @@ await connection.query("SELECT * FROM users WHERE email = $1", [email]);
 
 **Recommendation**: Use replacements or bind options in sequelize.query for safe parameter binding
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 await sequelize.query(`SELECT * FROM users WHERE status = '${status}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 await sequelize.query("SELECT * FROM users WHERE status = :status", { replacements: { status } });
 ```
 
@@ -749,13 +749,13 @@ await sequelize.query("SELECT * FROM users WHERE status = :status", { replacemen
 
 **Recommendation**: Use parameterized query format ($1, $2) and pass values in the values parameter array
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 await client.query(`SELECT * FROM accounts WHERE id = '${id}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 await client.query("SELECT * FROM accounts WHERE id = $1", [id]);
 ```
 
@@ -773,13 +773,13 @@ await client.query("SELECT * FROM accounts WHERE id = $1", [id]);
 
 **Recommendation**: Use query placeholders (?) and pass arguments in the parameter array
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 await pool.query(`SELECT * FROM products WHERE category = '${category}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 await pool.query("SELECT * FROM products WHERE category = ?", [category]);
 ```
 
@@ -797,13 +797,13 @@ await pool.query("SELECT * FROM products WHERE category = ?", [category]);
 
 **Recommendation**: Use bound parameters (:param_name) with session.execute(text("..."), {"param_name": val})
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 session.execute(text(f"SELECT * FROM users WHERE username = '{username}'"))
 
-// ✅ Do (Recommended)
+// Safer example
 session.execute(text("SELECT * FROM users WHERE username = :u"), {"u": username})
 ```
 
@@ -821,13 +821,13 @@ session.execute(text("SELECT * FROM users WHERE username = :u"), {"u": username}
 
 **Recommendation**: Pass parameters as params list to Model.objects.raw(query, [params]) or use standard ORM filters
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 User.objects.raw(f"SELECT * FROM auth_user WHERE username = '{username}'")
 
-// ✅ Do (Recommended)
+// Safer example
 User.objects.raw("SELECT * FROM auth_user WHERE username = %s", [username])
 ```
 
@@ -845,13 +845,13 @@ User.objects.raw("SELECT * FROM auth_user WHERE username = %s", [username])
 
 **Recommendation**: Pass query parameters as the second tuple argument to cursor.execute(query, (param,))
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 cursor.execute(f"SELECT * FROM items WHERE owner_id = '{owner_id}'")
 
-// ✅ Do (Recommended)
+// Safer example
 cursor.execute("SELECT * FROM items WHERE owner_id = %s", (owner_id,))
 ```
 
@@ -869,13 +869,13 @@ cursor.execute("SELECT * FROM items WHERE owner_id = %s", (owner_id,))
 
 **Recommendation**: Use named parameters (:param) or positional parameters (?1) in native @Query annotations
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 @Query(value = "SELECT * FROM users WHERE role = '" + ROLE + "'", nativeQuery = true)
 
-// ✅ Do (Recommended)
+// Safer example
 @Query(value = "SELECT * FROM users WHERE role = :role", nativeQuery = true)
 ```
 
@@ -893,13 +893,13 @@ cursor.execute("SELECT * FROM items WHERE owner_id = %s", (owner_id,))
 
 **Recommendation**: Use parameterized placeholders and bind parameters via query.setParameter()
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 session.createNativeQuery("SELECT * FROM orders WHERE status = '" + status + "'")
 
-// ✅ Do (Recommended)
+// Safer example
 session.createNativeQuery("SELECT * FROM orders WHERE status = :status").setParameter("status", status)
 ```
 
@@ -917,13 +917,13 @@ session.createNativeQuery("SELECT * FROM orders WHERE status = :status").setPara
 
 **Recommendation**: Pass query parameters as separate Object[] or varargs to jdbcTemplate
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 jdbcTemplate.query("SELECT * FROM users WHERE id = " + id, rowMapper)
 
-// ✅ Do (Recommended)
+// Safer example
 jdbcTemplate.query("SELECT * FROM users WHERE id = ?", rowMapper, id)
 ```
 
@@ -941,13 +941,13 @@ jdbcTemplate.query("SELECT * FROM users WHERE id = ?", rowMapper, id)
 
 **Recommendation**: Redact credentials, tokens, and payment card details before writing to log sinks
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 logger.info("Processing payment for card:", cardToken, secretKey);
 
-// ✅ Do (Recommended)
+// Safer example
 logger.info("Processing payment for transaction ID:", transactionId);
 ```
 
@@ -965,13 +965,13 @@ logger.info("Processing payment for transaction ID:", transactionId);
 
 **Recommendation**: Log the internal database error securely on the server and return a sanitized, generic error message to the client
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
-// ✅ Do (Recommended)
+// Safer example
 c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal server error occurred"})
 ```
 
@@ -989,16 +989,16 @@ c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal server error 
 
 **Recommendation**: Use parameterized queries ($1, ?, :name) instead of string concatenation or fmt.Sprintf
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go (database/sql)]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := "SELECT * FROM users WHERE id = " + id
 row := db.QueryRow(query)
 
-// ✅ Do (Recommended)
+// Safer example
 query := "SELECT * FROM users WHERE id = $1"
 row := db.QueryRow(query, id)
 ```
@@ -1019,16 +1019,16 @@ row := db.QueryRow(query, id)
 
 **Recommendation**: Validate SQL identifiers against an explicit allow-list of known safe column/table names before interpolation
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := fmt.Sprintf("SELECT * FROM %s WHERE active = 1", tableName)
 rows, err := db.Query(query)
 
-// ✅ Do (Recommended)
+// Safer example
 allowed := map[string]string{"users": "users", "admins": "admins"}
 table, ok := allowed[tableName]
 if !ok { return nil, errors.New("invalid table") }
@@ -1052,15 +1052,15 @@ rows, err := db.Query(query)
 
 **Recommendation**: Pass parameters as separate arguments to ORM clauses (e.g. db.Where("name = ?", val)) rather than dynamic string formatting
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go (GORM)]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Where(fmt.Sprintf("role = '%s'", role)).Find(&users)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Where("role = ?", role).Find(&users)
 ```
 
@@ -1080,15 +1080,15 @@ db.Where("role = ?", role).Find(&users)
 
 **Recommendation**: Ensure the number of bind placeholders ($1, ?) matches the count of passed query arguments exactly
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id, tenantID)
 ```
 
@@ -1108,16 +1108,16 @@ db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id, tenantID)
 
 **Recommendation**: Use sqlx.In or generate parameterized bind variable lists (?, ?, ...) for slice queries
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := fmt.Sprintf("SELECT * FROM users WHERE id IN (%s)", strings.Join(ids, ","))
 rows, err := db.Query(query)
 
-// ✅ Do (Recommended)
+// Safer example
 query, args, err := sqlx.In("SELECT * FROM users WHERE id IN (?)", ids)
 query = db.Rebind(query)
 rows, err := db.Query(query, args...)
@@ -1139,15 +1139,15 @@ rows, err := db.Query(query, args...)
 
 **Recommendation**: Keep the SQL query string passed to db.Prepare strictly constant and bind dynamic values via stmt.Query / stmt.Exec
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 stmt, err := db.Prepare("SELECT * FROM users WHERE status = " + filter)
 
-// ✅ Do (Recommended)
+// Safer example
 stmt, err := db.Prepare("SELECT * FROM users WHERE status = $1")
 rows, err := stmt.Query(filter)
 ```
@@ -1168,17 +1168,17 @@ rows, err := stmt.Query(filter)
 
 **Recommendation**: Enforce explicit tenant_id or organization_id filtering on all multi-tenant queries to prevent cross-tenant data access
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func getAccounts(db *sql.DB) (*sql.Rows, error) {
     return db.Query("SELECT * FROM accounts WHERE status = 'active'")
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func getAccounts(db *sql.DB, tenantID string) (*sql.Rows, error) {
     return db.Query("SELECT * FROM accounts WHERE tenant_id = $1 AND status = 'active'", tenantID)
 }
@@ -1200,17 +1200,17 @@ func getAccounts(db *sql.DB, tenantID string) (*sql.Rows, error) {
 
 **Recommendation**: Scope entity lookups by both the object ID and authenticated user/account ID
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func getOrder(db *sql.DB, orderID string) (*sql.Row, error) {
     return db.QueryRow("SELECT * FROM orders WHERE id = $1", orderID), nil
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func getOrder(db *sql.DB, orderID, userID string) (*sql.Row, error) {
     return db.QueryRow("SELECT * FROM orders WHERE id = $1 AND user_id = $2", orderID, userID), nil
 }
@@ -1232,15 +1232,15 @@ func getOrder(db *sql.DB, orderID, userID string) (*sql.Row, error) {
 
 **Recommendation**: Ensure raw queries replicate all security barriers, role restrictions, and tenant scopes provided by ORM repositories
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Raw("SELECT * FROM users")
 
-// ✅ Do (Recommended)
+// Safer example
 db.Raw("SELECT * FROM users WHERE organization_id = ? AND role <= ?", orgID, maxRole)
 ```
 
@@ -1260,16 +1260,16 @@ db.Raw("SELECT * FROM users WHERE organization_id = ? AND role <= ?", orgID, max
 
 **Recommendation**: Connect and execute application queries using least-privilege non-superuser roles to enforce database Row-Level Security
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Exec("SET ROLE postgres")
 db.Query("SELECT * FROM sensitive_documents")
 
-// ✅ Do (Recommended)
+// Safer example
 db.Exec("SET LOCAL app.current_tenant_id = $1", tenantID)
 db.Query("SELECT * FROM sensitive_documents")
 ```
@@ -1293,7 +1293,7 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 | [`debug-mode-enabled`](#debug-mode-enabled) | `MEDIUM` | `debug_configuration` | Debug mode appears to be explicitly enabled in configuration |
 | [`go-insecure-cookie-attribute`](#go-insecure-cookie-attribute) | `HIGH` | `cookie_security` | Cookie configured with explicitly insecure security attributes |
 
-### Details & Guidance
+### Details and Guidance
 
 #### `hardcoded-api-url` {#hardcoded-api-url}
 
@@ -1305,13 +1305,13 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 
 **Recommendation**: Configure API endpoints dynamically via environment variables for different environments
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 const API_URL = "http://localhost:8080/api/v1";
 
-// ✅ Do (Recommended)
+// Safer example
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 ```
 
@@ -1329,15 +1329,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 **Recommendation**: Enable certificate verification and configure valid trust stores
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 tr := &http.Transport{
     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
 
-// ✅ Do (Recommended)
+// Safer example
 tr := &http.Transport{
     TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 }
@@ -1357,13 +1357,13 @@ tr := &http.Transport{
 
 **Recommendation**: Use an explicit CORS origin allowlist tailored for each deployment environment
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 c.Header("Access-Control-Allow-Origin", "*")
 
-// ✅ Do (Recommended)
+// Safer example
 c.Header("Access-Control-Allow-Origin", "https://app.example.com")
 ```
 
@@ -1381,13 +1381,13 @@ c.Header("Access-Control-Allow-Origin", "https://app.example.com")
 
 **Recommendation**: Use minimum required file permissions such as 0600 for files or 0750 for directories
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 os.WriteFile("config.json", data, 0777)
 
-// ✅ Do (Recommended)
+// Safer example
 os.WriteFile("config.json", data, 0600)
 ```
 
@@ -1405,13 +1405,13 @@ os.WriteFile("config.json", data, 0600)
 
 **Recommendation**: Disable debug mode in production deployment configurations to prevent information disclosure
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 debug := true
 
-// ✅ Do (Recommended)
+// Safer example
 debug := os.Getenv("APP_ENV") == "development"
 ```
 
@@ -1429,13 +1429,13 @@ debug := os.Getenv("APP_ENV") == "development"
 
 **Recommendation**: Enable Secure and HttpOnly flags and set an appropriate SameSite policy for session cookies
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 cookie := &http.Cookie{Name: "session", Value: token, Secure: false}
 
-// ✅ Do (Recommended)
+// Safer example
 cookie := &http.Cookie{Name: "session", Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode}
 ```
 
@@ -1466,7 +1466,7 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 | [`SQLSAFE-005`](#sqlsafe-005) | `HIGH` | `logic-operator-precedence` | Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence |
 | [`SQLSAFE-006`](#sqlsafe-006) | `MEDIUM` | `soft-delete-bypass` | Raw query omits deleted_at IS NULL condition on soft-deletable entity table |
 
-### Details & Guidance
+### Details and Guidance
 
 #### `go-multipart-memory` {#go-multipart-memory}
 
@@ -1478,13 +1478,13 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 
 **Recommendation**: Set explicit memory limit with ParseMultipartForm or MaxBytesReader to prevent memory exhaustion
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 c.Request.ParseMultipartForm(100 << 20) // Unbounded 100MB buffer
 
-// ✅ Do (Recommended)
+// Safer example
 c.Request.ParseMultipartForm(10 << 20) // Controlled 10MB memory limit
 ```
 
@@ -1502,13 +1502,13 @@ c.Request.ParseMultipartForm(10 << 20) // Controlled 10MB memory limit
 
 **Recommendation**: Use custom http.Server with ReadHeaderTimeout, ReadTimeout, WriteTimeout, and IdleTimeout
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 http.ListenAndServe(":8080", handler)
 
-// ✅ Do (Recommended)
+// Safer example
 server := &http.Server{
     Addr: ":8080", Handler: handler,
     ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second,
@@ -1530,13 +1530,13 @@ server.ListenAndServe()
 
 **Recommendation**: Limit request body with http.MaxBytesReader or io.LimitReader before reading into memory
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 body, err := io.ReadAll(r.Body)
 
-// ✅ Do (Recommended)
+// Safer example
 body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB size limit
 ```
 
@@ -1554,13 +1554,13 @@ body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB size limit
 
 **Recommendation**: Check and handle returned errors or document valid reason for ignoring
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 _ = db.Close()
 
-// ✅ Do (Recommended)
+// Safer example
 if err := db.Close(); err != nil {
     log.Printf("Failed to close DB connection: %v", err)
 }
@@ -1580,15 +1580,15 @@ if err := db.Close(); err != nil {
 
 **Recommendation**: Propagate errors to request boundaries and perform controlled shutdown instead of calling panic/log.Fatal
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 if err != nil {
     panic(err)
 }
 
-// ✅ Do (Recommended)
+// Safer example
 if err != nil {
     return fmt.Errorf("process request: %w", err)
 }
@@ -1608,13 +1608,13 @@ if err != nil {
 
 **Recommendation**: Configure explicit http.Client.Timeout and appropriate transport timeouts
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 client := &http.Client{}
 
-// ✅ Do (Recommended)
+// Safer example
 client := &http.Client{Timeout: 10 * time.Second}
 ```
 
@@ -1632,13 +1632,13 @@ client := &http.Client{Timeout: 10 * time.Second}
 
 **Recommendation**: Follow the expand-contract migration pattern and avoid immediate column/table drops in live environments
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 ALTER TABLE users DROP COLUMN phone_number;
 
-// ✅ Do (Recommended)
+// Safer example
 -- Phase 1: Mark column deprecated in application code; Phase 2: Drop after code deployment
 ```
 
@@ -1656,13 +1656,13 @@ ALTER TABLE users DROP COLUMN phone_number;
 
 **Recommendation**: Always provide corresponding down migrations or automated rollback scripts for disaster recovery
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 -- no-down: Irreversible migration
 
-// ✅ Do (Recommended)
+// Safer example
 -- Provide matching down.sql migration with schema restore steps
 ```
 
@@ -1680,13 +1680,13 @@ ALTER TABLE users DROP COLUMN phone_number;
 
 **Recommendation**: Enforce explicit FOREIGN KEY, UNIQUE, or CHECK constraints on tenant and account scoping columns
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID);
 
-// ✅ Do (Recommended)
+// Safer example
 CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE);
 ```
 
@@ -1704,13 +1704,13 @@ CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID REFERENCES tenants(i
 
 **Recommendation**: Always enforce LIMIT and OFFSET / cursor pagination to prevent unbounded memory allocation and DB stalls
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Query("SELECT * FROM events WHERE created_at > $1", startTime)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM events WHERE created_at > $1 ORDER BY id ASC LIMIT 100", startTime)
 ```
 
@@ -1728,15 +1728,15 @@ db.Query("SELECT * FROM events WHERE created_at > $1 ORDER BY id ASC LIMIT 100",
 
 **Recommendation**: Batch queries using WHERE id IN (...) or JOINs to fetch data in a single roundtrip
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 for _, userID := range userIDs {
     db.QueryRow("SELECT * FROM profiles WHERE user_id = $1", userID)
 }
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM profiles WHERE user_id IN ($1, $2, ...)", userIDs)
 ```
 
@@ -1754,15 +1754,15 @@ db.Query("SELECT * FROM profiles WHERE user_id IN ($1, $2, ...)", userIDs)
 
 **Recommendation**: Always specify a WHERE clause or explicit target filter to prevent accidental table-wide mutation
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Exec("DELETE FROM users")
 
-// ✅ Do (Recommended)
+// Safer example
 db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)
 ```
 
@@ -1782,18 +1782,18 @@ db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)
 
 **Recommendation**: Use SELECT ... FOR UPDATE within a transaction or perform atomic SQL mutations
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 var balance int
 db.QueryRow("SELECT balance FROM accounts WHERE id = $1", id).Scan(&balance)
 balance += 100
 db.Exec("UPDATE accounts SET balance = $1 WHERE id = $2", balance, id)
 
-// ✅ Do (Recommended)
+// Safer example
 tx, _ := db.Begin()
 var balance int
 tx.QueryRow("SELECT balance FROM accounts WHERE id = $1 FOR UPDATE", id).Scan(&balance)
@@ -1818,19 +1818,19 @@ tx.Commit()
 
 **Recommendation**: Execute queries using the active transaction handle (tx) to guarantee atomic rollback on error
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 func Transfer(tx *sql.Tx, from, to string, amount int) error {
     db.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
     tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)
     return nil
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func Transfer(tx *sql.Tx, from, to string, amount int) error {
     tx.Exec("UPDATE accounts SET balance = balance - $1 WHERE id = $2", amount, from)
     tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE id = $2", amount, to)
@@ -1854,15 +1854,15 @@ func Transfer(tx *sql.Tx, from, to string, amount int) error {
 
 **Recommendation**: Explicitly group logical expressions with parentheses to avoid inadvertent filter bypass or tenant leakage
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 query := "SELECT * FROM orders WHERE tenant_id = $1 AND status = 'active' OR is_admin = true"
 
-// ✅ Do (Recommended)
+// Safer example
 query := "SELECT * FROM orders WHERE tenant_id = $1 AND (status = 'active' OR is_admin = true)"
 ```
 
@@ -1882,15 +1882,15 @@ query := "SELECT * FROM orders WHERE tenant_id = $1 AND (status = 'active' OR is
 
 **Recommendation**: Include 'deleted_at IS NULL' in WHERE clauses when querying tables that use soft deletion
 
-##### Code Examples (Don't vs Do)
+##### Unsafe and Safer Examples
 
 ::: code-group
 
 ```go [Go]
-// ❌ Don't (Unsafe)
+// Unsafe example
 db.Query("SELECT * FROM users WHERE email = $1", email)
 
-// ✅ Do (Recommended)
+// Safer example
 db.Query("SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL", email)
 ```
 
@@ -1912,7 +1912,7 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 | [`mixed-indentation`](#mixed-indentation) | `LOW` | `formatting` | Mixed tabs and spaces used for indentation on the same line |
 | [`javascript-console-debug`](#javascript-console-debug) | `LOW` | `debug_code` | Console debug statement left in code |
 
-### Details & Guidance
+### Details and Guidance
 
 #### `merge-conflict-marker` {#merge-conflict-marker}
 
@@ -1924,17 +1924,17 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 
 **Recommendation**: Resolve merge conflict and remove all markers before committing
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 <<<<<<< HEAD
 const apiURL = "http://localhost:8080";
 =======
 const apiURL = "https://api.production.com";
 >>>>>>> main
 
-// ✅ Do (Recommended)
+// Safer example
 const apiURL = process.env.API_URL || "https://api.production.com";
 ```
 
@@ -1952,16 +1952,16 @@ const apiURL = process.env.API_URL || "https://api.production.com";
 
 **Recommendation**: Remove debugger statement before committing
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 function calculateTotal(items: Item[]) {
   debugger; // Leftover debug statement
   return items.reduce((acc, item) => acc + item.price, 0);
 }
 
-// ✅ Do (Recommended)
+// Safer example
 function calculateTotal(items: Item[]) {
   return items.reduce((acc, item) => acc + item.price, 0);
 }
@@ -1981,13 +1981,13 @@ function calculateTotal(items: Item[]) {
 
 **Recommendation**: Remove trailing whitespace at line end
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 const username = "john_doe";
 
-// ✅ Do (Recommended)
+// Safer example
 const username = "john_doe";
 ```
 
@@ -2005,15 +2005,15 @@ const username = "john_doe";
 
 **Recommendation**: Use a consistent indentation style throughout the project
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 func process() {
 	  var x = 10 // Mixed tabs and spaces
 }
 
-// ✅ Do (Recommended)
+// Safer example
 func process() {
 	var x = 10 // Consistent tab indentation
 }
@@ -2033,15 +2033,15 @@ func process() {
 
 **Recommendation**: Remove debug statements or use an application logger with proper log level
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 function handleLogin(user: User) {
   console.log("User logged in:", user);
 }
 
-// ✅ Do (Recommended)
+// Safer example
 function handleLogin(user: User) {
   logger.info("User logged in", { userId: user.id });
 }
@@ -2062,7 +2062,7 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 | [`privacy-pii-fixture`](#privacy-pii-fixture) | `MEDIUM` | `privacy_fixture` | Fixture may contain a literal personally identifiable value |
 | [`privacy-sensitive-response`](#privacy-sensitive-response) | `HIGH` | `privacy_response` | Response construction may expose a sensitive personal field |
 
-### Details & Guidance
+### Details and Guidance
 
 #### `privacy-pii-log` {#privacy-pii-log}
 
@@ -2074,13 +2074,13 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 
 **Recommendation**: Remove the PII field or log a non-reversible, access-controlled reference identifier
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 log.Printf("User registered with email: %s, phone: %s", email, phone)
 
-// ✅ Do (Recommended)
+// Safer example
 log.Printf("User registered with ID: %s", userID)
 ```
 
@@ -2098,13 +2098,13 @@ log.Printf("User registered with ID: %s", userID)
 
 **Recommendation**: Transmit sensitive fields in an authenticated request body and avoid retaining them in URLs or access logs
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 urlParams.append("email", userEmail);
 
-// ✅ Do (Recommended)
+// Safer example
 // Transmit sensitive parameters in authenticated POST request body
 ```
 
@@ -2122,13 +2122,13 @@ urlParams.append("email", userEmail);
 
 **Recommendation**: Use clearly synthetic, reserved test data and keep production-derived records out of the repository
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```json
-// ❌ Don't (Unsafe)
+// Unsafe example
 {"email": "real_person_1985@gmail.com", "ssn": "123-45-6789"}
 
-// ✅ Do (Recommended)
+// Safer example
 {"email": "user@example.com", "ssn": "000-00-0000"}
 ```
 
@@ -2146,13 +2146,13 @@ urlParams.append("email", userEmail);
 
 **Recommendation**: Map the response through an explicit allowlisted DTO and omit sensitive fields
 
-##### Code Example (Don't vs Do)
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 res.json({ id: user.id, email: user.email, ssn: user.ssn });
 
-// ✅ Do (Recommended)
+// Safer example
 res.json({ id: user.id, email: user.email });
 ```
 

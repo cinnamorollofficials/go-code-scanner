@@ -1,9 +1,9 @@
 ---
 title: "privacy-pii-log rule"
-description: "Logging statement may expose personally identifiable information"
+description: "For developers remediating privacy-pii-log: Logging statement may expose personally identifiable information"
 ---
 
-# `privacy-pii-log`
+# `privacy-pii-log` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Logging statement may expose personally identifiable information"
 
 **Recommendation**: Remove the PII field or log a non-reversible, access-controlled reference identifier
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 log.Printf("User registered with email: %s, phone: %s", email, phone)
 
-// ✅ Do (Recommended)
+// Safer example
 log.Printf("User registered with ID: %s", userID)
 ```
 

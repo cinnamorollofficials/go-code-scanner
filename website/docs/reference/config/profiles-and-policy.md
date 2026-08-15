@@ -1,9 +1,9 @@
 ---
-title: Profiles & Policy Configuration
-description: Field reference for performance profiles, domain policy thresholds, and failure modes.
+title: Profiles and Policy Configuration
+description: "For configuration authors: look up performance profiles, domain thresholds, severity gates, and failure modes."
 ---
 
-# Profiles & Policy Configuration
+# Profiles and Policy Configuration
 
 Configure performance profiles, severity gates, and domain policy thresholds.
 

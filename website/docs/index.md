@@ -1,7 +1,7 @@
 ---
 layout: home
 title: Go Code Scanner Documentation
-description: Install, configure, and operate the policy-driven Go Code Scanner CLI.
+description: "For developers and CI maintainers: install, configure, and operate the policy-driven Go Code Scanner CLI."
 
 hero:
   name: "Go Code Scanner"
@@ -24,7 +24,7 @@ features:
   - title: 🛡️ Policy-Driven Commit Gate
     details: Enforces security compliance using deterministic exit codes (0 for pass, 1 for CI policy violations), baselines, and suppressions.
   - title: 🌐 6 Canonical Policy Domains
-    details: Comprehensive coverage across Quality, Reliability, Hardening, Security, Supply Chain, and Governance domains.
+    details: Policy coverage across Quality, Reliability, Hardening, Security, Supply Chain, and Governance domains.
   - title: 📊 Multi-Format Reporting
     details: Generates human-readable terminal summaries, JSON (default artifact), SARIF for GitHub Security tab, and JUnit XML for CI test reports.
 ---
@@ -81,7 +81,8 @@ In local interactive execution, `security-review scan` outputs findings and retu
 
 ### Path 2: Staged Pre-Commit Hook Scan
 
-Scan only Git-staged changes before committing to maintain sub-second execution speed:
+Scan only Git-staged changes before committing to minimize the input set and use
+the fast profile:
 
 ```sh
 # Fast scan strictly isolated to staged Git index diff
@@ -101,7 +102,7 @@ Generate a SARIF report and fail the build if High or Critical findings exist:
 security-review scan --ci --fail-on HIGH --format sarif --output results.sarif
 ```
 
-See the complete [Five-Minute CI Setup](/getting-started/ci-setup) and [GitHub Actions Guide](/guides/ci-integrations).
+Continue with the [Five-Minute CI Setup](/getting-started/ci-setup) or the more detailed [CI Integration Examples](/guides/ci-integrations).
 
 ---
 

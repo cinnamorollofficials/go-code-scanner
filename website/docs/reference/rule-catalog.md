@@ -1,6 +1,6 @@
 ---
-title: Searchable Rule Catalog
-description: Search and filter built-in rules by ID, domain, severity, language, and category.
+title: Rule Catalog
+description: "For developers remediating findings: search built-in rules by ID, domain, severity, language, and category."
 ---
 
 # Rule Catalog

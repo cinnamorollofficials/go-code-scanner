@@ -1,9 +1,9 @@
 ---
 title: "node-sequelize-raw-query rule"
-description: "Sequelize raw query executed with template string interpolation"
+description: "For developers remediating node-sequelize-raw-query: Sequelize raw query executed with template string interpolation"
 ---
 
-# `node-sequelize-raw-query`
+# `node-sequelize-raw-query` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Sequelize raw query executed with template string interpolation"
 
 **Recommendation**: Use replacements or bind options in sequelize.query for safe parameter binding
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```ts
-// ❌ Don't (Unsafe)
+// Unsafe example
 await sequelize.query(`SELECT * FROM users WHERE status = '${status}'`);
 
-// ✅ Do (Recommended)
+// Safer example
 await sequelize.query("SELECT * FROM users WHERE status = :status", { replacements: { status } });
 ```
 

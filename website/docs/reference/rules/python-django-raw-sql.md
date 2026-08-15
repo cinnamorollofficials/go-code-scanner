@@ -1,9 +1,9 @@
 ---
 title: "python-django-raw-sql rule"
-description: "Django raw SQL query constructed with f-string or unsafe .extra() clause"
+description: "For developers remediating python-django-raw-sql: Django raw SQL query constructed with f-string or unsafe .extra() clause"
 ---
 
-# `python-django-raw-sql`
+# `python-django-raw-sql` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Django raw SQL query constructed with f-string or unsafe .extra() 
 
 **Recommendation**: Pass parameters as params list to Model.objects.raw(query, [params]) or use standard ORM filters
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```text
-// ❌ Don't (Unsafe)
+// Unsafe example
 User.objects.raw(f"SELECT * FROM auth_user WHERE username = '{username}'")
 
-// ✅ Do (Recommended)
+// Safer example
 User.objects.raw("SELECT * FROM auth_user WHERE username = %s", [username])
 ```
 

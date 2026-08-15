@@ -1,9 +1,9 @@
 ---
 title: "go-unbounded-request-read rule"
-description: "Request body may be read without explicit size limits"
+description: "For developers remediating go-unbounded-request-read: Request body may be read without explicit size limits"
 ---
 
-# `go-unbounded-request-read`
+# `go-unbounded-request-read` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "Request body may be read without explicit size limits"
 
 **Recommendation**: Limit request body with http.MaxBytesReader or io.LimitReader before reading into memory
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 body, err := io.ReadAll(r.Body)
 
-// ✅ Do (Recommended)
+// Safer example
 body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB size limit
 ```
 

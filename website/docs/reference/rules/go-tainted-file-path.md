@@ -1,9 +1,9 @@
 ---
 title: "go-tainted-file-path rule"
-description: "Untrusted request parameter used directly in file system operation"
+description: "For developers remediating go-tainted-file-path: Untrusted request parameter used directly in file system operation"
 ---
 
-# `go-tainted-file-path`
+# `go-tainted-file-path` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,14 +15,17 @@ description: "Untrusted request parameter used directly in file system operation
 
 **Recommendation**: Normalize paths, enforce base directory boundaries, and use allowlisted identifiers
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 filePath := r.URL.Query().Get("file")
 data, _ := os.ReadFile(filePath)
 
-// ✅ Do (Recommended)
+// Safer example
 filename := filepath.Base(r.URL.Query().Get("file"))
 safePath := filepath.Join("/var/app/storage", filename)
 data, _ := os.ReadFile(safePath)

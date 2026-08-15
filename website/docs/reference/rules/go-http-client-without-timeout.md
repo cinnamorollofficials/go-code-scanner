@@ -1,9 +1,9 @@
 ---
 title: "go-http-client-without-timeout rule"
-description: "HTTP client struct literal does not set an overall request timeout"
+description: "For developers remediating go-http-client-without-timeout: HTTP client struct literal does not set an overall request timeout"
 ---
 
-# `go-http-client-without-timeout`
+# `go-http-client-without-timeout` rule
 
 [← Rule Catalog](/reference/rule-catalog)
 
@@ -15,13 +15,16 @@ description: "HTTP client struct literal does not set an overall request timeout
 
 **Recommendation**: Configure explicit http.Client.Timeout and appropriate transport timeouts
 
-##### Code Example (Don't vs Do)
+
+The examples below are illustrative and focus on the pattern relevant to this rule.
+
+##### Unsafe and Safer Example
 
 ```go
-// ❌ Don't (Unsafe)
+// Unsafe example
 client := &http.Client{}
 
-// ✅ Do (Recommended)
+// Safer example
 client := &http.Client{Timeout: 10 * time.Second}
 ```
 
