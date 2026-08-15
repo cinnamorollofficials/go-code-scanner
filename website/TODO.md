@@ -162,22 +162,22 @@ Acceptance criteria:
 
 ## P1 — Reduce navigation and content duplication
 
-- [ ] Collapse inactive sidebar groups or use section-specific sidebars so each
+- [x] Collapse inactive sidebar groups or use section-specific sidebars so each
   page does not expose the full documentation tree at once.
-- [ ] Turn the top navigation into predictable Learn/Guides, Reference, and
+- [x] Turn the top navigation into predictable Learn/Guides, Reference, and
   Project destinations or dropdowns.
-- [ ] Rename the `Unreleased` external link to `Development docs` or replace it
+- [x] Rename the `Unreleased` external link to `Development docs` or replace it
   with a clearer version-status treatment.
-- [ ] Expand `docs/getting-started/index.md` and `docs/guides/index.md` into useful
+- [x] Expand `docs/getting-started/index.md` and `docs/guides/index.md` into useful
   routing pages with audience, task outcome, and approximate completion time.
-- [ ] Keep `docs/guides/troubleshooting.md` focused on diagnosis; move duplicated
+- [x] Keep `docs/guides/troubleshooting.md` focused on diagnosis; move duplicated
   baseline/adoption instructions to the dedicated baseline guide.
-- [ ] Apply this content model consistently:
+- [x] Apply this content model consistently:
   - Getting Started: shortest path to first success.
   - Guide: steps that complete a user task.
   - Concept: mental model and product behavior.
   - Reference: exact commands, fields, values, and contracts.
-- [ ] Prefer cross-links over repeating complete command sequences across
+- [x] Prefer cross-links over repeating complete command sequences across
   multiple content layers.
 
 Acceptance criteria:

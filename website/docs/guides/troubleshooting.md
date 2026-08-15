@@ -1,53 +1,31 @@
 ---
-title: Adoption & Troubleshooting Playbook
-description: Operational playbook for gradual scanner adoption, baseline migration, and troubleshooting common CLI issues.
+title: Troubleshooting
+description: Diagnose CLI input errors, scanner operational failures, timeouts, cache issues, and configuration migrations.
 ---
 
-# Adoption & Troubleshooting Playbook
+# Troubleshooting
 
-Operational guide for adopting `security-review` across engineering teams and diagnosing common execution errors.
+Diagnose `security-review` failures from the process exit code, scanner status,
+and error message. For rollout steps, use [Gradual Adoption with Baselines](/guides/baselines);
+for reviewed exceptions, use [Managing Suppressions](/guides/suppressions).
 
-## Gradual Adoption Strategy
+## Start with the Exit Code
 
-When introducing `security-review` into an existing codebase, follow this 3-step gradual rollout plan to prevent blocking developer velocity:
+| Exit code | Meaning | First check |
+| :---: | :--- | :--- |
+| `1` | A CI policy threshold was violated, or a verification comparison failed. | Review active findings or verification mismatch output. |
+| `2` | The command, flag, argument, or configuration is invalid. | Compare the command with `security-review help` and validate the configuration. |
+| `3` | An operational action failed after valid input was accepted. | Inspect failed required scanners, file permissions, Git state, and cache/report writes. |
 
-### Step 1: Capture Legacy Baseline
-Generate a baseline snapshot to record pre-existing technical debt:
+## Common Operational Failures
 
-```sh
-# 1. Run full scan and save findings report
-security-review scan --output security_findings.json
-
-# 2. Create baseline snapshot from report
-security-review baseline create --report security_findings.json --baseline .security-baseline.json
-```
-
-### Step 2: Enforce Policy on New Code Only
-Configure your CI pipeline to fail **only** when *new* findings are introduced relative to the baseline snapshot:
-
-```sh
-security-review scan --ci --baseline .security-baseline.json --new-only
-```
-
-### Step 3: Progressive Remediation & Suppressions
-Audit baseline issues over time. For legitimate false positives or risk-accepted exceptions, record explicit suppressions in `.security-ignore`:
-
-```sh
-security-review suppress add \
-  --file pkg/secrets/fixture_test.go \
-  --rule hardcoded-credential \
-  --reason "Synthetic unit test fixture" \
-  --expires 2026-12-31
-```
-
----
-
-## Troubleshooting Common Operational Failures
-
-### 1. Missing External Scanner Executable (`Exit Code 2`)
+### 1. Missing External Scanner Executable (`Exit Code 3` when required)
 - **Symptom**: `executable "govulncheck" not found in $PATH`
-- **Cause**: A scanner adapter declared as `"required": true` in configuration is not installed on the system PATH.
-- **Remediation**: Install the missing tool (`go install golang.org/x/vuln/cmd/govulncheck@latest`) or set `"required": false` in configuration.
+- **Cause**: A required scanner adapter is not installed and its `on_missing`
+  behavior is `fail`.
+- **Remediation**: Install the executable, or make the scanner optional and set
+  `"on_missing": "skip"` when skipping is acceptable. Optional failures appear
+  as warnings rather than changing the process exit code to `3`.
 
 ### 2. Scanner Timeout Exceeded
 - **Symptom**: `scanner execution timed out after 30s`
@@ -71,3 +49,7 @@ security-review suppress add \
   security-review config validate security-review.json
   security-review upgrade check
   ```
+
+If a problem remains after these checks, capture the full command, exit code,
+scanner status lines, tool version, operating system, and a redacted
+configuration before opening an issue.

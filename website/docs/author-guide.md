@@ -5,6 +5,21 @@ description: Standards, conventions, and style guidelines for contributing conte
 
 # Documentation Author Guide
 
+## Content Types and Ownership
+
+Choose one content type before writing:
+
+| Type | Reader question | Content contract |
+| :--- | :--- | :--- |
+| **Getting Started** | “How do I reach my first successful result?” | Use the shortest supported path and defer optional configuration. |
+| **Guide** | “How do I complete this task?” | Start from prerequisites, provide ordered actions, and end with a verifiable outcome. |
+| **Concept** | “How does this behavior fit together?” | Explain the mental model without duplicating a full operational procedure. |
+| **Reference** | “What is the exact contract?” | List accepted commands, fields, defaults, values, outputs, and failure behavior. |
+
+Each command sequence has one canonical owner. Other pages should summarize the
+idea and link to that owner instead of copying a complete procedure. This keeps
+examples from drifting when CLI behavior changes.
+
 ## Frontmatter & Headings
 
 Every page must start with YAML frontmatter specifying title and description:
@@ -23,6 +38,8 @@ Use a single `<h1>` (`# Page Title`) per document. Subsections should follow a s
 - Always declare the code block language (e.g. `sh`, `json`, `go`, `yaml`).
 - Never include real secrets, tokens, internal URLs, or local absolute paths (`C:\Users\<user>\...` or `/home/...`).
 - Use synthetic placeholders (`your-api-key`, `example.org`, `path/to/file.go`).
+- Label output or snippets as complete, abbreviated, illustrative, or captured
+  from a fixture when that distinction affects whether they can be copied.
 
 ## Admonitions (Callouts)
 

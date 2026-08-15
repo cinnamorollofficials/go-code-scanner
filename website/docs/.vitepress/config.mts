@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitepress'
 
-function sidebarDocs() {
+function sidebarDocs(activeSection: string) {
   return [
     {
       text: 'Get Started',
+      collapsed: activeSection !== 'Get Started',
       items: [
         { text: 'Overview', link: '/getting-started/' },
         { text: 'Installation', link: '/getting-started/installation' },
@@ -13,6 +14,7 @@ function sidebarDocs() {
     },
     {
       text: 'Guides',
+      collapsed: activeSection !== 'Guides',
       items: [
         { text: 'Guides Overview', link: '/guides/' },
         { text: 'Pre-Commit Hooks', link: '/guides/pre-commit-hooks' },
@@ -25,6 +27,7 @@ function sidebarDocs() {
     },
     {
       text: 'Concepts',
+      collapsed: activeSection !== 'Concepts',
       items: [
         { text: 'Concepts Overview', link: '/concepts/' },
         { text: 'Scan Modes and Isolation', link: '/concepts/scan-modes' },
@@ -36,6 +39,7 @@ function sidebarDocs() {
     },
     {
       text: 'Reference',
+      collapsed: activeSection !== 'Reference',
       items: [
         { text: 'CLI Reference', link: '/reference/cli' },
         { text: 'Configuration Reference', link: '/reference/configuration' },
@@ -46,6 +50,7 @@ function sidebarDocs() {
     },
     {
       text: 'Project',
+      collapsed: activeSection !== 'Project',
       items: [
         { text: 'Security Model', link: '/security' },
         { text: 'Changelog', link: '/changelog' },
@@ -93,29 +98,43 @@ export default defineConfig({
   themeConfig: {
     logo: '/logo.svg',
     nav: [
-      { 
-        text: 'Documentation', 
-        link: '/getting-started/', 
-        activeMatch: '^/(getting-started|guides|concepts|author-guide|changelog|contributing|security)/'
+      {
+        text: 'Learn',
+        activeMatch: '^/(getting-started|guides|concepts)/',
+        items: [
+          { text: 'Get Started', link: '/getting-started/' },
+          { text: 'Guides', link: '/guides/' },
+          { text: 'Concepts', link: '/concepts/' }
+        ]
       },
-      { 
-        text: 'Reference', 
-        link: '/reference/', 
-        activeMatch: '^/reference/' 
+      {
+        text: 'Reference',
+        link: '/reference/',
+        activeMatch: '^/reference/'
       },
-      { 
-        text: 'Unreleased', 
-        link: 'https://github.com/cinnamorollofficials/go-code-scanner/releases' 
+      {
+        text: 'Project',
+        activeMatch: '^/(security|changelog|contributing|author-guide)',
+        items: [
+          { text: 'Security Model', link: '/security' },
+          { text: 'Changelog', link: '/changelog' },
+          { text: 'Contributing', link: '/contributing' },
+          { text: 'Documentation Author Guide', link: '/author-guide' }
+        ]
+      },
+      {
+        text: 'Development docs',
+        link: 'https://github.com/cinnamorollofficials/go-code-scanner/releases'
       }
     ],
     sidebar: {
-      '/getting-started/': sidebarDocs(),
-      '/guides/': sidebarDocs(),
-      '/concepts/': sidebarDocs(),
-      '/author-guide': sidebarDocs(),
-      '/changelog': sidebarDocs(),
-      '/contributing': sidebarDocs(),
-      '/security': sidebarDocs(),
+      '/getting-started/': sidebarDocs('Get Started'),
+      '/guides/': sidebarDocs('Guides'),
+      '/concepts/': sidebarDocs('Concepts'),
+      '/author-guide': sidebarDocs('Project'),
+      '/changelog': sidebarDocs('Project'),
+      '/contributing': sidebarDocs('Project'),
+      '/security': sidebarDocs('Project'),
 
       '/reference/': [
         {
