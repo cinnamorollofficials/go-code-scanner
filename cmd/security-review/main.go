@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,6 +29,7 @@ import (
 	"github.com/cinnamorollofficials/go-code-scanner/pkg/rules"
 	frontendscanner "github.com/cinnamorollofficials/go-code-scanner/pkg/scanner/frontend"
 	"github.com/cinnamorollofficials/go-code-scanner/pkg/suppression"
+	"github.com/cinnamorollofficials/go-code-scanner/pkg/viewer"
 )
 
 func main() {
@@ -51,6 +53,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runSuppress(args[1:], stdout, stderr)
 	case "cache":
 		return runCache(args[1:], stdout, stderr)
+	case "ui", "view":
+		return runUI(ctx, args[1:], stdout, stderr)
 	case "release":
 		return runRelease(args[1:], stdout, stderr)
 	case "upgrade":
@@ -943,6 +947,58 @@ func loadConfig(path, root string) (config.Config, error) {
 	return cfg, cfg.Validate()
 }
 
-func writeUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "usage: security-review <scan|config|hook|baseline|suppress|cache|release|upgrade|version> [options]")
+func runUI(ctx context.Context, args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("ui", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	port := flags.Int("port", 8080, "HTTP server port")
+	host := flags.String("host", "127.0.0.1", "HTTP server host")
+	root := flags.String("root", ".", "project root directory to scan")
+	configPath := flags.String("config", "", "path to JSON configuration file")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+
+	absRoot, err := filepath.Abs(*root)
+	if err != nil {
+		fmt.Fprintf(stderr, "invalid root path: %v\n", err)
+		return 2
+	}
+
+	server := viewer.NewServer(viewer.ServerOptions{
+		Root:       absRoot,
+		ConfigPath: *configPath,
+	})
+
+	addr := fmt.Sprintf("%s:%d", *host, *port)
+	httpServer := &http.Server{
+		Addr:    addr,
+		Handler: server.Handler(),
+	}
+
+	fmt.Fprintf(stdout, "\n🛡️  Go Code Scanner Dashboard is running at http://%s\n", addr)
+	fmt.Fprintf(stdout, "📁 Workspace: %s\n", absRoot)
+	fmt.Fprintln(stdout, "Press Ctrl+C to stop the dashboard server.")
+
+	serverErr := make(chan error, 1)
+	go func() {
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_ = httpServer.Shutdown(shutdownCtx)
+		return 0
+	case err := <-serverErr:
+		fmt.Fprintf(stderr, "server error: %v\n", err)
+		return 1
+	}
 }
+
+func writeUsage(writer io.Writer) {
+	fmt.Fprintln(writer, "usage: security-review <scan|ui|config|hook|baseline|suppress|cache|release|upgrade|version> [options]")
+}
+
