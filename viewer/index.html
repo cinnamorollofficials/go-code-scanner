@@ -1,26 +1,4 @@
-package viewer
-
-import (
-	"fmt"
-	"net/http"
-	"strings"
-)
-
-func (s *Server) handleDefaultUI(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" && r.URL.Path != "/index.html" {
-		http.NotFound(w, r)
-		return
-	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	_, _ = fmt.Fprint(w, getHTMLDashboard())
-}
-
-func getHTMLDashboard() string {
-	return strings.ReplaceAll(dashboardTemplate, "__BT__", "`")
-}
-
-const dashboardTemplate = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1510,7 +1488,7 @@ const dashboardTemplate = `<!DOCTYPE html>
     function formatDescription(desc) {
       if (!desc) return '';
       return escapeHtml(desc)
-        .replace(/\x60([^\x60]+)\x60/g, '<code>$1</code>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
         .replace(/\$([A-Z_]+)/g, '<code>$$$1</code>');
     }
 
@@ -1704,4 +1682,4 @@ const dashboardTemplate = `<!DOCTYPE html>
     }
   </script>
 </body>
-</html>`
+</html>
