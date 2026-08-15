@@ -1,5 +1,5 @@
 ---
-title: Rule Catalog
+title: Searchable Rule Catalog
 description: Search and filter built-in rules by ID, domain, severity, language, and category.
 ---
 

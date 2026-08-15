@@ -1,5 +1,7 @@
 ---
 layout: home
+title: Go Code Scanner Documentation
+description: Install, configure, and operate the policy-driven Go Code Scanner CLI.
 
 hero:
   name: "Go Code Scanner"

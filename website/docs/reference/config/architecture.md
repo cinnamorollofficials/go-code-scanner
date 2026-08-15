@@ -18,7 +18,7 @@ Define package layering rules, forbidden import paths between components, and pa
       { "name": "pkg", "paths": ["pkg/*"] }
     ],
     "forbidden_dependencies": [
-      { "from": "pkg/*", "to": "cmd/*" }
+      { "from": "pkg", "to": "cmd" }
     ]
   }
 }

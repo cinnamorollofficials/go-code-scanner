@@ -149,9 +149,9 @@ Acceptance criteria:
 - [x] Replace Markdown-like navigation text with real rendered links on canonical detail pages.
 - [x] Generate working previous/next navigation between rule detail pages.
 - [x] Preserve useful legacy anchors or provide redirects for inbound links.
-- [ ] Add automated checks for every detail link, previous/next link, and
+- [x] Add automated checks for every detail link, previous/next link, and
   preserved anchor.
-- [ ] Verify catalog filtering and the detail layout at 320 px, 768 px, and
+- [x] Verify catalog filtering and the detail layout at 320 px, 768 px, and
   desktop widths.
 
 Acceptance criteria:
@@ -188,23 +188,23 @@ Acceptance criteria:
 
 ## P2 — Add documentation quality gates under `website/`
 
-- [ ] Add a `docs:check-links` script that fails on broken internal links and
+- [x] Add a `docs:check-links` script that fails on broken internal links and
   missing anchors in the production output.
-- [ ] Add a content check for valid frontmatter, unique titles, useful
+- [x] Add a content check for valid frontmatter, unique titles, useful
   descriptions, exactly one H1, and labelled fenced code blocks.
-- [ ] Add a command-example check that compares documented CLI flags and
+- [x] Add a command-example check that compares documented CLI flags and
   subcommands with the current command definitions.
-- [ ] Validate copyable JSON configurations and every Config Builder preset with
+- [x] Validate copyable JSON configurations and every Config Builder preset with
   the real CLI validator.
-- [ ] Continue checking generated rule, scanner, and configuration references
+- [x] Continue checking generated rule, scanner, and configuration references
   for drift.
-- [ ] Add browser smoke tests for the homepage, first-scan guide, CLI reference,
+- [x] Add browser smoke tests for the homepage, first-scan guide, CLI reference,
   Rule Catalog, and Config Builder.
-- [ ] Add accessibility smoke tests covering keyboard use, focus visibility,
+- [x] Add accessibility smoke tests covering keyboard use, focus visibility,
   landmarks, headings, labels, status announcements, and color contrast.
-- [ ] Provide one `docs:verify` script that runs content checks, generated-content
+- [x] Provide one `docs:verify` script that runs content checks, generated-content
   checks, tests, and the production build.
-- [ ] Document each check and its expected failure message in the documentation
+- [x] Document each check and its expected failure message in the documentation
   author guide.
 
 Acceptance criteria:
@@ -215,9 +215,9 @@ Acceptance criteria:
 
 ## P2 — Accessibility, responsive behavior, and metadata
 
-- [ ] Add `prefers-reduced-motion` handling for custom transitions and animated
+- [x] Add `prefers-reduced-motion` handling for custom transitions and animated
   controls.
-- [ ] Verify the header, mobile menu, sidebar, search, Config Builder, tables,
+- [x] Verify the header, mobile menu, sidebar, search, Config Builder, tables,
   and code-copy controls using keyboard-only navigation.
 - [ ] Add breadcrumbs or compact section labels to deep configuration and rule
   reference pages.
@@ -225,7 +225,7 @@ Acceptance criteria:
 - [ ] Add canonical URL metadata for generated documentation pages.
 - [ ] Add a concise feedback or issue-reporting link only if the destination is
   actively maintained.
-- [ ] Confirm that dense tables and generated rule content do not cause unusable
+- [x] Confirm that dense tables and generated rule content do not cause unusable
   horizontal or vertical navigation on mobile.
 
 Acceptance criteria:
@@ -274,7 +274,7 @@ Acceptance criteria:
   page.
 - [ ] Installation, first scan, CI, baseline, suppression, and scanner examples
   match current product behavior.
-- [ ] `npm run docs:verify` passes locally and in the website build pipeline.
-- [ ] Critical pages pass link, responsive, and accessibility smoke tests.
+- [x] `npm run docs:verify` passes locally and in the website build pipeline.
+- [x] Critical pages pass link, responsive, and accessibility smoke tests.
 - [ ] Each checked item has reproducible evidence in a test, generated artifact,
   or documented manual verification result.

@@ -9,32 +9,32 @@
     <div class="filters" role="search" aria-label="Filter rule catalog">
       <label class="search-field">
         <span>Rule ID or description</span>
-        <input v-model.trim="query" type="search" placeholder="Search rules…" />
+        <input id="rule-query" v-model.trim="query" type="search" placeholder="Search rules…" />
       </label>
-      <label>
+      <label for="rule-domain">
         <span>Domain</span>
-        <select v-model="domain">
+        <select id="rule-domain" v-model="domain">
           <option value="">All domains</option>
           <option v-for="value in domains" :key="value" :value="value">{{ label(value) }}</option>
         </select>
       </label>
-      <label>
+      <label for="rule-severity">
         <span>Severity</span>
-        <select v-model="severity">
+        <select id="rule-severity" v-model="severity">
           <option value="">All severities</option>
           <option v-for="value in severities" :key="value" :value="value">{{ value }}</option>
         </select>
       </label>
-      <label>
+      <label for="rule-language">
         <span>Language / ecosystem</span>
-        <select v-model="language">
+        <select id="rule-language" v-model="language">
           <option value="">All languages</option>
           <option v-for="value in languages" :key="value" :value="value">{{ value }}</option>
         </select>
       </label>
-      <label>
+      <label for="rule-category">
         <span>Category</span>
-        <select v-model="category">
+        <select id="rule-category" v-model="category">
           <option value="">All categories</option>
           <option v-for="value in categories" :key="value" :value="value">{{ label(value) }}</option>
         </select>
@@ -110,6 +110,11 @@ function label(value) {
 </script>
 
 <style scoped>
+.rule-catalog {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .domain-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -141,6 +146,7 @@ function label(value) {
 
 .filters label {
   display: grid;
+  min-width: 0;
   gap: 5px;
   color: var(--vp-c-text-2);
   font-size: 0.8rem;
@@ -150,6 +156,8 @@ function label(value) {
 .filters input,
 .filters select,
 .filters button {
+  width: 100%;
+  min-width: 0;
   min-height: 40px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
@@ -165,16 +173,16 @@ function label(value) {
 }
 
 .filters button:disabled { cursor: not-allowed; opacity: 0.55; }
-.search-field { grid-column: span 2; }
+.search-field { grid-column: 1 / -1; }
 .result-count { color: var(--vp-c-text-2); font-size: 0.9rem; }
-.table-wrap { overflow-x: auto; }
+.table-wrap { max-width: 100%; overflow-x: auto; }
 .table-wrap:focus { outline: 2px solid var(--vp-c-brand-1); outline-offset: 2px; }
 table { min-width: 780px; }
 th { white-space: nowrap; }
 .severity { font-size: 0.75rem; font-weight: 700; }
 .severity[data-severity="CRITICAL"] { color: var(--vp-c-danger-1); }
-.severity[data-severity="HIGH"] { color: #c2410c; }
-.severity[data-severity="MEDIUM"] { color: #a16207; }
+.severity[data-severity="HIGH"] { color: var(--rule-severity-high); }
+.severity[data-severity="MEDIUM"] { color: var(--rule-severity-medium); }
 .empty-state { padding: 20px; text-align: center; color: var(--vp-c-text-2); }
 
 @media (max-width: 640px) {

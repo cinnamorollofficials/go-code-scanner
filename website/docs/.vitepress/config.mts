@@ -1,10 +1,9 @@
 import { defineConfig } from 'vitepress'
 
 function sidebarDocs(activeSection: string) {
-  return [
+  const sections = [
     {
       text: 'Get Started',
-      collapsed: activeSection !== 'Get Started',
       items: [
         { text: 'Overview', link: '/getting-started/' },
         { text: 'Installation', link: '/getting-started/installation' },
@@ -14,7 +13,6 @@ function sidebarDocs(activeSection: string) {
     },
     {
       text: 'Guides',
-      collapsed: activeSection !== 'Guides',
       items: [
         { text: 'Guides Overview', link: '/guides/' },
         { text: 'Pre-Commit Hooks', link: '/guides/pre-commit-hooks' },
@@ -27,7 +25,6 @@ function sidebarDocs(activeSection: string) {
     },
     {
       text: 'Concepts',
-      collapsed: activeSection !== 'Concepts',
       items: [
         { text: 'Concepts Overview', link: '/concepts/' },
         { text: 'Scan Modes and Isolation', link: '/concepts/scan-modes' },
@@ -39,7 +36,6 @@ function sidebarDocs(activeSection: string) {
     },
     {
       text: 'Reference',
-      collapsed: activeSection !== 'Reference',
       items: [
         { text: 'CLI Reference', link: '/reference/cli' },
         { text: 'Configuration Reference', link: '/reference/configuration' },
@@ -50,13 +46,21 @@ function sidebarDocs(activeSection: string) {
     },
     {
       text: 'Project',
-      collapsed: activeSection !== 'Project',
       items: [
         { text: 'Security Model', link: '/security' },
         { text: 'Changelog', link: '/changelog' },
         { text: 'Contributing Guide', link: '/contributing' },
         { text: 'Documentation Author Guide', link: '/author-guide' }
       ]
+    }
+  ]
+  return [
+    sections.find((section) => section.text === activeSection)!,
+    {
+      text: 'Explore Other Sections',
+      items: sections
+        .filter((section) => section.text !== activeSection)
+        .map((section) => ({ text: section.text, link: section.items[0].link }))
     }
   ]
 }

@@ -7,7 +7,7 @@ description: Complete usage reference for all security-review CLI commands, flag
 
 `security-review` provides command-line tools for security scanning, git hooks, baseline management, suppressions, and cache maintenance.
 
-```sh
+```text
 security-review [command] [flags]
 ```
 
@@ -74,7 +74,7 @@ security-review config validate <path>
 
 Manages git hook installation and pre-commit lifecycle.
 
-```sh
+```text
 security-review hook <install|uninstall|status|run> [event] [--root <dir>]
 ```
 
@@ -150,13 +150,46 @@ security-review cache clean [--dir <path>]
 
 ---
 
-## `release` & `upgrade`
+## `release`
+
+Creates and verifies release archives, checksum manifests, provenance, and
+signatures. See the [Security Model](/security) for the complete trusted-release
+workflow.
 
 ```sh
-# Check compatibility contract changes against a previous schema
-security-review upgrade check [--contract <path>]
+# Verify every archive named by SHA256SUMS
+security-review release checksums verify --manifest SHA256SUMS --directory dist/
 
-# Print version and build details
+# Verify provenance subjects and an Ed25519 signature
+security-review release verify \
+  --provenance provenance.json \
+  --signature provenance.sig \
+  --public-key release-public.pem \
+  --directory dist/
+```
+
+Additional release operations are `archive`, `provenance generate`,
+`provenance sign`, and `changelog validate`.
+
+---
+
+## `upgrade`
+
+Checks the current compatibility contract against a previously generated
+contract. Exit code `1` means a migration is required.
+
+```sh
+security-review upgrade check [--contract <path>]
+```
+
+---
+
+## `version`
+
+Prints the version, commit, build date, Go version, target operating system, and
+target architecture embedded in the binary.
+
+```sh
 security-review version
 ```
 
@@ -170,4 +203,3 @@ security-review version
 - **`1`**: Policy threshold violated when `--ci` is active (findings meet or exceed threshold), or release/contract verification mismatch.
 - **`2`**: Invalid CLI flags, missing required arguments, or invalid configuration syntax.
 - **`3`**: Operational failure (I/O error, file permission, git repository error, or cache failure).
-
