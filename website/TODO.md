@@ -82,24 +82,24 @@ Affected pages:
 
 ## P0 — Make the Config Builder truthful and functional
 
-- [ ] Decide whether the builder is a complete configuration generator or a
+- [x] Decide whether the builder is a complete configuration generator or a
   small starter; align its title and description with that scope.
-- [ ] Make the preset list, preset implementation, and
+- [x] Make the preset list, preset implementation, and
   `docs/reference/config-builder-contract.md` agree on the same preset count.
-- [ ] Implement every selectable preset so choosing one never silently does
+- [x] Implement every selectable preset so choosing one never silently does
   nothing.
-- [ ] Remove the invalid `INFO` threshold.
-- [ ] Add the promised file-download action, or remove it from the contract.
-- [ ] Add client-side validation for required values, number ranges, enum values,
+- [x] Remove the invalid `INFO` threshold.
+- [x] Add the promised file-download action, or remove it from the contract.
+- [x] Add client-side validation for required values, number ranges, enum values,
   and unsafe/empty paths before copy or download.
-- [ ] Show clear success and failure states for clipboard and download actions.
-- [ ] Announce copy/download status through an `aria-live` region.
-- [ ] Add a reset action and a clear indication when changing presets will
+- [x] Show clear success and failure states for clipboard and download actions.
+- [x] Announce copy/download status through an `aria-live` region.
+- [x] Add a reset action and a clear indication when changing presets will
   replace unsaved edits.
-- [ ] If the builder remains “complete”, expose the high-value policy, profile,
+- [x] If the builder remains “complete”, expose the high-value policy, profile,
   scanner, hook, frontend, and cache settings instead of only four editable
   fields.
-- [ ] Test exported JSON with the project's real configuration validator.
+- [x] Test exported JSON with the project's real configuration validator.
 
 Affected files:
 
