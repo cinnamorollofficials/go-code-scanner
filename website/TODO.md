@@ -63,15 +63,15 @@ Acceptance criteria:
 
 ### Scanner configuration reference
 
-- [ ] In `docs/reference/config/scanners.md`, document only supported scanner
+- [x] In `docs/reference/config/scanners.md`, document only supported scanner
   types: the default/pattern form, `command`, and `adapter` as applicable.
-- [ ] Remove `builtin` as a supported scanner type unless it becomes a valid
+- [x] Remove `builtin` as a supported scanner type unless it becomes a valid
   configuration value.
-- [ ] Replace noncanonical policy domains such as `secrets`, `vulnerabilities`,
+- [x] Replace noncanonical policy domains such as `secrets`, `vulnerabilities`,
   `architecture`, and `frontend` with the six canonical domains.
-- [ ] Correct the required-scanner failure behavior to use the operational
+- [x] Correct the required-scanner failure behavior to use the operational
   failure exit code rather than the invalid-input exit code.
-- [ ] Verify every scanner configuration example with the real configuration
+- [x] Verify every scanner configuration example with the real configuration
   validator.
 
 Acceptance criteria:
