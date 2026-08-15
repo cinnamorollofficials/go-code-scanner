@@ -62,6 +62,7 @@ builds the site, inspects rendered links and anchors, and runs browser smoke tes
 | `docs:check-cli` | Copyable `security-review` commands use current subcommands and flags. | `unsupported command shape` or `is not valid` identifies the command that must be corrected against the CLI reference. |
 | `docs:check-presets` | Every Config Builder preset passes both browser-side checks and the real CLI validator. | The preset name is followed by `browser validation failed` or `CLI validation failed`; correct the shared preset data rather than the generated output. |
 | `docs:check-configs` | Copyable JSON configuration examples pass the real CLI validator. | The page and JSON block number are followed by the validator error. Correct the documented example. |
+| `docs:check-deployment` | The internal deployment guide stays portable and agrees with the Docker, Compose, Nginx, and base-path contract shipped under `website/`. | The message names the missing file, outdated command, port mapping, route, or unsupported deployment claim that must be reconciled. |
 | `docs:check-links` | Rendered internal destinations and anchors exist and remain inside the documentation base path. | `missing target`, `missing anchor`, or `link escapes documentation base` names the rendered source and broken link. |
 | `docs:test-browser` | Critical pages, filters, responsive layouts, keyboard flows, status regions, and WCAG A/AA smoke checks. | Playwright names the failed journey; accessibility failures also include the rule ID and affected element. |
 

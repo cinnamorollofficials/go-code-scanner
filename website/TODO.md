@@ -237,15 +237,15 @@ Acceptance criteria:
 
 ## P2 — Clean up website deployment documentation
 
-- [ ] Replace every `file:///Users/...` link in `DEPLOYMENT.md` with a portable
+- [x] Replace every `file:///Users/...` link in `DEPLOYMENT.md` with a portable
   repository-relative link.
-- [ ] Decide whether deployment documentation is an internal Indonesian guide or
+- [x] Decide whether deployment documentation is an internal Indonesian guide or
   part of the public English documentation, then apply that choice consistently.
-- [ ] Lead with the supported deployment path and move optional VPS, reverse
+- [x] Lead with the supported deployment path and move optional VPS, reverse
   proxy, and Certbot procedures into clearly labelled advanced sections.
-- [ ] Verify Docker, Docker Compose, base-path, and update commands against the
+- [x] Verify Docker, Docker Compose, base-path, and update commands against the
   files currently shipped under `website/`.
-- [ ] Remove decorative emoji where they make the operational guide harder to
+- [x] Remove decorative emoji where they make the operational guide harder to
   scan.
 
 Acceptance criteria:

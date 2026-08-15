@@ -21,8 +21,9 @@ COPY . .
 ARG VITEPRESS_BASE=/
 ENV VITEPRESS_BASE=${VITEPRESS_BASE}
 
-# Build VitePress documentation site
-RUN npm run docs:build
+# Build the static site from the website-only Docker context. The full
+# docs:verify gate runs before deployment and additionally requires Go + Chrome.
+RUN npm run docs:build-site
 
 # ==========================================
 # Stage 2: Serve with Lightweight Nginx

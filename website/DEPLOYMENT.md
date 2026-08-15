@@ -1,92 +1,124 @@
-# 🚀 Panduan Deployment Website (VitePress) ke VPS
+# Panduan Deployment Website
 
-Dokumen ini berisi panduan lengkap langkah-demi-langkah untuk membuat build dan mendeploy website dokumentasi **Go Code Scanner** ke VPS (Virtual Private Server) menggunakan Docker, Docker Compose, dan Nginx.
+Dokumen ini adalah panduan internal berbahasa Indonesia untuk operator yang
+menjalankan website dokumentasi Go Code Scanner. Dokumentasi publik di
+`website/docs/` tetap menggunakan bahasa Inggris.
 
----
+Jalur yang didukung untuk VPS adalah Docker Compose dengan website disajikan di
+root domain, misalnya `https://docs.example.com/`. Jalankan `npm run docs:verify`
+di lingkungan pengembangan atau CI sebelum membuat image deployment.
 
-## 📁 Berkas Deployment yang Disediakan
+## Berkas yang digunakan
 
-Semua konfigurasi telah disiapkan di dalam direktori `website/`:
+- [Dockerfile](./Dockerfile) membangun aset statis dengan Node.js 20, lalu
+  menyalinnya ke image Nginx 1.27.
+- [docker-compose.yml](./docker-compose.yml) membangun service `website`,
+  mengaktifkan restart otomatis, dan memetakan port host `80` ke container.
+- [nginx.conf](./nginx.conf) menangani clean URL, cache aset, kompresi, header
+  keamanan, dan halaman 404.
+- [.dockerignore](./.dockerignore) menjaga konteks build tetap kecil.
 
-- [Dockerfile](file:///Users/hadiyahku/code/go-code-scanner-1/website/Dockerfile): Multi-stage build (Node.js 20 Alpine untuk build static asset + Nginx 1.27 Alpine untuk web server produksi minimalis).
-- [nginx.conf](file:///Users/hadiyahku/code/go-code-scanner-1/website/nginx.conf): Konfigurasi web server Nginx yang dioptimalkan untuk VitePress (`cleanUrls`, routing SPA, kompresi Gzip, caching static assets, & security headers).
-- [docker-compose.yml](file:///Users/hadiyahku/code/go-code-scanner-1/website/docker-compose.yml): Berkas Docker Compose untuk menjalankan service web secara praktis.
-- [.dockerignore](file:///Users/hadiyahku/code/go-code-scanner-1/website/.dockerignore): Mengabaikan `node_modules` dan file temporary dari konteks build Docker.
+## Prasyarat
 
----
+Host deployment memerlukan Git, Docker Engine, Docker Compose v2, dan `curl`
+untuk pemeriksaan akhir.
 
-## 📌 Prasyarat di VPS
+```sh
+git --version
+docker --version
+docker compose version
+curl --version
+```
 
-Sebelum memulai, pastikan VPS Anda sudah terpasang:
-- **Git**
-- **Docker** (`docker --version`)
-- **Docker Compose** (`docker compose version`)
+## Jalur deployment yang didukung
 
----
+Clone repository dan jalankan Compose dari folder `website/`:
 
-## 🚀 Cara 1: Deploy Menggunakan Docker Compose (Sangat Direkomendasikan)
-
-### Step 1: Clone Repository ke VPS
-```bash
+```sh
 git clone https://github.com/cinnamorollofficials/go-code-scanner.git
 cd go-code-scanner/website
-```
-
-### Step 2: Build & Jalankan Container di Background
-```bash
+docker compose config
 docker compose up -d --build
+docker compose ps
+curl --fail --silent --show-error http://127.0.0.1/
 ```
 
-Setelah perintah selesai, website akan langsung dapat diakses melalui browser di IP VPS Anda di port `80` (`http://IP-VPS-ANDA`).
+Compose menetapkan `VITEPRESS_BASE=/`, sesuai dengan Nginx yang menyajikan hasil
+build di root. Setelah pemeriksaan `curl` berhasil, website tersedia melalui
+alamat IP atau domain host pada port 80.
 
----
+## Memperbarui deployment
 
-## 🐳 Cara 2: Deploy Menggunakan Docker CLI Manual
+Ambil perubahan secara fast-forward, bangun ulang image, lalu periksa endpoint:
 
-### Step 1: Build Docker Image
-Masuk ke folder `website` dan jalankan perintah build:
-```bash
-cd website
+```sh
+cd go-code-scanner/website
+git pull --ff-only origin main
+docker compose up -d --build --remove-orphans
+docker compose ps
+curl --fail --silent --show-error http://127.0.0.1/
+```
+
+Jika container tidak sehat atau endpoint gagal, lihat status dan log sebelum
+mengubah konfigurasi:
+
+```sh
+docker compose ps
+docker compose logs --tail=200 website
+```
+
+## Base path dan subpath
+
+Konfigurasi Compose yang disertakan mendukung root path `/`. Untuk memeriksa
+hasil build statis yang menargetkan subpath, gunakan nilai dengan slash pembuka
+dan penutup:
+
+```sh
+VITEPRESS_BASE=/docs/ npm run docs:build-site
+```
+
+Perintah itu menghasilkan URL aset dengan prefix `/docs/`, tetapi image Nginx
+yang disertakan tidak langsung melayani subpath. Web server atau reverse proxy
+harus memetakan `/docs/` ke isi `docs/.vitepress/dist/`. Jangan hanya mengganti
+build argument pada image root-path karena halaman akan meminta aset dari lokasi
+yang tidak disajikan oleh konfigurasi Nginx saat ini.
+
+## Opsi lanjutan
+
+### Docker CLI tanpa Compose
+
+Gunakan jalur ini hanya bila lifecycle container dikelola tanpa Compose:
+
+```sh
+cd go-code-scanner/website
 docker build -t go-code-scanner-website:latest .
-```
-
-*Catatan (Custom Path):*
-Jika website akan di-deploy ke subpath khusus (misalnya `https://example.com/docs/`), Anda dapat menyertakan `--build-arg VITEPRESS_BASE=/docs/`:
-```bash
-docker build --build-arg VITEPRESS_BASE=/docs/ -t go-code-scanner-website:latest .
-```
-
-### Step 2: Jalankan Container
-```bash
 docker run -d \
   --name go-code-scanner-website \
   --restart unless-stopped \
   -p 80:80 \
   go-code-scanner-website:latest
+curl --fail --silent --show-error http://127.0.0.1/
 ```
 
----
+Hapus container lama sebelum memakai kembali nama yang sama pada deployment
+baru.
 
-## 🔒 Cara 3: Konfigurasi HTTPS / Domain dengan Nginx Reverse Proxy & SSL (Certbot)
+### Reverse proxy dan TLS pada VPS
 
-Jika Anda menyambungkan Domain (misalnya `docs.domainanda.com`) dan menggunakan Nginx / Certbot di host VPS:
+Jika host Nginx atau proxy lain mengelola domain dan TLS, ubah port Compose
+menjadi loopback-only agar container tidak terekspos langsung:
 
-### 1. Ubah Port pada `docker-compose.yml` agar tidak bentrok dengan Port 80 VPS:
-Ubah mapping port ke `127.0.0.1:8080:80`:
 ```yaml
 ports:
   - "127.0.0.1:8080:80"
 ```
 
-Jalankan ulang docker compose:
-```bash
-docker compose up -d
-```
+Contoh virtual host Nginx di host:
 
-### 2. Buat Virtual Host Nginx di VPS (`/etc/nginx/sites-available/docs.domainanda.com`)
 ```nginx
 server {
-    server_name docs.domainanda.com;
+    listen 80;
+    server_name docs.example.com;
 
     location / {
         proxy_pass http://127.0.0.1:8080;
@@ -98,43 +130,26 @@ server {
 }
 ```
 
-Aktifkan situs & reload Nginx:
-```bash
-sudo ln -s /etc/nginx/sites-available/docs.domainanda.com /etc/nginx/sites-enabled/
+Validasi dan reload konfigurasi host sebelum meminta sertifikat:
+
+```sh
 sudo nginx -t
 sudo systemctl reload nginx
+sudo certbot --nginx -d docs.example.com
 ```
 
-### 3. Pasang Sertifikat SSL gratis dengan Certbot:
-```bash
-sudo certbot --nginx -d docs.domainanda.com
+Instalasi Nginx host, firewall, DNS, dan Certbot bergantung pada distribusi dan
+kebijakan infrastruktur. Langkah tersebut bukan bagian dari image website.
+
+## Operasi rutin
+
+```sh
+# Status service
+docker compose ps
+
+# Log terbaru; tambahkan --follow bila perlu memantau
+docker compose logs --tail=200 website
+
+# Hentikan service tanpa menghapus image
+docker compose down
 ```
-
----
-
-## 🔄 Cara Update Website Saat Ada Perubahan Kode
-
-Setiap ada update atau pembaruan dokumentasi di repository:
-
-```bash
-cd go-code-scanner/website
-git pull origin main
-docker compose up -d --build
-```
-
----
-
-## 📊 Monitoring & Command Bantuan
-
-- **Melihat log aplikasi:**
-  ```bash
-  docker compose logs -f website
-  ```
-- **Cek status container:**
-  ```bash
-  docker compose ps
-  ```
-- **Menghentikan container:**
-  ```bash
-  docker compose down
-  ```
