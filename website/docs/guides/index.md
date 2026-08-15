@@ -9,6 +9,9 @@ Task-oriented integration and operational playbooks for `security-review`.
 
 ## Available Guides
 
-- **[Author Guide](/author-guide)**: Content conventions, typography, admonitions, and styling rules for documentation contributors.
-- **[Local & CI Integrations](/guides/ci-integrations)**: Complete setup guide for pre-commit hooks, GitHub Actions, GitLab CI, and SARIF upload.
-- **[Adoption & Troubleshooting](/guides/troubleshooting)**: Gradual rollout strategy, baseline migration, and remediation steps for operational CLI failures.
+- **[Pre-Commit Hooks](/guides/pre-commit-hooks)**: Automate sub-second isolated staged checks before every git commit.
+- **[GitHub Actions / GitLab CI](/guides/ci-integrations)**: Set up CI workflows, PR gates, and upload SARIF to GitHub Code Scanning tab.
+- **[Gradual Adoption with Baselines](/guides/baselines)**: Adopt the scanner in legacy codebases without blocking feature velocity.
+- **[Managing Suppressions](/guides/suppressions)**: Register and manage audited false-positive and risk-accepted exceptions.
+- **[Reproducing a Finding](/guides/reproducing-findings)**: 6-step playbook for isolating, diagnosing, and verifying reported findings.
+- **[Troubleshooting](/guides/troubleshooting)**: Diagnose and resolve common CLI errors, cache issues, and timeout failures.

@@ -291,6 +291,11 @@ tx.Commit()`,
 			Description: "Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements.",
 		},
 		{
+			Domain:      finding.SupplyChain,
+			Title:       "📦 Supply Chain Rules",
+			Description: "Rules auditing third-party dependencies, version pins, package vulnerabilities, and license restrictions.",
+		},
+		{
 			Domain:      finding.Governance,
 			Title:       "📜 Governance Rules",
 			Description: "Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints.",
@@ -320,7 +325,7 @@ tx.Commit()`,
 		count := len(grouped[info.Domain])
 		icon := strings.Fields(info.Title)[0]
 		titleWithoutIcon := strings.TrimSpace(strings.TrimPrefix(info.Title, icon))
-		buf.WriteString(fmt.Sprintf("| **%s** | %s | %d | %s |\n", titleWithoutIcon, icon, count, info.Description))
+		buf.WriteString(fmt.Sprintf("| **[%s](#%s)** | %s | %d | %s |\n", titleWithoutIcon, strings.ToLower(strings.ReplaceAll(titleWithoutIcon, " ", "-")), count, info.Description))
 	}
 	buf.WriteString("\n---\n\n")
 
@@ -331,21 +336,26 @@ tx.Commit()`,
 			continue
 		}
 
-		buf.WriteString(fmt.Sprintf("## %s\n\n", info.Title))
+		icon := strings.Fields(info.Title)[0]
+		titleWithoutIcon := strings.TrimSpace(strings.TrimPrefix(info.Title, icon))
+		sectionID := strings.ToLower(strings.ReplaceAll(titleWithoutIcon, " ", "-"))
+
+		buf.WriteString(fmt.Sprintf("## %s {#%s}\n\n", info.Title, sectionID))
 		buf.WriteString(fmt.Sprintf("%s\n\n", info.Description))
 
-		// Table for this domain
+		// Matrix table for this domain
 		buf.WriteString("| Rule ID | Severity | Category | Description |\n")
 		buf.WriteString("| :--- | :--- | :--- | :--- |\n")
 
 		for _, r := range domainRules {
 			desc := strings.ReplaceAll(r.Description, "\n", " ")
-			buf.WriteString(fmt.Sprintf("| [`%s`](#%s) | `%s` | `%s` | %s |\n", r.ID, r.ID, r.Severity, r.Category, desc))
+			buf.WriteString(fmt.Sprintf("| [`%s`](#%s) | `%s` | `%s` | %s |\n", r.ID, strings.ToLower(r.ID), r.Severity, r.Category, desc))
 		}
 
 		buf.WriteString("\n### Details & Guidance\n\n")
-		for _, r := range domainRules {
-			buf.WriteString(fmt.Sprintf("#### `%s`\n\n", r.ID))
+		for idx, r := range domainRules {
+			anchorID := strings.ToLower(r.ID)
+			buf.WriteString(fmt.Sprintf("#### `%s` {#%s}\n\n", r.ID, anchorID))
 			buf.WriteString(fmt.Sprintf("- **Domain**: `%s`\n", r.Domain))
 			buf.WriteString(fmt.Sprintf("- **Severity**: `%s`\n", r.Severity))
 			buf.WriteString(fmt.Sprintf("- **Category**: `%s`\n\n", r.Category))
@@ -386,6 +396,18 @@ tx.Commit()`,
 				))
 			}
 
+			// Navigation helpers between rules
+			var navLinks []string
+			if idx > 0 {
+				prevID := domainRules[idx-1].ID
+				navLinks = append(navLinks, fmt.Sprintf("← [`%s`](#%s)", prevID, strings.ToLower(prevID)))
+			}
+			navLinks = append(navLinks, fmt.Sprintf("[↑ Back to %s](#%s)", titleWithoutIcon, sectionID))
+			if idx < len(domainRules)-1 {
+				nextID := domainRules[idx+1].ID
+				navLinks = append(navLinks, fmt.Sprintf("[`%s`](#%s) →", nextID, strings.ToLower(nextID)))
+			}
+			buf.WriteString(fmt.Sprintf("<p class=\"rule-nav\">%s</p>\n\n", strings.Join(navLinks, " | ")))
 			buf.WriteString("---\n\n")
 		}
 	}

@@ -3,40 +3,54 @@ import { defineConfig } from 'vitepress'
 function sidebarDocs() {
   return [
     {
-      text: 'Getting Started',
+      text: 'Get Started',
       items: [
         { text: 'Overview', link: '/getting-started/' },
         { text: 'Installation', link: '/getting-started/installation' },
-        { text: 'First Scan & Exit Codes', link: '/getting-started/first-scan' }
+        { text: 'First Scan & Exit Codes', link: '/getting-started/first-scan' },
+        { text: 'Five-Minute CI Setup', link: '/getting-started/ci-setup' }
       ]
     },
     {
-      text: 'Core Features',
-      items: [
-        { text: 'Features Overview', link: '/features/' },
-        { text: 'Scan Execution & Policy', link: '/features/scan-execution-and-policy' },
-        { text: 'Reports & Finding Lifecycle', link: '/features/reports-and-finding-lifecycle' },
-        { text: 'How It Works & Reproduce Findings', link: '/features/analysis-and-reproduction' },
-        { text: 'AST & SQL Taint Analysis', link: '/features/sql-taint-analysis' },
-        { text: 'Developer Workflow Features', link: '/features/developer-workflow-features' },
-        { text: 'Frontend & Client Scanning', link: '/features/client-scanning' }
-      ]
-    },
-    {
-      text: 'Guides & Integrations',
+      text: 'Guides',
       items: [
         { text: 'Guides Overview', link: '/guides/' },
-        { text: 'Local & CI Integrations', link: '/guides/ci-integrations' },
-        { text: 'Adoption & Troubleshooting', link: '/guides/troubleshooting' }
+        { text: 'Pre-Commit Hooks', link: '/guides/pre-commit-hooks' },
+        { text: 'GitHub Actions / GitLab CI', link: '/guides/ci-integrations' },
+        { text: 'Gradual Adoption with Baselines', link: '/guides/baselines' },
+        { text: 'Managing Suppressions', link: '/guides/suppressions' },
+        { text: 'Reproducing a Finding', link: '/guides/reproducing-findings' },
+        { text: 'Troubleshooting', link: '/guides/troubleshooting' }
       ]
     },
     {
-      text: 'Development',
+      text: 'Concepts',
+      items: [
+        { text: 'Concepts Overview', link: '/concepts/' },
+        { text: 'Scan Modes and Isolation', link: '/concepts/scan-modes' },
+        { text: 'Profiles and Policy', link: '/concepts/profiles-and-policy' },
+        { text: 'Reports and Finding Lifecycle', link: '/concepts/reports-and-finding-lifecycle' },
+        { text: 'Frontend Scanning', link: '/concepts/frontend-scanning' },
+        { text: 'SQL Taint Analysis', link: '/concepts/sql-taint-analysis' }
+      ]
+    },
+    {
+      text: 'Reference',
+      items: [
+        { text: 'CLI Reference', link: '/reference/cli' },
+        { text: 'Configuration Reference', link: '/reference/configuration' },
+        { text: 'Scanner Compatibility', link: '/reference/scanners' },
+        { text: 'Rule Catalog', link: '/reference/rules' },
+        { text: 'Config Builder', link: '/reference/config-builder' }
+      ]
+    },
+    {
+      text: 'Project',
       items: [
         { text: 'Security Model', link: '/security' },
+        { text: 'Changelog', link: '/changelog' },
         { text: 'Contributing Guide', link: '/contributing' },
-        { text: 'Author Guide', link: '/author-guide' },
-        { text: 'Changelog', link: '/changelog' }
+        { text: 'Documentation Author Guide', link: '/author-guide' }
       ]
     }
   ]
@@ -67,7 +81,7 @@ export default defineConfig({
       { 
         text: 'Documentation', 
         link: '/getting-started/', 
-        activeMatch: '^/(getting-started|features|guides|author-guide|changelog|contributing|security)/' 
+        activeMatch: '^/(getting-started|guides|concepts|features|author-guide|changelog|contributing|security)/' 
       },
       { 
         text: 'Reference', 
@@ -81,8 +95,9 @@ export default defineConfig({
     ],
     sidebar: {
       '/getting-started/': sidebarDocs(),
-      '/features/': sidebarDocs(),
       '/guides/': sidebarDocs(),
+      '/concepts/': sidebarDocs(),
+      '/features/': sidebarDocs(),
       '/author-guide': sidebarDocs(),
       '/changelog': sidebarDocs(),
       '/contributing': sidebarDocs(),

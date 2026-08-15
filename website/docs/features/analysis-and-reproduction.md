@@ -9,7 +9,7 @@ This page explains the internal analysis mechanics of `go-code-scanner` (`securi
 
 ---
 
-## Group 1: Scanner Mechanics & Architecture (Cara Kerja Scanner)
+## Scanner Mechanics & Architecture
 
 `go-code-scanner` operates as an offline-first, policy-driven static analysis security tool (SAST). Its execution pipeline transforms raw source code into structured, actionable security reports through a deterministic multi-stage analysis process.
 
@@ -70,7 +70,7 @@ Fingerprint = SHA-256( Rule_ID + "|" + Relative_File_Path + "|" + Normalized_Cod
 
 ---
 
-## Group 2: Step-by-Step Finding Reproduction Playbook (Metode Reproduksi Finding)
+## Step-by-Step Finding Reproduction Playbook
 
 When `security-review` reports a security finding in CI or local CLI execution, follow this 6-step reproduction playbook to isolate, diagnose, and verify the issue.
 

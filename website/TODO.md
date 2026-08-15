@@ -109,7 +109,7 @@ Affected files:
 
 ## P1 — Reorganize navigation around reader goals
 
-- [ ] Replace the current sidebar groups with the following information
+- [x] Replace the current sidebar groups with the following information
   architecture:
 
   ```text
@@ -147,17 +147,17 @@ Affected files:
     Documentation Author Guide
   ```
 
-- [ ] Rename the misleading “Development” group to “Project”.
-- [ ] Move the Documentation Author Guide out of end-user guides.
-- [ ] Split “Adoption & Troubleshooting” into separate task-oriented pages.
-- [ ] Split “How It Works & Reproducing Findings” into a concept page and an
+- [x] Rename the misleading “Development” group to “Project”.
+- [x] Move the Documentation Author Guide out of end-user guides.
+- [x] Split “Adoption & Troubleshooting” into separate task-oriented pages.
+- [x] Split “How It Works & Reproducing Findings” into a concept page and an
   operational reproduction guide.
-- [ ] Remove bilingual parenthetical headings unless the whole site adopts a
+- [x] Remove bilingual parenthetical headings unless the whole site adopts a
   documented localization strategy.
-- [ ] Add the SQL Taint Analysis page to the Features/Concepts overview.
-- [ ] Either expand thin overview pages with useful routing context or link
+- [x] Add the SQL Taint Analysis page to the Features/Concepts overview.
+- [x] Either expand thin overview pages with useful routing context or link
   directly to the first meaningful page.
-- [ ] Make “Documentation”, “Guides”, “Reference”, and “Project” top-level paths
+- [x] Make “Documentation”, “Guides”, “Reference”, and “Project” top-level paths
   predictable and apply consistent active navigation states.
 
 Affected files:
@@ -170,33 +170,33 @@ Affected files:
 
 ## P1 — Improve the homepage onboarding path
 
-- [ ] Keep the hero concise and place a “Choose your goal” section immediately
+- [x] Keep the hero concise and place a “Choose your goal” section immediately
   after it: local scan, pre-commit gate, CI integration, existing-project
   adoption, and reference lookup.
-- [ ] Correct all three quick-start commands.
-- [ ] Add a realistic expected-output excerpt to the local-scan path.
-- [ ] Explain that the default scan writes `security_findings.json`.
-- [ ] Explain local versus `--ci` exit behavior next to the first scan command.
-- [ ] Link every quick-start path to a complete task-oriented guide.
-- [ ] Present the six canonical domains consistently and move detailed marketing
+- [x] Correct all three quick-start commands.
+- [x] Add a realistic expected-output excerpt to the local-scan path.
+- [x] Explain that the default scan writes `security_findings.json`.
+- [x] Explain local versus `--ci` exit behavior next to the first scan command.
+- [x] Link every quick-start path to a complete task-oriented guide.
+- [x] Present the six canonical domains consistently and move detailed marketing
   claims below the first successful user workflow.
-- [ ] Avoid absolute claims such as “enterprise-grade” and “100%” unless the
+- [x] Avoid absolute claims such as “enterprise-grade” and “100%” unless the
   relevant guarantee is explicitly scoped and verifiable.
 
 Affected file: `docs/index.md`.
 
 ## P1 — Make the Rule Catalog navigable
 
-- [ ] Replace the single 2,000+ line catalog page with a generated index and
+- [x] Replace the single 2,000+ line catalog page with a generated index and
   smaller detail pages, preferably grouped by canonical domain.
-- [ ] Add filters for rule ID, domain, severity, language/ecosystem, and category.
-- [ ] Keep a compact rule matrix above detailed remediation guidance.
-- [ ] Preserve existing rule anchors or add redirects so inbound links continue
+- [x] Add filters for rule ID, domain, severity, language/ecosystem, and category.
+- [x] Keep a compact rule matrix above detailed remediation guidance.
+- [x] Preserve existing rule anchors or add redirects so inbound links continue
   working after the split.
-- [ ] Ensure rule counts and domain summaries are generated rather than manually
+- [x] Ensure rule counts and domain summaries are generated rather than manually
   maintained.
-- [ ] Add previous/next navigation between rule details.
-- [ ] Verify every “View Guidance” link resolves to an existing rule.
+- [x] Add previous/next navigation between rule details.
+- [x] Verify every “View Guidance” link resolves to an existing rule.
 
 Affected file: `docs/reference/rules.md` and its generator output structure.
 

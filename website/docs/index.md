@@ -4,47 +4,42 @@ layout: home
 hero:
   name: "Go Code Scanner"
   text: "Policy-driven, offline-first security analysis CLI"
-  tagline: Enterprise-grade security gate, secret detection, dependency auditing, and SAST for Go codebases.
+  tagline: Single-binary commit gate, secret detection, dependency auditing, and AST/SQL taint analysis for Go codebases.
   actions:
     - theme: brand
       text: Quick Start
       link: #quick-start-paths
     - theme: alt
-      text: View Documentation
-      link: /getting-started/
+      text: Choose Your Goal
+      link: #choose-your-goal
     - theme: alt
       text: View on GitHub
       link: https://github.com/cinnamorollofficials/go-code-scanner
 
 features:
   - title: 🔒 Offline-First & Private
-    details: Runs 100% locally on your machine or build runner. No code, AST, or repository metadata is transmitted to remote servers.
+    details: Runs entirely on your local machine or self-hosted CI runner. No code, ASTs, or metadata are transmitted over the network.
   - title: 🛡️ Policy-Driven Commit Gate
-    details: Enforces security compliance using deterministic exit codes (0 for pass, 1 for policy violations under CI), baselines, and suppressions.
+    details: Enforces security compliance using deterministic exit codes (0 for pass, 1 for CI policy violations), baselines, and suppressions.
   - title: 🌐 6 Canonical Policy Domains
     details: Comprehensive coverage across Quality, Reliability, Hardening, Security, Supply Chain, and Governance domains.
   - title: 📊 Multi-Format Reporting
-    details: Outputs rich terminal summary, JSON (default artifact), SARIF for GitHub Security Code Scanning, and JUnit XML for CI reporting.
+    details: Generates human-readable terminal summaries, JSON (default artifact), SARIF for GitHub Security tab, and JUnit XML for CI test reports.
 ---
 
-## Overview
+## Choose Your Goal {#choose-your-goal}
 
-**`security-review` (Go Code Scanner)** is a high-performance, single-binary CLI tool designed to prevent security flaws, secret leaks, and governance regressions from entering production.
+<div class="tip custom-block" style="padding-top: 12px">
 
-::: tip Policy-Driven Gate
-Unlike conventional linters that report purely informational warnings, `security-review` operates as a strict **commit and release gate**. It returns exit code `1` when policy thresholds are violated and the **`--ci`** flag is supplied.
-:::
+| Goal | Description | Recommended Guide |
+| :--- | :--- | :--- |
+| **Run a Local Scan** | Analyze your current workspace in seconds and review findings. | [First Scan Guide](/getting-started/first-scan) |
+| **Set Up Pre-Commit Hook** | Block secret leaks and vulnerabilities before code is committed. | [Pre-Commit Hooks](/guides/pre-commit-hooks) |
+| **Integrate with CI/CD** | Add automated commit and PR security gates with SARIF upload. | [Five-Minute CI Setup](/getting-started/ci-setup) |
+| **Adopt in Existing Codebase** | Roll out without blocking velocity using finding baselines. | [Gradual Adoption Guide](/guides/baselines) |
+| **Lookup CLI & Rules** | Browse flags, configuration options, and rule remediation examples. | [CLI Reference](/reference/cli) · [Rule Catalog](/reference/rules) |
 
----
-
-## 6 Canonical Policy Domains
-
-1. **Security (`security`)**: Hardcoded API keys, private keys, database credentials, SQL injection, command injection, and tainted dataflows.
-2. **Hardening (`hardening`)**: Insecure file permissions, weak TLS configurations, and missing security headers.
-3. **Reliability (`reliability`)**: Unhandled error returns, goroutine leaks, and missing context cancellations.
-4. **Quality (`quality`)**: Dead code, anti-patterns, empty handlers, and dangerous type conversions.
-5. **Supply Chain (`supply_chain`)**: Vulnerable dependencies and untrusted third-party packages.
-6. **Governance (`governance`)**: License compliance, unresolved merge conflict markers, and architectural constraints.
+</div>
 
 ---
 
@@ -57,27 +52,76 @@ Choose one of three copyable quick-start paths below to start scanning immediate
 Run a full security scan on your active working directory:
 
 ```sh
-# Install binary via Go toolchain
+# 1. Install security-review CLI binary via Go toolchain
 go install github.com/cinnamorollofficials/go-code-scanner/cmd/security-review@latest
 
-# Run local scan (writes security_findings.json and displays terminal summary)
+# 2. Run scan (writes security_findings.json and prints terminal summary)
 security-review scan
 ```
 
+::: details Expected Terminal Output
+```text
+Code review: my-project (full)
+  scanner go-sec-core   passed
+  scanner go-sql-taint  passed
+
+Findings: 3 | critical=0 high=1 medium=1 low=1 | suppressed=0 stale=0
+
+[HIGH] security/hardcoded-credentials
+  config/secrets.go:12 Hardcoded API token detected in configuration assignment
+  Fix: Move sensitive credentials to environment variables or secret manager
+
+[MEDIUM] security/sql-string-format
+  pkg/db/user.go:45 Dynamic SQL query constructed via fmt.Sprintf instead of prepared statement
+  Fix: Use parameterized placeholders (?, $1) with db.QueryContext
+
+[LOW] governance/merge-conflict-marker
+  main.go:88 Unresolved Git conflict marker leftover in source file
+  Fix: Resolve merge conflict markers before committing
+
+Report: security_findings.json
+```
+:::
+
+::: tip Local vs. CI Exit Behavior
+In local interactive execution, `security-review scan` outputs findings and returns **exit code `0`** so it does not interrupt local development. To return exit code `1` on policy violations, pass the **`--ci`** flag.
+:::
+
+---
+
 ### Path 2: Staged Pre-Commit Hook Scan
 
-Scan only git-staged changes before committing to maintain sub-second hook speed:
+Scan only Git-staged changes before committing to maintain sub-second execution speed:
 
 ```sh
-# Fast scan restricted to staged git diff
+# Fast scan strictly isolated to staged Git index diff
 security-review scan --staged --profile fast
 ```
 
+Learn how to automate this automatically on every commit in the [Pre-Commit Hooks Guide](/guides/pre-commit-hooks).
+
+---
+
 ### Path 3: CI SARIF Scan (GitHub Actions)
 
-Generate a SARIF report and fail the build if high-severity findings exist:
+Generate a SARIF report and fail the build if High or Critical findings exist:
 
 ```sh
-# Generate SARIF report and enforce failure on High/Critical findings
+# Generate SARIF report and fail CI on High/Critical findings
 security-review scan --ci --fail-on HIGH --format sarif --output results.sarif
 ```
+
+See the complete [Five-Minute CI Setup](/getting-started/ci-setup) and [GitHub Actions Guide](/guides/ci-integrations).
+
+---
+
+## 6 Canonical Policy Domains
+
+`security-review` classifies all rules into 6 distinct policy areas:
+
+1. **Security (`security`)**: Hardcoded API keys, private keys, database credentials, SQL injection, and tainted dataflow sinks.
+2. **Hardening (`hardening`)**: Insecure file permissions, weak TLS versions, and missing security headers.
+3. **Reliability (`reliability`)**: Unhandled error returns, goroutine leaks, and missing context cancellations.
+4. **Quality (`quality`)**: Dead code, anti-patterns, empty handlers, and dangerous type conversions.
+5. **Supply Chain (`supply_chain`)**: Vulnerable dependencies and untrusted third-party packages.
+6. **Governance (`governance`)**: License compliance, unresolved merge conflict markers, and architectural constraints.

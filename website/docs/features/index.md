@@ -7,10 +7,11 @@ description: Overview of core scanner execution features, report formats, workfl
 
 `security-review` offers comprehensive policy-driven, offline-first security scanning capabilities for Go repositories.
 
-## Feature Guides
+## Feature Concepts & Guides
 
-- **[Scan Execution & Policy](/features/scan-execution-and-policy)**: Full, changed, and staged discovery modes, index isolation, scope filtering, performance profiles, and `--fail-on` policy thresholds.
-- **[Reports & Finding Lifecycle](/features/reports-and-finding-lifecycle)**: Terminal, JSON, SARIF, and JUnit output formats, deterministic fingerprints, baselines, and suppressions.
-- **[How It Works & Reproducing Findings](/features/analysis-and-reproduction)**: Multi-engine detection architecture (Go AST, Pattern, Frontend, Supply Chain) and step-by-step finding reproduction playbook.
-- **[Developer Workflow Features](/features/developer-workflow-features)**: Git hooks lifecycle, local cache management, dry-run auto-fixes, rule explanations, and config validation.
-- **[Frontend & Client Scanning](/features/client-scanning)**: Framework detection (React, Vue, Svelte), threat boundaries, DOM injection sanitization, and secret exposure prevention.
+- **[Scan Modes and Isolation](/concepts/scan-modes)**: Full, changed, and staged discovery modes with Git index isolation.
+- **[Profiles and Policy](/concepts/profiles-and-policy)**: Performance profiles, 6 canonical domains, and `--fail-on` thresholds.
+- **[Reports & Finding Lifecycle](/concepts/reports-and-finding-lifecycle)**: Output formats, deterministic fingerprints, and lifecycle states.
+- **[Frontend Scanning](/concepts/frontend-scanning)**: Framework detection (React, Vue, Svelte, Next.js), DOM sanitization, and client security.
+- **[AST & SQL Taint Analysis](/concepts/sql-taint-analysis)**: Native AST parsing, interprocedural taint propagation, and auto-fixes.
+- **[Developer Workflow Features](/features/developer-workflow-features)**: Git hooks, cache management, dry-run fixes, and rule explanations.

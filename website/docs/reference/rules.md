@@ -11,15 +11,16 @@ Below is the complete catalog of built-in detection rules provided by `security-
 
 | Domain | Icon | Total Rules | Scope & Focus |
 | :--- | :---: | :---: | :--- |
-| **Security Rules** | 🔒 | 40 | Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws. |
-| **Hardening Rules** | 🛡️ | 6 | Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings. |
-| **Reliability Rules** | ⚡ | 16 | Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes. |
-| **Quality Rules** | 🧹 | 5 | Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements. |
-| **Governance Rules** | 📜 | 4 | Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints. |
+| **[Security Rules](#security-rules)** | %!s(int=40) | %!d(string=Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws.) | %!s(MISSING) |
+| **[Hardening Rules](#hardening-rules)** | %!s(int=6) | %!d(string=Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings.) | %!s(MISSING) |
+| **[Reliability Rules](#reliability-rules)** | %!s(int=16) | %!d(string=Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes.) | %!s(MISSING) |
+| **[Quality Rules](#quality-rules)** | %!s(int=5) | %!d(string=Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements.) | %!s(MISSING) |
+| **[Supply Chain Rules](#supply-chain-rules)** | %!s(int=0) | %!d(string=Rules auditing third-party dependencies, version pins, package vulnerabilities, and license restrictions.) | %!s(MISSING) |
+| **[Governance Rules](#governance-rules)** | %!s(int=4) | %!d(string=Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints.) | %!s(MISSING) |
 
 ---
 
-## 🔒 Security Rules
+## 🔒 Security Rules {#security-rules}
 
 Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and authentication/authorization flaws.
 
@@ -53,22 +54,22 @@ Rules targeting vulnerability patterns, secret leaks, unsafe DOM injections, and
 | [`java-spring-jpa-native-query`](#java-spring-jpa-native-query) | `HIGH` | `sql-injection` | Spring Data JPA native query built via string concatenation |
 | [`java-hibernate-native-query`](#java-hibernate-native-query) | `HIGH` | `sql-injection` | Hibernate createNativeQuery executed with dynamic string concatenation |
 | [`java-jdbc-dynamic-query`](#java-jdbc-dynamic-query) | `HIGH` | `sql-injection` | Spring JdbcTemplate executed with concatenated SQL string |
-| [`DBSEC-002`](#DBSEC-002) | `HIGH` | `data_leak` | Sensitive credentials or PII fields logged to application tracing stream |
-| [`DBSEC-003`](#DBSEC-003) | `HIGH` | `information_exposure` | Internal database driver error exposed directly in HTTP client response |
-| [`SQLI-001`](#SQLI-001) | `HIGH` | `sql-injection` | Untrusted value concatenated or formatted into executable SQL at database driver sink |
-| [`SQLI-002`](#SQLI-002) | `HIGH` | `sql-injection` | Untrusted table, column, or identifier dynamically interpolated into SQL |
-| [`SQLI-004`](#SQLI-004) | `HIGH` | `orm-escape-hatch` | Unsafe raw ORM escape hatch called with dynamic or concatenated string |
-| [`SQLI-008`](#SQLI-008) | `MEDIUM` | `bind-mismatch` | SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed |
-| [`SQLI-011`](#SQLI-011) | `HIGH` | `list-expansion` | Unsafe list or IN clause expansion using strings.Join or manual string interpolation |
-| [`SQLI-012`](#SQLI-012) | `HIGH` | `prepared-statement` | Tainted SQL query template passed into statement preparation method db.Prepare() |
-| [`SQLAUTH-001`](#SQLAUTH-001) | `HIGH` | `multi-tenant-isolation` | Multi-tenant entity queried without tenant_id or organization_id scoping constraint |
-| [`SQLAUTH-002`](#SQLAUTH-002) | `HIGH` | `authorization-idor` | Sensitive resource queried solely by object ID without user ownership scoping (IDOR risk) |
-| [`SQLAUTH-003`](#SQLAUTH-003) | `HIGH` | `raw-query-bypass` | Raw query bypasses standard ORM authorization scopes and permission filters |
-| [`SQLAUTH-004`](#SQLAUTH-004) | `HIGH` | `rls-misconfiguration` | Database query assumes Row-Level Security but explicitly switches to superuser or bypass role |
+| [`DBSEC-002`](#dbsec-002) | `HIGH` | `data_leak` | Sensitive credentials or PII fields logged to application tracing stream |
+| [`DBSEC-003`](#dbsec-003) | `HIGH` | `information_exposure` | Internal database driver error exposed directly in HTTP client response |
+| [`SQLI-001`](#sqli-001) | `HIGH` | `sql-injection` | Untrusted value concatenated or formatted into executable SQL at database driver sink |
+| [`SQLI-002`](#sqli-002) | `HIGH` | `sql-injection` | Untrusted table, column, or identifier dynamically interpolated into SQL |
+| [`SQLI-004`](#sqli-004) | `HIGH` | `orm-escape-hatch` | Unsafe raw ORM escape hatch called with dynamic or concatenated string |
+| [`SQLI-008`](#sqli-008) | `MEDIUM` | `bind-mismatch` | SQL placeholder count mismatch: query specifies N placeholders but different number of parameters were passed |
+| [`SQLI-011`](#sqli-011) | `HIGH` | `list-expansion` | Unsafe list or IN clause expansion using strings.Join or manual string interpolation |
+| [`SQLI-012`](#sqli-012) | `HIGH` | `prepared-statement` | Tainted SQL query template passed into statement preparation method db.Prepare() |
+| [`SQLAUTH-001`](#sqlauth-001) | `HIGH` | `multi-tenant-isolation` | Multi-tenant entity queried without tenant_id or organization_id scoping constraint |
+| [`SQLAUTH-002`](#sqlauth-002) | `HIGH` | `authorization-idor` | Sensitive resource queried solely by object ID without user ownership scoping (IDOR risk) |
+| [`SQLAUTH-003`](#sqlauth-003) | `HIGH` | `raw-query-bypass` | Raw query bypasses standard ORM authorization scopes and permission filters |
+| [`SQLAUTH-004`](#sqlauth-004) | `HIGH` | `rls-misconfiguration` | Database query assumes Row-Level Security but explicitly switches to superuser or bypass role |
 
 ### Details & Guidance
 
-#### `mock-token`
+#### `mock-token` {#mock-token}
 
 - **Domain**: `security`
 - **Severity**: `CRITICAL`
@@ -108,9 +109,11 @@ auth_header = f"Bearer {os.environ.get('AUTH_TOKEN')}"
 
 :::
 
+<p class="rule-nav">[↑ Back to Security Rules](#security-rules) | [`browser-token-storage`](#browser-token-storage) →</p>
+
 ---
 
-#### `browser-token-storage`
+#### `browser-token-storage` {#browser-token-storage}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -130,9 +133,11 @@ localStorage.setItem("access_token", response.token);
 await fetch("/api/login", { credentials: "include", method: "POST", body });
 ```
 
+<p class="rule-nav">← [`mock-token`](#mock-token) | [↑ Back to Security Rules](#security-rules) | [`permission-bypass`](#permission-bypass) →</p>
+
 ---
 
-#### `permission-bypass`
+#### `permission-bypass` {#permission-bypass}
 
 - **Domain**: `security`
 - **Severity**: `CRITICAL`
@@ -190,9 +195,11 @@ def check_permission(user, resource):
 
 :::
 
+<p class="rule-nav">← [`browser-token-storage`](#browser-token-storage) | [↑ Back to Security Rules](#security-rules) | [`weak-secret`](#weak-secret) →</p>
+
 ---
 
-#### `weak-secret`
+#### `weak-secret` {#weak-secret}
 
 - **Domain**: `security`
 - **Severity**: `CRITICAL`
@@ -232,9 +239,11 @@ JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 
 :::
 
+<p class="rule-nav">← [`permission-bypass`](#permission-bypass) | [↑ Back to Security Rules](#security-rules) | [`frontend-sensitive-log`](#frontend-sensitive-log) →</p>
+
 ---
 
-#### `frontend-sensitive-log`
+#### `frontend-sensitive-log` {#frontend-sensitive-log}
 
 - **Domain**: `security`
 - **Severity**: `MEDIUM`
@@ -254,9 +263,11 @@ console.log("User auth failed for password:", password);
 console.error("User authentication failed", { username });
 ```
 
+<p class="rule-nav">← [`weak-secret`](#weak-secret) | [↑ Back to Security Rules](#security-rules) | [`backend-sensitive-log`](#backend-sensitive-log) →</p>
+
 ---
 
-#### `backend-sensitive-log`
+#### `backend-sensitive-log` {#backend-sensitive-log}
 
 - **Domain**: `security`
 - **Severity**: `MEDIUM`
@@ -276,9 +287,11 @@ log.Printf("Connecting to DB with secret: %s", dbSecret)
 log.Printf("Connecting to DB host: %s", dbHost)
 ```
 
+<p class="rule-nav">← [`frontend-sensitive-log`](#frontend-sensitive-log) | [↑ Back to Security Rules](#security-rules) | [`sql-string-format`](#sql-string-format) →</p>
+
 ---
 
-#### `sql-string-format`
+#### `sql-string-format` {#sql-string-format}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -324,9 +337,11 @@ cursor.execute(query, (user_email,))
 
 :::
 
+<p class="rule-nav">← [`backend-sensitive-log`](#backend-sensitive-log) | [↑ Back to Security Rules](#security-rules) | [`hardcoded-credential`](#hardcoded-credential) →</p>
+
 ---
 
-#### `hardcoded-credential`
+#### `hardcoded-credential` {#hardcoded-credential}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -374,9 +389,11 @@ String apiKey = System.getenv("STRIPE_API_KEY");
 
 :::
 
+<p class="rule-nav">← [`sql-string-format`](#sql-string-format) | [↑ Back to Security Rules](#security-rules) | [`unsafe-inner-html`](#unsafe-inner-html) →</p>
+
 ---
 
-#### `unsafe-inner-html`
+#### `unsafe-inner-html` {#unsafe-inner-html}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -396,9 +413,11 @@ String apiKey = System.getenv("STRIPE_API_KEY");
 <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
 ```
 
+<p class="rule-nav">← [`hardcoded-credential`](#hardcoded-credential) | [↑ Back to Security Rules](#security-rules) | [`dynamic-order`](#dynamic-order) →</p>
+
 ---
 
-#### `dynamic-order`
+#### `dynamic-order` {#dynamic-order}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -421,9 +440,11 @@ if allowedColumns[sortColumn] {
 }
 ```
 
+<p class="rule-nav">← [`unsafe-inner-html`](#unsafe-inner-html) | [↑ Back to Security Rules](#security-rules) | [`api-struct-response`](#api-struct-response) →</p>
+
 ---
 
-#### `api-struct-response`
+#### `api-struct-response` {#api-struct-response}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -445,9 +466,11 @@ response := UserResponse{ID: user.ID, Email: user.Email}
 c.JSON(http.StatusOK, response)
 ```
 
+<p class="rule-nav">← [`dynamic-order`](#dynamic-order) | [↑ Back to Security Rules](#security-rules) | [`sensitive-json-field`](#sensitive-json-field) →</p>
+
 ---
 
-#### `sensitive-json-field`
+#### `sensitive-json-field` {#sensitive-json-field}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -473,9 +496,11 @@ type Account struct {
 }
 ```
 
+<p class="rule-nav">← [`api-struct-response`](#api-struct-response) | [↑ Back to Security Rules](#security-rules) | [`go-shell-command`](#go-shell-command) →</p>
+
 ---
 
-#### `go-shell-command`
+#### `go-shell-command` {#go-shell-command}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -515,9 +540,11 @@ subprocess.Popen(["ls", "--", validated_path], shell=False)
 
 :::
 
+<p class="rule-nav">← [`sensitive-json-field`](#sensitive-json-field) | [↑ Back to Security Rules](#security-rules) | [`go-weak-cryptographic-hash`](#go-weak-cryptographic-hash) →</p>
+
 ---
 
-#### `go-weak-cryptographic-hash`
+#### `go-weak-cryptographic-hash` {#go-weak-cryptographic-hash}
 
 - **Domain**: `security`
 - **Severity**: `MEDIUM`
@@ -559,9 +586,11 @@ hash_val = hashlib.sha256(password.encode()).hexdigest()
 
 :::
 
+<p class="rule-nav">← [`go-shell-command`](#go-shell-command) | [↑ Back to Security Rules](#security-rules) | [`go-tainted-file-path`](#go-tainted-file-path) →</p>
+
 ---
 
-#### `go-tainted-file-path`
+#### `go-tainted-file-path` {#go-tainted-file-path}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -584,9 +613,11 @@ safePath := filepath.Join("/var/app/storage", filename)
 data, _ := os.ReadFile(safePath)
 ```
 
+<p class="rule-nav">← [`go-weak-cryptographic-hash`](#go-weak-cryptographic-hash) | [↑ Back to Security Rules](#security-rules) | [`go-weak-random-secret`](#go-weak-random-secret) →</p>
+
 ---
 
-#### `go-weak-random-secret`
+#### `go-weak-random-secret` {#go-weak-random-secret}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -608,9 +639,11 @@ cryptoRand.Read(tokenBytes)
 sessionToken := hex.EncodeToString(tokenBytes)
 ```
 
+<p class="rule-nav">← [`go-tainted-file-path`](#go-tainted-file-path) | [↑ Back to Security Rules](#security-rules) | [`javascript-dynamic-eval`](#javascript-dynamic-eval) →</p>
+
 ---
 
-#### `javascript-dynamic-eval`
+#### `javascript-dynamic-eval` {#javascript-dynamic-eval}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -630,9 +663,11 @@ const config = eval("(" + jsonString + ")");
 const config = JSON.parse(jsonString);
 ```
 
+<p class="rule-nav">← [`go-weak-random-secret`](#go-weak-random-secret) | [↑ Back to Security Rules](#security-rules) | [`node-prisma-raw-query`](#node-prisma-raw-query) →</p>
+
 ---
 
-#### `node-prisma-raw-query`
+#### `node-prisma-raw-query` {#node-prisma-raw-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -652,9 +687,11 @@ const users = await prisma.$queryRawUnsafe(`SELECT * FROM users WHERE id = '${id
 const users = await prisma.$queryRaw`SELECT * FROM users WHERE id = ${id}`;
 ```
 
+<p class="rule-nav">← [`javascript-dynamic-eval`](#javascript-dynamic-eval) | [↑ Back to Security Rules](#security-rules) | [`node-typeorm-raw-query`](#node-typeorm-raw-query) →</p>
+
 ---
 
-#### `node-typeorm-raw-query`
+#### `node-typeorm-raw-query` {#node-typeorm-raw-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -674,9 +711,11 @@ await connection.query(`SELECT * FROM users WHERE email = '${email}'`);
 await connection.query("SELECT * FROM users WHERE email = $1", [email]);
 ```
 
+<p class="rule-nav">← [`node-prisma-raw-query`](#node-prisma-raw-query) | [↑ Back to Security Rules](#security-rules) | [`node-sequelize-raw-query`](#node-sequelize-raw-query) →</p>
+
 ---
 
-#### `node-sequelize-raw-query`
+#### `node-sequelize-raw-query` {#node-sequelize-raw-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -696,9 +735,11 @@ await sequelize.query(`SELECT * FROM users WHERE status = '${status}'`);
 await sequelize.query("SELECT * FROM users WHERE status = :status", { replacements: { status } });
 ```
 
+<p class="rule-nav">← [`node-typeorm-raw-query`](#node-typeorm-raw-query) | [↑ Back to Security Rules](#security-rules) | [`node-pg-dynamic-query`](#node-pg-dynamic-query) →</p>
+
 ---
 
-#### `node-pg-dynamic-query`
+#### `node-pg-dynamic-query` {#node-pg-dynamic-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -718,9 +759,11 @@ await client.query(`SELECT * FROM accounts WHERE id = '${id}'`);
 await client.query("SELECT * FROM accounts WHERE id = $1", [id]);
 ```
 
+<p class="rule-nav">← [`node-sequelize-raw-query`](#node-sequelize-raw-query) | [↑ Back to Security Rules](#security-rules) | [`node-mysql-dynamic-query`](#node-mysql-dynamic-query) →</p>
+
 ---
 
-#### `node-mysql-dynamic-query`
+#### `node-mysql-dynamic-query` {#node-mysql-dynamic-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -740,9 +783,11 @@ await pool.query(`SELECT * FROM products WHERE category = '${category}'`);
 await pool.query("SELECT * FROM products WHERE category = ?", [category]);
 ```
 
+<p class="rule-nav">← [`node-pg-dynamic-query`](#node-pg-dynamic-query) | [↑ Back to Security Rules](#security-rules) | [`python-sqlalchemy-raw-sql`](#python-sqlalchemy-raw-sql) →</p>
+
 ---
 
-#### `python-sqlalchemy-raw-sql`
+#### `python-sqlalchemy-raw-sql` {#python-sqlalchemy-raw-sql}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -762,9 +807,11 @@ session.execute(text(f"SELECT * FROM users WHERE username = '{username}'"))
 session.execute(text("SELECT * FROM users WHERE username = :u"), {"u": username})
 ```
 
+<p class="rule-nav">← [`node-mysql-dynamic-query`](#node-mysql-dynamic-query) | [↑ Back to Security Rules](#security-rules) | [`python-django-raw-sql`](#python-django-raw-sql) →</p>
+
 ---
 
-#### `python-django-raw-sql`
+#### `python-django-raw-sql` {#python-django-raw-sql}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -784,9 +831,11 @@ User.objects.raw(f"SELECT * FROM auth_user WHERE username = '{username}'")
 User.objects.raw("SELECT * FROM auth_user WHERE username = %s", [username])
 ```
 
+<p class="rule-nav">← [`python-sqlalchemy-raw-sql`](#python-sqlalchemy-raw-sql) | [↑ Back to Security Rules](#security-rules) | [`python-psycopg-format-query`](#python-psycopg-format-query) →</p>
+
 ---
 
-#### `python-psycopg-format-query`
+#### `python-psycopg-format-query` {#python-psycopg-format-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -806,9 +855,11 @@ cursor.execute(f"SELECT * FROM items WHERE owner_id = '{owner_id}'")
 cursor.execute("SELECT * FROM items WHERE owner_id = %s", (owner_id,))
 ```
 
+<p class="rule-nav">← [`python-django-raw-sql`](#python-django-raw-sql) | [↑ Back to Security Rules](#security-rules) | [`java-spring-jpa-native-query`](#java-spring-jpa-native-query) →</p>
+
 ---
 
-#### `java-spring-jpa-native-query`
+#### `java-spring-jpa-native-query` {#java-spring-jpa-native-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -828,9 +879,11 @@ cursor.execute("SELECT * FROM items WHERE owner_id = %s", (owner_id,))
 @Query(value = "SELECT * FROM users WHERE role = :role", nativeQuery = true)
 ```
 
+<p class="rule-nav">← [`python-psycopg-format-query`](#python-psycopg-format-query) | [↑ Back to Security Rules](#security-rules) | [`java-hibernate-native-query`](#java-hibernate-native-query) →</p>
+
 ---
 
-#### `java-hibernate-native-query`
+#### `java-hibernate-native-query` {#java-hibernate-native-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -850,9 +903,11 @@ session.createNativeQuery("SELECT * FROM orders WHERE status = '" + status + "'"
 session.createNativeQuery("SELECT * FROM orders WHERE status = :status").setParameter("status", status)
 ```
 
+<p class="rule-nav">← [`java-spring-jpa-native-query`](#java-spring-jpa-native-query) | [↑ Back to Security Rules](#security-rules) | [`java-jdbc-dynamic-query`](#java-jdbc-dynamic-query) →</p>
+
 ---
 
-#### `java-jdbc-dynamic-query`
+#### `java-jdbc-dynamic-query` {#java-jdbc-dynamic-query}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -872,9 +927,11 @@ jdbcTemplate.query("SELECT * FROM users WHERE id = " + id, rowMapper)
 jdbcTemplate.query("SELECT * FROM users WHERE id = ?", rowMapper, id)
 ```
 
+<p class="rule-nav">← [`java-hibernate-native-query`](#java-hibernate-native-query) | [↑ Back to Security Rules](#security-rules) | [`DBSEC-002`](#dbsec-002) →</p>
+
 ---
 
-#### `DBSEC-002`
+#### `DBSEC-002` {#dbsec-002}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -894,9 +951,11 @@ logger.info("Processing payment for card:", cardToken, secretKey);
 logger.info("Processing payment for transaction ID:", transactionId);
 ```
 
+<p class="rule-nav">← [`java-jdbc-dynamic-query`](#java-jdbc-dynamic-query) | [↑ Back to Security Rules](#security-rules) | [`DBSEC-003`](#dbsec-003) →</p>
+
 ---
 
-#### `DBSEC-003`
+#### `DBSEC-003` {#dbsec-003}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -916,9 +975,11 @@ c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal server error occurred"})
 ```
 
+<p class="rule-nav">← [`DBSEC-002`](#dbsec-002) | [↑ Back to Security Rules](#security-rules) | [`SQLI-001`](#sqli-001) →</p>
+
 ---
 
-#### `SQLI-001`
+#### `SQLI-001` {#sqli-001}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -944,9 +1005,11 @@ row := db.QueryRow(query, id)
 
 :::
 
+<p class="rule-nav">← [`DBSEC-003`](#dbsec-003) | [↑ Back to Security Rules](#security-rules) | [`SQLI-002`](#sqli-002) →</p>
+
 ---
 
-#### `SQLI-002`
+#### `SQLI-002` {#sqli-002}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -975,9 +1038,11 @@ rows, err := db.Query(query)
 
 :::
 
+<p class="rule-nav">← [`SQLI-001`](#sqli-001) | [↑ Back to Security Rules](#security-rules) | [`SQLI-004`](#sqli-004) →</p>
+
 ---
 
-#### `SQLI-004`
+#### `SQLI-004` {#sqli-004}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -1001,9 +1066,11 @@ db.Where("role = ?", role).Find(&users)
 
 :::
 
+<p class="rule-nav">← [`SQLI-002`](#sqli-002) | [↑ Back to Security Rules](#security-rules) | [`SQLI-008`](#sqli-008) →</p>
+
 ---
 
-#### `SQLI-008`
+#### `SQLI-008` {#sqli-008}
 
 - **Domain**: `security`
 - **Severity**: `MEDIUM`
@@ -1027,9 +1094,11 @@ db.Query("SELECT * FROM users WHERE id = ? AND tenant_id = ?", id, tenantID)
 
 :::
 
+<p class="rule-nav">← [`SQLI-004`](#sqli-004) | [↑ Back to Security Rules](#security-rules) | [`SQLI-011`](#sqli-011) →</p>
+
 ---
 
-#### `SQLI-011`
+#### `SQLI-011` {#sqli-011}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -1056,9 +1125,11 @@ rows, err := db.Query(query, args...)
 
 :::
 
+<p class="rule-nav">← [`SQLI-008`](#sqli-008) | [↑ Back to Security Rules](#security-rules) | [`SQLI-012`](#sqli-012) →</p>
+
 ---
 
-#### `SQLI-012`
+#### `SQLI-012` {#sqli-012}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -1083,9 +1154,11 @@ rows, err := stmt.Query(filter)
 
 :::
 
+<p class="rule-nav">← [`SQLI-011`](#sqli-011) | [↑ Back to Security Rules](#security-rules) | [`SQLAUTH-001`](#sqlauth-001) →</p>
+
 ---
 
-#### `SQLAUTH-001`
+#### `SQLAUTH-001` {#sqlauth-001}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -1113,9 +1186,11 @@ func getAccounts(db *sql.DB, tenantID string) (*sql.Rows, error) {
 
 :::
 
+<p class="rule-nav">← [`SQLI-012`](#sqli-012) | [↑ Back to Security Rules](#security-rules) | [`SQLAUTH-002`](#sqlauth-002) →</p>
+
 ---
 
-#### `SQLAUTH-002`
+#### `SQLAUTH-002` {#sqlauth-002}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -1143,9 +1218,11 @@ func getOrder(db *sql.DB, orderID, userID string) (*sql.Row, error) {
 
 :::
 
+<p class="rule-nav">← [`SQLAUTH-001`](#sqlauth-001) | [↑ Back to Security Rules](#security-rules) | [`SQLAUTH-003`](#sqlauth-003) →</p>
+
 ---
 
-#### `SQLAUTH-003`
+#### `SQLAUTH-003` {#sqlauth-003}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -1169,9 +1246,11 @@ db.Raw("SELECT * FROM users WHERE organization_id = ? AND role <= ?", orgID, max
 
 :::
 
+<p class="rule-nav">← [`SQLAUTH-002`](#sqlauth-002) | [↑ Back to Security Rules](#security-rules) | [`SQLAUTH-004`](#sqlauth-004) →</p>
+
 ---
 
-#### `SQLAUTH-004`
+#### `SQLAUTH-004` {#sqlauth-004}
 
 - **Domain**: `security`
 - **Severity**: `HIGH`
@@ -1197,9 +1276,11 @@ db.Query("SELECT * FROM sensitive_documents")
 
 :::
 
+<p class="rule-nav">← [`SQLAUTH-003`](#sqlauth-003) | [↑ Back to Security Rules](#security-rules)</p>
+
 ---
 
-## 🛡️ Hardening Rules
+## 🛡️ Hardening Rules {#hardening-rules}
 
 Rules enforcing defensive configurations, TLS verification, CORS allowlists, and secure environment settings.
 
@@ -1214,7 +1295,7 @@ Rules enforcing defensive configurations, TLS verification, CORS allowlists, and
 
 ### Details & Guidance
 
-#### `hardcoded-api-url`
+#### `hardcoded-api-url` {#hardcoded-api-url}
 
 - **Domain**: `hardening`
 - **Severity**: `MEDIUM`
@@ -1234,9 +1315,11 @@ const API_URL = "http://localhost:8080/api/v1";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 ```
 
+<p class="rule-nav">[↑ Back to Hardening Rules](#hardening-rules) | [`tls-insecure-skip-verify`](#tls-insecure-skip-verify) →</p>
+
 ---
 
-#### `tls-insecure-skip-verify`
+#### `tls-insecure-skip-verify` {#tls-insecure-skip-verify}
 
 - **Domain**: `hardening`
 - **Severity**: `HIGH`
@@ -1260,9 +1343,11 @@ tr := &http.Transport{
 }
 ```
 
+<p class="rule-nav">← [`hardcoded-api-url`](#hardcoded-api-url) | [↑ Back to Hardening Rules](#hardening-rules) | [`wildcard-cors-origin`](#wildcard-cors-origin) →</p>
+
 ---
 
-#### `wildcard-cors-origin`
+#### `wildcard-cors-origin` {#wildcard-cors-origin}
 
 - **Domain**: `hardening`
 - **Severity**: `HIGH`
@@ -1282,9 +1367,11 @@ c.Header("Access-Control-Allow-Origin", "*")
 c.Header("Access-Control-Allow-Origin", "https://app.example.com")
 ```
 
+<p class="rule-nav">← [`tls-insecure-skip-verify`](#tls-insecure-skip-verify) | [↑ Back to Hardening Rules](#hardening-rules) | [`go-permissive-file-mode`](#go-permissive-file-mode) →</p>
+
 ---
 
-#### `go-permissive-file-mode`
+#### `go-permissive-file-mode` {#go-permissive-file-mode}
 
 - **Domain**: `hardening`
 - **Severity**: `MEDIUM`
@@ -1304,9 +1391,11 @@ os.WriteFile("config.json", data, 0777)
 os.WriteFile("config.json", data, 0600)
 ```
 
+<p class="rule-nav">← [`wildcard-cors-origin`](#wildcard-cors-origin) | [↑ Back to Hardening Rules](#hardening-rules) | [`debug-mode-enabled`](#debug-mode-enabled) →</p>
+
 ---
 
-#### `debug-mode-enabled`
+#### `debug-mode-enabled` {#debug-mode-enabled}
 
 - **Domain**: `hardening`
 - **Severity**: `MEDIUM`
@@ -1326,9 +1415,11 @@ debug := true
 debug := os.Getenv("APP_ENV") == "development"
 ```
 
+<p class="rule-nav">← [`go-permissive-file-mode`](#go-permissive-file-mode) | [↑ Back to Hardening Rules](#hardening-rules) | [`go-insecure-cookie-attribute`](#go-insecure-cookie-attribute) →</p>
+
 ---
 
-#### `go-insecure-cookie-attribute`
+#### `go-insecure-cookie-attribute` {#go-insecure-cookie-attribute}
 
 - **Domain**: `hardening`
 - **Severity**: `HIGH`
@@ -1348,9 +1439,11 @@ cookie := &http.Cookie{Name: "session", Value: token, Secure: false}
 cookie := &http.Cookie{Name: "session", Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode}
 ```
 
+<p class="rule-nav">← [`debug-mode-enabled`](#debug-mode-enabled) | [↑ Back to Hardening Rules](#hardening-rules)</p>
+
 ---
 
-## ⚡ Reliability Rules
+## ⚡ Reliability Rules {#reliability-rules}
 
 Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, and unexpected process crashes.
 
@@ -1362,20 +1455,20 @@ Rules mitigating resource exhaustion, unhandled errors, missing HTTP timeouts, a
 | [`go-discarded-error`](#go-discarded-error) | `MEDIUM` | `error_handling` | Returned error value is explicitly ignored with blank identifier |
 | [`go-process-termination`](#go-process-termination) | `MEDIUM` | `process_termination` | Application path may terminate entire process unexpectedly |
 | [`go-http-client-without-timeout`](#go-http-client-without-timeout) | `MEDIUM` | `missing_timeout` | HTTP client struct literal does not set an overall request timeout |
-| [`DBMIG-001`](#DBMIG-001) | `HIGH` | `destructive-migration` | Destructive schema migration detected without guarded rollout or deprecation phase |
-| [`DBMIG-002`](#DBMIG-002) | `MEDIUM` | `migration-safety` | Database migration file lacks reversible rollback instructions |
-| [`DBMIG-003`](#DBMIG-003) | `MEDIUM` | `schema-integrity` | Security-sensitive key column defined in table definition |
-| [`DBPERF-001`](#DBPERF-001) | `MEDIUM` | `query-performance` | Public dataset queried without an explicit LIMIT or pagination boundary |
-| [`DBPERF-002`](#DBPERF-002) | `HIGH` | `n-plus-one` | Database query executed inside loop (N+1 query anti-pattern) |
-| [`SQLSAFE-001`](#SQLSAFE-001) | `HIGH` | `destructive-query` | Unbounded UPDATE or DELETE query without a WHERE clause |
-| [`SQLSAFE-003`](#SQLSAFE-003) | `HIGH` | `concurrency-hazard` | Non-atomic read-modify-write pattern detected on balance/inventory field without row locking |
-| [`SQLSAFE-004`](#SQLSAFE-004) | `HIGH` | `transaction-loss` | Database operation executes on global connection pool escaping active transaction boundary |
-| [`SQLSAFE-005`](#SQLSAFE-005) | `HIGH` | `logic-operator-precedence` | Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence |
-| [`SQLSAFE-006`](#SQLSAFE-006) | `MEDIUM` | `soft-delete-bypass` | Raw query omits deleted_at IS NULL condition on soft-deletable entity table |
+| [`DBMIG-001`](#dbmig-001) | `HIGH` | `destructive-migration` | Destructive schema migration detected without guarded rollout or deprecation phase |
+| [`DBMIG-002`](#dbmig-002) | `MEDIUM` | `migration-safety` | Database migration file lacks reversible rollback instructions |
+| [`DBMIG-003`](#dbmig-003) | `MEDIUM` | `schema-integrity` | Security-sensitive key column defined in table definition |
+| [`DBPERF-001`](#dbperf-001) | `MEDIUM` | `query-performance` | Public dataset queried without an explicit LIMIT or pagination boundary |
+| [`DBPERF-002`](#dbperf-002) | `HIGH` | `n-plus-one` | Database query executed inside loop (N+1 query anti-pattern) |
+| [`SQLSAFE-001`](#sqlsafe-001) | `HIGH` | `destructive-query` | Unbounded UPDATE or DELETE query without a WHERE clause |
+| [`SQLSAFE-003`](#sqlsafe-003) | `HIGH` | `concurrency-hazard` | Non-atomic read-modify-write pattern detected on balance/inventory field without row locking |
+| [`SQLSAFE-004`](#sqlsafe-004) | `HIGH` | `transaction-loss` | Database operation executes on global connection pool escaping active transaction boundary |
+| [`SQLSAFE-005`](#sqlsafe-005) | `HIGH` | `logic-operator-precedence` | Query contains unparenthesized mixed AND / OR operators in WHERE clause, altering logical precedence |
+| [`SQLSAFE-006`](#sqlsafe-006) | `MEDIUM` | `soft-delete-bypass` | Raw query omits deleted_at IS NULL condition on soft-deletable entity table |
 
 ### Details & Guidance
 
-#### `go-multipart-memory`
+#### `go-multipart-memory` {#go-multipart-memory}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1395,9 +1488,11 @@ c.Request.ParseMultipartForm(100 << 20) // Unbounded 100MB buffer
 c.Request.ParseMultipartForm(10 << 20) // Controlled 10MB memory limit
 ```
 
+<p class="rule-nav">[↑ Back to Reliability Rules](#reliability-rules) | [`go-http-default-server`](#go-http-default-server) →</p>
+
 ---
 
-#### `go-http-default-server`
+#### `go-http-default-server` {#go-http-default-server}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1421,9 +1516,11 @@ server := &http.Server{
 server.ListenAndServe()
 ```
 
+<p class="rule-nav">← [`go-multipart-memory`](#go-multipart-memory) | [↑ Back to Reliability Rules](#reliability-rules) | [`go-unbounded-request-read`](#go-unbounded-request-read) →</p>
+
 ---
 
-#### `go-unbounded-request-read`
+#### `go-unbounded-request-read` {#go-unbounded-request-read}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1443,9 +1540,11 @@ body, err := io.ReadAll(r.Body)
 body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB size limit
 ```
 
+<p class="rule-nav">← [`go-http-default-server`](#go-http-default-server) | [↑ Back to Reliability Rules](#reliability-rules) | [`go-discarded-error`](#go-discarded-error) →</p>
+
 ---
 
-#### `go-discarded-error`
+#### `go-discarded-error` {#go-discarded-error}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1467,9 +1566,11 @@ if err := db.Close(); err != nil {
 }
 ```
 
+<p class="rule-nav">← [`go-unbounded-request-read`](#go-unbounded-request-read) | [↑ Back to Reliability Rules](#reliability-rules) | [`go-process-termination`](#go-process-termination) →</p>
+
 ---
 
-#### `go-process-termination`
+#### `go-process-termination` {#go-process-termination}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1493,9 +1594,11 @@ if err != nil {
 }
 ```
 
+<p class="rule-nav">← [`go-discarded-error`](#go-discarded-error) | [↑ Back to Reliability Rules](#reliability-rules) | [`go-http-client-without-timeout`](#go-http-client-without-timeout) →</p>
+
 ---
 
-#### `go-http-client-without-timeout`
+#### `go-http-client-without-timeout` {#go-http-client-without-timeout}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1515,9 +1618,11 @@ client := &http.Client{}
 client := &http.Client{Timeout: 10 * time.Second}
 ```
 
+<p class="rule-nav">← [`go-process-termination`](#go-process-termination) | [↑ Back to Reliability Rules](#reliability-rules) | [`DBMIG-001`](#dbmig-001) →</p>
+
 ---
 
-#### `DBMIG-001`
+#### `DBMIG-001` {#dbmig-001}
 
 - **Domain**: `reliability`
 - **Severity**: `HIGH`
@@ -1537,9 +1642,11 @@ ALTER TABLE users DROP COLUMN phone_number;
 -- Phase 1: Mark column deprecated in application code; Phase 2: Drop after code deployment
 ```
 
+<p class="rule-nav">← [`go-http-client-without-timeout`](#go-http-client-without-timeout) | [↑ Back to Reliability Rules](#reliability-rules) | [`DBMIG-002`](#dbmig-002) →</p>
+
 ---
 
-#### `DBMIG-002`
+#### `DBMIG-002` {#dbmig-002}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1559,9 +1666,11 @@ ALTER TABLE users DROP COLUMN phone_number;
 -- Provide matching down.sql migration with schema restore steps
 ```
 
+<p class="rule-nav">← [`DBMIG-001`](#dbmig-001) | [↑ Back to Reliability Rules](#reliability-rules) | [`DBMIG-003`](#dbmig-003) →</p>
+
 ---
 
-#### `DBMIG-003`
+#### `DBMIG-003` {#dbmig-003}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1581,9 +1690,11 @@ CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID);
 CREATE TABLE documents (id UUID PRIMARY KEY, tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE);
 ```
 
+<p class="rule-nav">← [`DBMIG-002`](#dbmig-002) | [↑ Back to Reliability Rules](#reliability-rules) | [`DBPERF-001`](#dbperf-001) →</p>
+
 ---
 
-#### `DBPERF-001`
+#### `DBPERF-001` {#dbperf-001}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1603,9 +1714,11 @@ db.Query("SELECT * FROM events WHERE created_at > $1", startTime)
 db.Query("SELECT * FROM events WHERE created_at > $1 ORDER BY id ASC LIMIT 100", startTime)
 ```
 
+<p class="rule-nav">← [`DBMIG-003`](#dbmig-003) | [↑ Back to Reliability Rules](#reliability-rules) | [`DBPERF-002`](#dbperf-002) →</p>
+
 ---
 
-#### `DBPERF-002`
+#### `DBPERF-002` {#dbperf-002}
 
 - **Domain**: `reliability`
 - **Severity**: `HIGH`
@@ -1627,9 +1740,11 @@ for _, userID := range userIDs {
 db.Query("SELECT * FROM profiles WHERE user_id IN ($1, $2, ...)", userIDs)
 ```
 
+<p class="rule-nav">← [`DBPERF-001`](#dbperf-001) | [↑ Back to Reliability Rules](#reliability-rules) | [`SQLSAFE-001`](#sqlsafe-001) →</p>
+
 ---
 
-#### `SQLSAFE-001`
+#### `SQLSAFE-001` {#sqlsafe-001}
 
 - **Domain**: `reliability`
 - **Severity**: `HIGH`
@@ -1653,9 +1768,11 @@ db.Exec("DELETE FROM users WHERE expires_at < $1", cutoffTime)
 
 :::
 
+<p class="rule-nav">← [`DBPERF-002`](#dbperf-002) | [↑ Back to Reliability Rules](#reliability-rules) | [`SQLSAFE-003`](#sqlsafe-003) →</p>
+
 ---
 
-#### `SQLSAFE-003`
+#### `SQLSAFE-003` {#sqlsafe-003}
 
 - **Domain**: `reliability`
 - **Severity**: `HIGH`
@@ -1687,9 +1804,11 @@ tx.Commit()
 
 :::
 
+<p class="rule-nav">← [`SQLSAFE-001`](#sqlsafe-001) | [↑ Back to Reliability Rules](#reliability-rules) | [`SQLSAFE-004`](#sqlsafe-004) →</p>
+
 ---
 
-#### `SQLSAFE-004`
+#### `SQLSAFE-004` {#sqlsafe-004}
 
 - **Domain**: `reliability`
 - **Severity**: `HIGH`
@@ -1721,9 +1840,11 @@ func Transfer(tx *sql.Tx, from, to string, amount int) error {
 
 :::
 
+<p class="rule-nav">← [`SQLSAFE-003`](#sqlsafe-003) | [↑ Back to Reliability Rules](#reliability-rules) | [`SQLSAFE-005`](#sqlsafe-005) →</p>
+
 ---
 
-#### `SQLSAFE-005`
+#### `SQLSAFE-005` {#sqlsafe-005}
 
 - **Domain**: `reliability`
 - **Severity**: `HIGH`
@@ -1747,9 +1868,11 @@ query := "SELECT * FROM orders WHERE tenant_id = $1 AND (status = 'active' OR is
 
 :::
 
+<p class="rule-nav">← [`SQLSAFE-004`](#sqlsafe-004) | [↑ Back to Reliability Rules](#reliability-rules) | [`SQLSAFE-006`](#sqlsafe-006) →</p>
+
 ---
 
-#### `SQLSAFE-006`
+#### `SQLSAFE-006` {#sqlsafe-006}
 
 - **Domain**: `reliability`
 - **Severity**: `MEDIUM`
@@ -1773,9 +1896,11 @@ db.Query("SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL", email)
 
 :::
 
+<p class="rule-nav">← [`SQLSAFE-005`](#sqlsafe-005) | [↑ Back to Reliability Rules](#reliability-rules)</p>
+
 ---
 
-## 🧹 Quality Rules
+## 🧹 Quality Rules {#quality-rules}
 
 Rules maintaining repository hygiene, formatting consistency, and flagging left-over debug statements.
 
@@ -1789,7 +1914,7 @@ Rules maintaining repository hygiene, formatting consistency, and flagging left-
 
 ### Details & Guidance
 
-#### `merge-conflict-marker`
+#### `merge-conflict-marker` {#merge-conflict-marker}
 
 - **Domain**: `quality`
 - **Severity**: `HIGH`
@@ -1813,9 +1938,11 @@ const apiURL = "https://api.production.com";
 const apiURL = process.env.API_URL || "https://api.production.com";
 ```
 
+<p class="rule-nav">[↑ Back to Quality Rules](#quality-rules) | [`javascript-debugger`](#javascript-debugger) →</p>
+
 ---
 
-#### `javascript-debugger`
+#### `javascript-debugger` {#javascript-debugger}
 
 - **Domain**: `quality`
 - **Severity**: `MEDIUM`
@@ -1840,9 +1967,11 @@ function calculateTotal(items: Item[]) {
 }
 ```
 
+<p class="rule-nav">← [`merge-conflict-marker`](#merge-conflict-marker) | [↑ Back to Quality Rules](#quality-rules) | [`trailing-whitespace`](#trailing-whitespace) →</p>
+
 ---
 
-#### `trailing-whitespace`
+#### `trailing-whitespace` {#trailing-whitespace}
 
 - **Domain**: `quality`
 - **Severity**: `LOW`
@@ -1862,9 +1991,11 @@ const username = "john_doe";
 const username = "john_doe";
 ```
 
+<p class="rule-nav">← [`javascript-debugger`](#javascript-debugger) | [↑ Back to Quality Rules](#quality-rules) | [`mixed-indentation`](#mixed-indentation) →</p>
+
 ---
 
-#### `mixed-indentation`
+#### `mixed-indentation` {#mixed-indentation}
 
 - **Domain**: `quality`
 - **Severity**: `LOW`
@@ -1888,9 +2019,11 @@ func process() {
 }
 ```
 
+<p class="rule-nav">← [`trailing-whitespace`](#trailing-whitespace) | [↑ Back to Quality Rules](#quality-rules) | [`javascript-console-debug`](#javascript-console-debug) →</p>
+
 ---
 
-#### `javascript-console-debug`
+#### `javascript-console-debug` {#javascript-console-debug}
 
 - **Domain**: `quality`
 - **Severity**: `LOW`
@@ -1914,9 +2047,11 @@ function handleLogin(user: User) {
 }
 ```
 
+<p class="rule-nav">← [`mixed-indentation`](#mixed-indentation) | [↑ Back to Quality Rules](#quality-rules)</p>
+
 ---
 
-## 📜 Governance Rules
+## 📜 Governance Rules {#governance-rules}
 
 Rules enforcing data privacy, PII protection, fixture sanitization, and compliance policy constraints.
 
@@ -1929,7 +2064,7 @@ Rules enforcing data privacy, PII protection, fixture sanitization, and complian
 
 ### Details & Guidance
 
-#### `privacy-pii-log`
+#### `privacy-pii-log` {#privacy-pii-log}
 
 - **Domain**: `governance`
 - **Severity**: `HIGH`
@@ -1949,9 +2084,11 @@ log.Printf("User registered with email: %s, phone: %s", email, phone)
 log.Printf("User registered with ID: %s", userID)
 ```
 
+<p class="rule-nav">[↑ Back to Governance Rules](#governance-rules) | [`privacy-pii-url`](#privacy-pii-url) →</p>
+
 ---
 
-#### `privacy-pii-url`
+#### `privacy-pii-url` {#privacy-pii-url}
 
 - **Domain**: `governance`
 - **Severity**: `HIGH`
@@ -1971,9 +2108,11 @@ urlParams.append("email", userEmail);
 // Transmit sensitive parameters in authenticated POST request body
 ```
 
+<p class="rule-nav">← [`privacy-pii-log`](#privacy-pii-log) | [↑ Back to Governance Rules](#governance-rules) | [`privacy-pii-fixture`](#privacy-pii-fixture) →</p>
+
 ---
 
-#### `privacy-pii-fixture`
+#### `privacy-pii-fixture` {#privacy-pii-fixture}
 
 - **Domain**: `governance`
 - **Severity**: `MEDIUM`
@@ -1993,9 +2132,11 @@ urlParams.append("email", userEmail);
 {"email": "user@example.com", "ssn": "000-00-0000"}
 ```
 
+<p class="rule-nav">← [`privacy-pii-url`](#privacy-pii-url) | [↑ Back to Governance Rules](#governance-rules) | [`privacy-sensitive-response`](#privacy-sensitive-response) →</p>
+
 ---
 
-#### `privacy-sensitive-response`
+#### `privacy-sensitive-response` {#privacy-sensitive-response}
 
 - **Domain**: `governance`
 - **Severity**: `HIGH`
@@ -2014,6 +2155,8 @@ res.json({ id: user.id, email: user.email, ssn: user.ssn });
 // ✅ Do (Recommended)
 res.json({ id: user.id, email: user.email });
 ```
+
+<p class="rule-nav">← [`privacy-pii-fixture`](#privacy-pii-fixture) | [↑ Back to Governance Rules](#governance-rules)</p>
 
 ---
 

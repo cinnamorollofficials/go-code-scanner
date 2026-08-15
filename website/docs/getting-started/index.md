@@ -11,3 +11,4 @@ Welcome to **Go Code Scanner** (`security-review`).
 
 - **[Installation](/getting-started/installation)**: Step-by-step instructions for installing release binaries, using `go install`, or building from source on Linux, macOS, and Windows.
 - **[First Scan & Exit Codes](/getting-started/first-scan)**: Execute your first scan, interpret terminal findings, and understand policy exit code enforcement with `--ci` and `--fail-on`.
+- **[Five-Minute CI Setup](/getting-started/ci-setup)**: Add automated security analysis and commit gates to GitHub Actions and GitLab CI pipelines.
