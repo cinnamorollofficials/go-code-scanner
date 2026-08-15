@@ -139,16 +139,16 @@ Acceptance criteria:
 
 ## P1 — Rebuild the Rule Catalog for navigation, not scrolling
 
-- [ ] Replace the single multi-thousand-line `docs/reference/rules.md` output
-  with a generated catalog index and smaller rule detail pages.
-- [ ] Add client-side filters for rule ID, canonical domain, severity,
+- [x] Retain the generated `docs/reference/rules.md` only as a no-index legacy
+  anchor target, and provide a canonical generated index with smaller detail pages.
+- [x] Add client-side filters for rule ID, canonical domain, severity,
   language/ecosystem, and category.
-- [ ] Keep a compact rule matrix on the catalog index.
-- [ ] Generate rule counts and domain summaries from the same source as rule
+- [x] Keep a compact rule matrix on the catalog index.
+- [x] Generate rule counts and domain summaries from the same source as rule
   details.
-- [ ] Replace Markdown-like text inside raw HTML with real rendered links.
-- [ ] Generate working previous/next navigation between rule detail pages.
-- [ ] Preserve useful legacy anchors or provide redirects for inbound links.
+- [x] Replace Markdown-like navigation text with real rendered links on canonical detail pages.
+- [x] Generate working previous/next navigation between rule detail pages.
+- [x] Preserve useful legacy anchors or provide redirects for inbound links.
 - [ ] Add automated checks for every detail link, previous/next link, and
   preserved anchor.
 - [ ] Verify catalog filtering and the detail layout at 320 px, 768 px, and

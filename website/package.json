@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev docs",
+    "predocs:build": "npm run docs:generate-rules",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "docs:check-presets": "node scripts/validate-config-presets.mjs"
+    "docs:check-presets": "node scripts/validate-config-presets.mjs",
+    "docs:generate-rules": "node scripts/generate-rule-catalog.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.2",

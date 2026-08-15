@@ -14,7 +14,7 @@ Authoritative technical specifications, command reference, and rule catalog for 
 - **[CLI Reference](/reference/cli)**: Complete guide to all subcommands (`scan`, `config`, `hook`, `baseline`, `suppress`, `cache`, `upgrade`, `version`), flags, defaults, and deterministic exit codes.
 - **[Interactive Config Builder](/reference/config-builder)**: Visual, browser-local configuration generator supporting all 9 presets and direct file download.
 - **[Config Builder Contract](/reference/config-builder-contract)**: State model, privacy guarantees, and accessibility specification.
-- **[Rule Catalog](/reference/rules)**: Full directory of 71 built-in detection rules across 6 domains with Do's and Don'ts code examples.
+- **[Rule Catalog](/reference/rule-catalog)**: Filterable directory of 71 built-in detection rules with focused remediation pages and code examples.
 - **[Scanner Compatibility](/reference/scanners)**: Built-in and external scanner adapter matrix and runtime prerequisites.
 
 ---

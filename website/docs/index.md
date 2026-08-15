@@ -37,7 +37,7 @@ features:
 | **Set Up Pre-Commit Hook** | Block secret leaks and vulnerabilities before code is committed. | [Pre-Commit Hooks](/guides/pre-commit-hooks) |
 | **Integrate with CI/CD** | Add automated commit and PR security gates with SARIF upload. | [Five-Minute CI Setup](/getting-started/ci-setup) |
 | **Adopt in Existing Codebase** | Roll out without blocking velocity using finding baselines. | [Gradual Adoption Guide](/guides/baselines) |
-| **Lookup CLI & Rules** | Browse flags, configuration options, and rule remediation examples. | [CLI Reference](/reference/cli) · [Rule Catalog](/reference/rules) |
+| **Lookup CLI & Rules** | Browse flags, configuration options, and rule remediation examples. | [CLI Reference](/reference/cli) · [Rule Catalog](/reference/rule-catalog) |
 
 </div>
 

@@ -40,7 +40,7 @@ function sidebarDocs() {
         { text: 'CLI Reference', link: '/reference/cli' },
         { text: 'Configuration Reference', link: '/reference/configuration' },
         { text: 'Scanner Compatibility', link: '/reference/scanners' },
-        { text: 'Rule Catalog', link: '/reference/rules' },
+        { text: 'Rule Catalog', link: '/reference/rule-catalog' },
         { text: 'Config Builder', link: '/reference/config-builder' }
       ]
     },
@@ -66,7 +66,22 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   sitemap: {
-    hostname: 'https://cinnamorollofficials.github.io/go-code-scanner/'
+    hostname: 'https://cinnamorollofficials.github.io/go-code-scanner/',
+    transformItems: (items) => items.filter((item) => {
+      const path = item.url.replace(/\/$/, '')
+      return path !== 'reference/rules' && !path.endsWith('/reference/rules')
+    })
+  },
+  transformPageData(pageData) {
+    if (pageData.relativePath === 'reference/rules.md') {
+      pageData.frontmatter.search = false
+      pageData.frontmatter.head = [
+        ...(pageData.frontmatter.head || []),
+        ['meta', { name: 'robots', content: 'noindex,follow' }],
+        ['link', { rel: 'canonical', href: 'https://cinnamorollofficials.github.io/go-code-scanner/reference/rule-catalog' }]
+      ]
+    }
+    return pageData
   },
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${basePrefix}/favicon.svg` }],
@@ -110,7 +125,7 @@ export default defineConfig({
             { text: 'CLI Reference', link: '/reference/cli' },
             { text: 'Interactive Config Builder', link: '/reference/config-builder' },
             { text: 'Config Builder Contract', link: '/reference/config-builder-contract' },
-            { text: 'Rule Catalog', link: '/reference/rules' },
+            { text: 'Rule Catalog', link: '/reference/rule-catalog' },
             { text: 'Scanner Compatibility', link: '/reference/scanners' }
           ]
         },
